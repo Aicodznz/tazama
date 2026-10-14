@@ -1,0 +1,6 @@
+{
+  "name": "Tazama",
+  "description": "Tanzania's Premier Video-Sharing Platform. Tazama. Unda. Pata.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

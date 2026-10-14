@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'amytzee@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && incoming().uid == userId;
+      allow update: if (isOwner(userId) && incoming().uid == userId && !incoming().diff(existing()).affectedKeys().hasAny(['role'])) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Admins Collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Channels Collection
+    match /channels/{channelId} {
+      allow read: if true;
+      allow create: if isSignedIn() && incoming().ownerId == request.auth.uid;
+      allow update: if (isSignedIn() && existing().ownerId == request.auth.uid) || isAdmin();
+      allow delete: if (isSignedIn() && existing().ownerId == request.auth.uid) || isAdmin();
+    }
+
+    // Videos Collection
+    match /videos/{videoId} {
+      allow read: if resource.data.visibility == 'public' ||
+                    (isSignedIn() && resource.data.channelOwnerId == request.auth.uid) ||
+                    isAdmin();
+      allow create: if isSignedIn();
+      allow update: if (isSignedIn() && (
+        existing().channelOwnerId == request.auth.uid ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['viewsCount', 'likesCount', 'commentsCount'])
+      )) || isAdmin();
+      allow delete: if (isSignedIn() && existing().channelOwnerId == request.auth.uid) || isAdmin();
+    }
+
+    // Comments Collection
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow update: if (isSignedIn() && (
+        existing().userId == request.auth.uid ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['likesCount'])
+      )) || isAdmin();
+      allow delete: if (isSignedIn() && existing().userId == request.auth.uid) || isAdmin();
+    }
+
+    // Likes Collection
+    match /likes/{likeId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isSignedIn() && (
+        (incoming() != null && incoming().userId == request.auth.uid) ||
+        (existing() != null && existing().userId == request.auth.uid)
+      );
+    }
+
+    // Subscriptions Collection
+    match /subscriptions/{subId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && incoming().subscriberId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().subscriberId == request.auth.uid;
+    }
+
+    // Playlists Collection
+    match /playlists/{playlistId} {
+      allow read: if resource.data.isPublic == true ||
+                    (isSignedIn() && resource.data.userId == request.auth.uid) ||
+                    isAdmin();
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow update, delete: if (isSignedIn() && existing().userId == request.auth.uid) || isAdmin();
+    }
+
+    // Gifts Collection
+    match /gifts/{giftId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && incoming().senderId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // Creator Memberships Collection
+    match /creatorMemberships/{membershipId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && incoming().userId == request.auth.uid;
+      allow update: if (isSignedIn() && existing().userId == request.auth.uid) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Reports Collection
+    match /reports/{reportId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.reporterId == request.auth.uid);
+      allow create: if isSignedIn() && incoming().reporterId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+  }
+}
