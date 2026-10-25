@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
@@ -355,19 +356,37 @@ async function startServer() {
     res.status(200).json({ received: true, uid: req.body?.uid });
   });
 
-  // Vite middleware in dev or static files in production
-  if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.resolve(__dirname, 'dist')));
-    app.get('*', (_req, res) => {
-      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+  // Serve built static files if dist/index.html exists, or fallback to Vite middleware
+  const distDir = path.resolve(__dirname, 'dist');
+  const distIndexHtml = path.join(distDir, 'index.html');
+
+  if (fs.existsSync(distIndexHtml)) {
+    console.log(`[Production Mode] Serving static assets from: ${distDir}`);
+    app.use(express.static(distDir));
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api')) return next();
+      res.sendFile(distIndexHtml);
     });
   } else {
+    console.log('[Development / Dynamic Mode] Launching Vite middleware with SPA HTML handler...');
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa'
     });
     app.use(vite.middlewares);
+    app.use('*', async (req, res, next) => {
+      if (req.path.startsWith('/api')) return next();
+      const url = req.originalUrl;
+      try {
+        const rootIndexHtml = path.resolve(__dirname, 'index.html');
+        let template = fs.readFileSync(rootIndexHtml, 'utf-8');
+        template = await vite.transformIndexHtml(url, template);
+        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+      } catch (e) {
+        next(e);
+      }
+    });
   }
 
   app.listen(PORT, '0.0.0.0', () => {
