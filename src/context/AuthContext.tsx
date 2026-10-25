@@ -101,7 +101,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setDemoMode(false);
         try {
           const userDocRef = doc(db, 'users', firebaseUser.uid);
-          const userSnap = await getDoc(userDocRef);
+          const snapPromise = getDoc(userDocRef);
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('User fetch timeout')), 3000)
+          );
+          const userSnap = await Promise.race([snapPromise, timeoutPromise]);
           
           if (userSnap.exists()) {
             const data = userSnap.data() as UserProfile;
