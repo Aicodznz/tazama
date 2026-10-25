@@ -1,7 +1,7 @@
 export type Language = 'sw' | 'en';
 export type Theme = 'dark' | 'light';
 
-export type UserRole = 'viewer' | 'creator' | 'moderator' | 'admin';
+export type UserRole = 'viewer' | 'creator' | 'moderator' | 'admin' | 'finance' | 'copyright' | 'support' | 'analyst';
 
 export interface UserProfile {
   uid: string;
@@ -208,5 +208,183 @@ export interface AuditLogEntry {
   details: string;
   status: 'SUCCESS' | 'WARNING' | 'REJECTED';
   timestamp: string;
+}
+
+export interface Playlist {
+  id: string;
+  title: string;
+  description?: string;
+  coverUrl?: string;
+  videoIds: string[];
+  createdAt: string;
+}
+
+export interface OfflineDownload {
+  videoId: string;
+  video: VideoItem;
+  downloadedAt: string;
+  fileSizeBytes: number;
+}
+
+export interface LiveChatMessage {
+  id: string;
+  senderName: string;
+  senderAvatar: string;
+  message: string;
+  isTip?: boolean;
+  tipAmountTZS?: number;
+  timestamp: string;
+}
+
+export interface LiveStream {
+  id: string;
+  title: string;
+  channelId: string;
+  channelName: string;
+  channelAvatar: string;
+  category: VideoCategory;
+  viewerCount: number;
+  streamUrl: string;
+  thumbnailUrl: string;
+  startedAt: string;
+  description: string;
+}
+
+export interface STKPushRequest {
+  provider: 'M-Pesa' | 'Tigo Pesa' | 'Airtel Money' | 'Halopesa';
+  phoneNumber: string;
+  amountTZS: number;
+  reference: string;
+}
+
+export interface CopyrightClaim {
+  id: string;
+  claimantName: string;
+  claimantOrg: string;
+  infringedWorkTitle: string;
+  targetVideoId: string;
+  targetVideoTitle: string;
+  targetChannelName: string;
+  matchPercentage: number;
+  status: 'pending' | 'approved' | 'rejected' | 'disputed';
+  evidenceUrl?: string;
+  createdAt: string;
+  notes?: string;
+}
+
+export interface CreatorVerificationRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  channelId: string;
+  channelName: string;
+  subscriberCount: number;
+  documentType: 'NIDA' | 'Passport' | 'Leseni ya Udereva' | 'BRELA';
+  documentNumber: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+}
+
+export interface CreatorMonetizationApplication {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  channelId: string;
+  channelName: string;
+  subscriberCount: number;
+  watchHours: number;
+  totalViews: number;
+  strikesCount: number;
+  paymentDetailsConfigured: boolean;
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+  notes?: string;
+}
+
+export interface PromoCode {
+  id: string;
+  code: string;
+  discountPercent: number;
+  validUntil: string;
+  maxUses: number;
+  usedCount: number;
+  isActive: boolean;
+}
+
+export interface UserAppeal {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  penalizedAction: string;
+  reason: string;
+  explanation: string;
+  evidence: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+  decisionNotes?: string;
+}
+
+export interface SecurityLogEvent {
+  id: string;
+  userId: string;
+  userEmail: string;
+  eventType: 'LOGIN_SUCCESS' | 'LOGIN_FAILED' | 'PASSWORD_RESET' | 'SUSPICIOUS_SPIKE' | 'ROLE_CHANGED' | 'SESSION_TERMINATED';
+  ipAddress: string;
+  location: string;
+  device: string;
+  timestamp: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH';
+}
+
+export interface CommunityPost {
+  id: string;
+  channelId: string;
+  channelName: string;
+  channelAvatar: string;
+  content: string;
+  imageUrl?: string;
+  pollOptions?: { option: string; votes: number }[];
+  likesCount: number;
+  commentsCount: number;
+  createdAt: string;
+  isLiked?: boolean;
+}
+
+export interface CreatorMembershipTier {
+  id: string;
+  channelId: string;
+  name: string;
+  priceTZS: number;
+  perks: string[];
+  memberCount: number;
+  badgeColor: string;
+}
+
+export interface VideoSubtitleTrack {
+  id: string;
+  videoId: string;
+  videoTitle: string;
+  language: 'sw' | 'en';
+  languageLabel: string;
+  status: 'published' | 'draft' | 'auto_generated';
+  format: 'vtt' | 'srt';
+  updatedAt: string;
+}
+
+export interface CreatorPromotion {
+  id: string;
+  videoId: string;
+  videoTitle: string;
+  goal: 'views' | 'subscribers' | 'engagement';
+  targetAudience: string;
+  budgetTZS: number;
+  spentTZS: number;
+  impressions: number;
+  clicks: number;
+  status: 'active' | 'paused' | 'completed';
+  startDate: string;
 }
 

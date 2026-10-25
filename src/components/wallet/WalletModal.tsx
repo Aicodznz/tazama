@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Wallet, Smartphone, ShieldCheck, CheckCircle, ArrowDownLeft, AlertCircle } from 'lucide-react';
 import { formatTZS, translations } from '../../lib/i18n';
 import { useAuth } from '../../context/AuthContext';
+import { useVideo } from '../../context/VideoContext';
 
 interface WalletModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface WalletModalProps {
 
 export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => {
   const { profile, language, topUpBalance } = useAuth();
+  const { triggerSTKPush } = useVideo();
   const t = translations[language];
 
   const [selectedProvider, setSelectedProvider] = useState<'M-Pesa' | 'Tigo Pesa' | 'Airtel Money' | 'Halopesa'>('M-Pesa');
@@ -29,27 +31,19 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
       return;
     }
 
-    setIsProcessing(true);
-    setErrorMsg(null);
-    try {
-      const ok = await topUpBalance(amount, selectedProvider, phoneNumber);
-      if (ok) {
-        setSuccess(true);
-        setTimeout(() => {
-          setSuccess(false);
-          onClose();
-        }, 2200);
-      }
-    } catch (e: any) {
-      setErrorMsg('Hitilafu kwenye malipo.');
-    } finally {
-      setIsProcessing(false);
-    }
+    // Trigger authentic STK Push prompt simulation
+    triggerSTKPush({
+      provider: selectedProvider,
+      phoneNumber: phoneNumber || '0754 123 456',
+      amountTZS: amount,
+      reference: `TZM-${Math.floor(100000 + Math.random() * 900000)}`
+    });
+    onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-[#191E29] border border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6 overflow-hidden">
+      <div className="relative w-full max-w-md bg-[#191E29] border border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6 overflow-y-auto max-h-[90vh]">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#262E3E]">

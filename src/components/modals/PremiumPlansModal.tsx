@@ -137,29 +137,29 @@ export const PremiumPlansModal: React.FC<PremiumPlansModalProps> = ({
 
         {/* Tab Switcher (Viewer Plans vs Creator Plans) */}
         <div className="flex items-center justify-center mt-5">
-          <div className="bg-[#10131B] p-1 rounded-2xl border border-[#262E3E] flex items-center gap-1">
+          <div className="bg-[#10131B] p-1 rounded-2xl border border-[#262E3E] grid grid-cols-2 gap-1 w-full max-w-md">
             <button
               onClick={() => setActiveTab('viewer')}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              className={`px-2.5 sm:px-5 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 activeTab === 'viewer'
                   ? 'bg-[#FF3040] text-white shadow-md shadow-[#FF3040]/30'
                   : 'text-[#A7B0C0] hover:text-white'
               }`}
             >
-              <Tv className="w-4 h-4" />
-              Kwa Watazamaji (Viewer VIP)
+              <Tv className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">Watazamaji (VIP)</span>
             </button>
 
             <button
               onClick={() => setActiveTab('creator')}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              className={`px-2.5 sm:px-5 py-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                 activeTab === 'creator'
                   ? 'bg-[#16C784] text-black shadow-md shadow-[#16C784]/30 font-extrabold'
                   : 'text-[#A7B0C0] hover:text-white'
               }`}
             >
-              <Sparkles className="w-4 h-4" />
-              Kwa Waumbaji (Creator Pro)
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="truncate">Waumbaji (Pro)</span>
             </button>
           </div>
         </div>

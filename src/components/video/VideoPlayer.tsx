@@ -113,14 +113,73 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
 
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
-    if (!document.fullscreenElement) {
-      containerRef.current.requestFullscreen().catch(() => {});
+    
+    const isCurrentlyNative = !!(
+      document.fullscreenElement ||
+      (document as any).webkitFullscreenElement ||
+      (document as any).mozFullScreenElement ||
+      (document as any).msFullscreenElement
+    );
+
+    if (!isFullscreen && !isCurrentlyNative) {
+      // Attempt native fullscreen if allowed by browser/host iframe
+      try {
+        if (containerRef.current.requestFullscreen) {
+          containerRef.current.requestFullscreen().catch(() => {});
+        } else if ((containerRef.current as any).webkitRequestFullscreen) {
+          (containerRef.current as any).webkitRequestFullscreen();
+        } else if ((videoRef.current as any)?.webkitEnterFullscreen) {
+          (videoRef.current as any).webkitEnterFullscreen();
+        }
+      } catch (err) {
+        // Fallback gracefully to viewport fullscreen
+      }
       setIsFullscreen(true);
     } else {
-      document.exitFullscreen().catch(() => {});
+      // Exit fullscreen
+      try {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        } else if ((document as any).webkitExitFullscreen) {
+          (document as any).webkitExitFullscreen();
+        }
+      } catch (err) {}
       setIsFullscreen(false);
     }
   };
+
+  // Sync fullscreen state with browser native events
+  useEffect(() => {
+    const handleNativeFullscreenChange = () => {
+      const isNative = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement
+      );
+      if (!isNative && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleNativeFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleNativeFullscreenChange);
+
+    const videoEl = videoRef.current;
+    const handleVideoEndFullscreen = () => {
+      setIsFullscreen(false);
+    };
+    if (videoEl) {
+      videoEl.addEventListener('webkitendfullscreen', handleVideoEndFullscreen);
+    }
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleNativeFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleNativeFullscreenChange);
+      if (videoEl) {
+        videoEl.removeEventListener('webkitendfullscreen', handleVideoEndFullscreen);
+      }
+    };
+  }, [isFullscreen]);
 
   // Keyboard accessibility
   useEffect(() => {
@@ -133,18 +192,20 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
         toggleMute();
       } else if (e.code === 'KeyF') {
         toggleFullscreen();
+      } else if (e.code === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPlaying, isMuted]);
+  }, [isPlaying, isMuted, isFullscreen]);
 
   const handleMouseMove = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     controlsTimeoutRef.current = setTimeout(() => {
       if (isPlaying) setShowControls(false);
-    }, 3000);
+    }, 3500);
   };
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -154,7 +215,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => isPlaying && setShowControls(false)}
-      className="relative w-full aspect-video-player bg-black rounded-2xl overflow-hidden shadow-2xl group select-none"
+      className={`relative w-full bg-black select-none transition-all duration-200 ${
+        isFullscreen
+          ? 'fixed inset-0 z-[99999] w-screen h-screen rounded-none flex items-center justify-center overflow-hidden'
+          : 'aspect-video-player rounded-none sm:rounded-2xl overflow-hidden shadow-2xl group'
+      }`}
     >
       {/* HTML5 video element with Cloudflare Stream / CDN source */}
       <video
@@ -165,9 +230,24 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={() => setIsPlaying(false)}
         onClick={togglePlay}
-        className="w-full h-full object-contain cursor-pointer"
+        onDoubleClick={toggleFullscreen}
+        className={`w-full h-full cursor-pointer ${
+          isFullscreen ? 'max-h-screen object-contain' : 'object-contain'
+        }`}
         playsInline
       />
+
+      {/* Floating Exit Fullscreen Button in Fullscreen Mode */}
+      {isFullscreen && (
+        <button
+          onClick={toggleFullscreen}
+          className="absolute top-4 right-4 z-50 px-3.5 py-1.5 rounded-full bg-black/80 hover:bg-black text-white border border-white/20 shadow-2xl flex items-center gap-1.5 text-xs font-bold active:scale-95 transition-all backdrop-blur-md"
+          title="Toka Skrini Nzima (Funga)"
+        >
+          <Minimize className="w-4 h-4 text-[#FF3040]" />
+          <span>Toka Fulu</span>
+        </button>
+      )}
 
       {/* Cloudflare Stream CDN Watermark */}
       <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] text-white/90 border border-white/10 pointer-events-none">
@@ -217,22 +297,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
         </div>
 
         {/* Bottom Control Bar */}
-        <div className="flex items-center justify-between text-white text-xs">
+        <div className="flex items-center justify-between text-white text-xs px-2 sm:px-3 py-1 sm:py-1.5 max-w-full overflow-hidden">
           
           {/* Left Controls */}
-          <div className="flex items-center gap-3 md:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <button 
               onClick={togglePlay} 
-              className="p-1.5 hover:text-[#FF3040] transition-colors focus:outline-none"
+              className="p-1 sm:p-1.5 hover:text-[#FF3040] transition-colors focus:outline-none"
               title={isPlaying ? 'Sitisha (Space)' : 'Cheza (Space)'}
             >
-              {isPlaying ? <Pause className="w-5 h-5 fill-white" /> : <Play className="w-5 h-5 fill-white" />}
+              {isPlaying ? <Pause className="w-4 h-4 sm:w-5 sm:h-5 fill-white" /> : <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white" />}
             </button>
 
-            {/* Volume */}
-            <div className="flex items-center gap-2 group/vol">
-              <button onClick={toggleMute} className="p-1.5 hover:text-[#FF3040] transition-colors">
-                {isMuted || volume === 0 ? <VolumeX className="w-5 h-5 text-red-400" /> : <Volume2 className="w-5 h-5" />}
+            {/* Volume - Slider hidden on mobile, physical buttons used */}
+            <div className="flex items-center gap-1 sm:gap-2 group/vol">
+              <button 
+                onClick={toggleMute} 
+                className="p-1 sm:p-1.5 hover:text-[#FF3040] transition-colors"
+                title={isMuted ? 'Washa Sauti' : 'Zima Sauti'}
+              >
+                {isMuted || volume === 0 ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
               </button>
               <input
                 type="range"
@@ -241,25 +325,25 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
                 step={0.05}
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="w-14 md:w-20 h-1 bg-white/30 rounded-lg appearance-none accent-[#FF3040] cursor-pointer"
+                className="hidden sm:block w-14 md:w-20 h-1 bg-white/30 rounded-lg appearance-none accent-[#FF3040] cursor-pointer"
               />
             </div>
 
             {/* Time Stamp */}
-            <div className="text-[11px] font-mono text-[#A7B0C0]">
+            <div className="text-[10px] sm:text-[11px] font-mono text-[#A7B0C0] shrink-0 whitespace-nowrap">
               <span className="text-white font-semibold">{formatDuration(currentTime)}</span>
-              <span className="mx-1">/</span>
+              <span className="mx-0.5 sm:mx-1">/</span>
               <span>{formatDuration(duration)}</span>
             </div>
           </div>
 
           {/* Right Controls */}
-          <div className="flex items-center gap-2 md:gap-3">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             
-            {/* Captions */}
+            {/* Captions - Desktop / Tablet */}
             <button
               onClick={() => setShowCaptions(!showCaptions)}
-              className={`p-1.5 rounded-lg transition-colors ${showCaptions ? 'text-[#FF3040] bg-white/10' : 'text-white/80 hover:text-white'}`}
+              className={`hidden sm:block p-1.5 rounded-lg transition-colors ${showCaptions ? 'text-[#FF3040] bg-white/10' : 'text-white/80 hover:text-white'}`}
               title="Manukuu (Captions)"
             >
               <Subtitles className="w-4 h-4" />
@@ -269,7 +353,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
             <div className="relative">
               <button
                 onClick={() => { setShowSpeedMenu(!showSpeedMenu); setShowQualityMenu(false); }}
-                className="p-1.5 rounded-lg hover:bg-white/10 text-white/90 text-xs font-semibold"
+                className="px-1.5 py-1 rounded-lg hover:bg-white/10 text-white/90 text-[11px] sm:text-xs font-semibold"
                 title="Kasi ya Video (Speed)"
               >
                 {playbackSpeed}x
@@ -294,7 +378,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
             <div className="relative">
               <button
                 onClick={() => { setShowQualityMenu(!showQualityMenu); setShowSpeedMenu(false); }}
-                className="p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white"
+                className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white"
                 title="Ubora wa Video (Resolution)"
               >
                 <Settings className="w-4 h-4" />
@@ -315,13 +399,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
               )}
             </div>
 
-            {/* Fullscreen */}
+            {/* Fullscreen Button */}
             <button
               onClick={toggleFullscreen}
-              className="p-1.5 hover:text-[#FF3040] transition-colors focus:outline-none"
-              title={isFullscreen ? 'Ondoa Skrini Nzima (F)' : 'Skrini Nzima (F)'}
+              className={`p-1.5 rounded-lg transition-all focus:outline-none flex items-center gap-1 active:scale-95 ${
+                isFullscreen ? 'text-[#FF3040] bg-white/15 font-bold' : 'hover:text-[#FF3040] hover:bg-white/10'
+              }`}
+              title={isFullscreen ? 'Ondoa Skrini Nzima (Toka Fulu)' : 'Weka Skrini Nzima (Fulu)'}
+              aria-label={isFullscreen ? 'Ondoa Skrini Nzima' : 'Weka Skrini Nzima'}
             >
-              {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+              {isFullscreen ? (
+                <>
+                  <Minimize className="w-4 h-4 text-[#FF3040]" />
+                  <span className="hidden sm:inline text-[10px] text-[#FF3040] font-bold">Toka</span>
+                </>
+              ) : (
+                <>
+                  <Maximize className="w-4 h-4" />
+                  <span className="hidden sm:inline text-[10px] text-[#A7B0C0] font-semibold">Fulu</span>
+                </>
+              )}
             </button>
           </div>
 

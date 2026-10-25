@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Home, 
   Flame, 
@@ -21,10 +21,13 @@ import {
   X,
   Settings,
   ShieldCheck,
-  Compass
+  Compass,
+  Radio,
+  Download
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { translations } from '../../lib/i18n';
+import { PWAInstallModal } from '../modals/PWAInstallModal';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -44,10 +47,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onClose
 }) => {
   const { language, role, profile } = useAuth();
+  const [showPWAModal, setShowPWAModal] = useState(false);
   const t = translations[language];
 
   const mainNavItems = [
     { id: 'home', label: t.home, icon: Home },
+    { id: 'live', label: 'Mubashara (Live)', icon: Radio, badge: 'LIVE' },
     { id: 'shorts', label: t.shorts, icon: Film, badge: '🔥' },
     { id: 'subscriptions', label: t.subscriptions, icon: Tv },
   ];
@@ -236,6 +241,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
+        {/* Account & Panels Section */}
+        <div className="pt-3 pb-3 border-b border-[#262E3E] space-y-1">
+          {isOpen && (
+            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#A7B0C0]">
+              Akaunti &amp; Kuingia
+            </p>
+          )}
+          <button
+            onClick={() => handleItemClick('login')}
+            className={`w-full flex items-center gap-3.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+              activePage === 'login' 
+                ? 'bg-purple-600 text-white font-bold' 
+                : 'text-[#A7B0C0] hover:text-white hover:bg-[#191E29]'
+            }`}
+            title="Ingia Kwenye Akaunti Yako"
+          >
+            <Users className="w-5 h-5 shrink-0 text-purple-400" />
+            {isOpen && <span className="truncate">Kuingia (Login)</span>}
+          </button>
+          <button
+            onClick={() => handleItemClick('register')}
+            className={`w-full flex items-center gap-3.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+              activePage === 'register' 
+                ? 'bg-blue-600 text-white font-bold' 
+                : 'text-[#A7B0C0] hover:text-white hover:bg-[#191E29]'
+            }`}
+            title="Tengeneza Akaunti Mpya"
+          >
+            <Crown className="w-5 h-5 shrink-0 text-blue-400" />
+            {isOpen && <span className="truncate">Kujisajili (Register)</span>}
+          </button>
+        </div>
+
         {/* Footer links in sidebar */}
         {isOpen && (
           <div className="pt-4 px-3 text-[11px] text-[#A7B0C0]/70 space-y-2">
@@ -347,6 +385,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-extrabold uppercase">VIP</span>
               </button>
+
+              {/* Install PWA App Button */}
+              <button
+                onClick={() => {
+                  if (onClose) onClose();
+                  setShowPWAModal(true);
+                }}
+                className="w-full mt-2 flex items-center justify-between p-3 rounded-2xl bg-[#16C784]/15 border border-[#16C784]/30 text-[#16C784] font-bold text-xs hover:bg-[#16C784]/25 transition-all"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Download className="w-5 h-5 text-[#16C784]" />
+                  <span>Weka App kwenye Simu</span>
+                </div>
+                <span className="text-[9px] bg-[#16C784] text-black px-1.5 py-0.5 rounded font-extrabold uppercase">BURE</span>
+              </button>
             </div>
 
             {/* Creator Economy Mobile */}
@@ -453,28 +506,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* 3. Mobile Bottom Navigation Bar (Phone UX - Sticky and Always Visible on Mobile) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#10131B]/95 backdrop-blur-md border-t border-[#262E3E] px-2 py-1 flex items-center justify-around md:hidden safe-area-pb">
+      {/* 3. Mobile Bottom Navigation Dock (Hidden on WatchPage for full immersive view) */}
+      <nav className={`fixed bottom-0 left-0 right-0 z-40 bg-[#121620]/95 backdrop-blur-xl border-t border-[#262E3E]/80 px-2 py-1.5 items-center justify-around md:hidden safe-area-pb shadow-2xl ${
+        activePage === 'watch' ? 'hidden' : 'flex'
+      }`}>
         {/* Home */}
         <button
           onClick={() => handleItemClick('home')}
           className={`flex flex-col items-center justify-center w-14 py-1 text-[10px] font-semibold transition-colors ${
-            activePage === 'home' ? 'text-[#FF3040]' : 'text-[#A7B0C0] hover:text-white'
+            activePage === 'home' ? 'text-white font-bold' : 'text-[#A7B0C0] hover:text-white'
           }`}
         >
-          <Home className="w-5 h-5 mb-0.5" />
-          <span className="truncate">{t.home}</span>
+          <Home className={`w-5 h-5 mb-0.5 ${activePage === 'home' ? 'text-white stroke-[2.5]' : 'text-[#A7B0C0]'}`} />
+          <span className="truncate">Home</span>
         </button>
 
-        {/* Shorts */}
+        {/* Explore */}
         <button
-          onClick={() => handleItemClick('shorts')}
+          onClick={() => handleItemClick('explore')}
           className={`flex flex-col items-center justify-center w-14 py-1 text-[10px] font-semibold transition-colors ${
-            activePage === 'shorts' ? 'text-[#FF3040]' : 'text-[#A7B0C0] hover:text-white'
+            activePage === 'explore' ? 'text-white font-bold' : 'text-[#A7B0C0] hover:text-white'
           }`}
         >
-          <Film className="w-5 h-5 mb-0.5" />
-          <span className="truncate">{t.shorts}</span>
+          <Compass className={`w-5 h-5 mb-0.5 ${activePage === 'explore' ? 'text-white stroke-[2.5]' : 'text-[#A7B0C0]'}`} />
+          <span className="truncate">Explore</span>
         </button>
 
         {/* Center Floating Plus Action (Upload Video / Short) */}
@@ -483,58 +538,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onOpenUpload();
             if (onClose) onClose();
           }}
-          className="flex items-center justify-center -mt-5 w-12 h-12 rounded-full bg-gradient-to-tr from-[#FF3040] to-[#FF6B6B] text-white shadow-lg shadow-[#FF3040]/40 active:scale-95 transition-transform"
-          title={t.upload}
+          className="flex items-center justify-center -mt-5 w-12 h-12 rounded-full bg-[#FF3040] text-white shadow-xl shadow-[#FF3040]/50 active:scale-95 transition-transform"
+          title="Unda Video / Short"
           aria-label="Upload Video"
         >
-          <Plus className="w-6 h-6 stroke-[2.5]" />
+          <Plus className="w-6 h-6 stroke-[3]" />
         </button>
 
-        {/* Premium Plans */}
+        {/* Channels */}
         <button
-          onClick={() => {
-            if (onClose) onClose();
-            if (onOpenPremium) onOpenPremium(role === 'creator' ? 'creator' : 'viewer');
-          }}
-          className="flex flex-col items-center justify-center w-14 py-1 text-[10px] font-semibold transition-colors text-amber-400 hover:text-amber-300"
+          onClick={() => handleItemClick('channels')}
+          className={`flex flex-col items-center justify-center w-14 py-1 text-[10px] font-semibold transition-colors ${
+            activePage === 'channels' ? 'text-white font-bold' : 'text-[#A7B0C0] hover:text-white'
+          }`}
         >
-          <Crown className="w-5 h-5 mb-0.5 text-amber-400" />
-          <span className="truncate">Premium</span>
+          <Users className={`w-5 h-5 mb-0.5 ${activePage === 'channels' ? 'text-white stroke-[2.5]' : 'text-[#A7B0C0]'}`} />
+          <span className="truncate">Channels</span>
         </button>
 
-        {/* Role-Aware Tab (Admin if role===admin, Studio if creator, else Library) */}
-        {role === 'admin' ? (
-          <button
-            onClick={() => handleItemClick('admin')}
-            className={`flex flex-col items-center justify-center w-14 py-1 text-[10px] font-semibold transition-colors ${
-              activePage === 'admin' ? 'text-amber-400 font-bold' : 'text-[#A7B0C0] hover:text-white'
-            }`}
-          >
-            <ShieldAlert className="w-5 h-5 mb-0.5 text-amber-400" />
-            <span className="truncate">Admin</span>
-          </button>
-        ) : role === 'creator' ? (
-          <button
-            onClick={() => handleItemClick('studio')}
-            className={`flex flex-col items-center justify-center w-14 py-1 text-[10px] font-semibold transition-colors ${
-              activePage === 'studio' ? 'text-[#16C784] font-bold' : 'text-[#A7B0C0] hover:text-white'
-            }`}
-          >
-            <Sparkles className="w-5 h-5 mb-0.5 text-[#16C784]" />
-            <span className="truncate">Studio</span>
-          </button>
-        ) : (
-          <button
-            onClick={() => handleItemClick('library')}
-            className={`flex flex-col items-center justify-center w-14 py-1 text-[10px] font-semibold transition-colors ${
-              activePage === 'library' ? 'text-[#FF3040]' : 'text-[#A7B0C0] hover:text-white'
-            }`}
-          >
-            <Library className="w-5 h-5 mb-0.5" />
-            <span className="truncate">{t.library}</span>
-          </button>
-        )}
+        {/* Library */}
+        <button
+          onClick={() => handleItemClick('library')}
+          className={`flex flex-col items-center justify-center w-14 py-1 text-[10px] font-semibold transition-colors ${
+            activePage === 'library' ? 'text-white font-bold' : 'text-[#A7B0C0] hover:text-white'
+          }`}
+        >
+          <Library className={`w-5 h-5 mb-0.5 ${activePage === 'library' ? 'text-white stroke-[2.5]' : 'text-[#A7B0C0]'}`} />
+          <span className="truncate">Library</span>
+        </button>
       </nav>
+
+      {/* PWA Install Guide Modal */}
+      <PWAInstallModal 
+        isOpen={showPWAModal} 
+        onClose={() => setShowPWAModal(false)} 
+      />
     </>
   );
 };

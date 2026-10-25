@@ -15,12 +15,16 @@ import {
   Menu,
   CheckCircle,
   X,
-  Crown
+  Crown,
+  Zap,
+  Radio,
+  Download
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useVideo } from '../../context/VideoContext';
 import { translations, formatTZS } from '../../lib/i18n';
 import { UserRole } from '../../types';
+import { PWAInstallModal } from '../modals/PWAInstallModal';
 
 interface NavbarProps {
   onOpenUpload: () => void;
@@ -50,13 +54,14 @@ export const Navbar: React.FC<NavbarProps> = ({
     toggleTheme 
   } = useAuth();
   
-  const { searchQuery, setSearchQuery } = useVideo();
+  const { searchQuery, setSearchQuery, isDataSaver, toggleDataSaver } = useVideo();
   const t = translations[language];
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showRolePicker, setShowRolePicker] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [showPWAModal, setShowPWAModal] = useState(false);
   const [searchInput, setSearchInput] = useState(searchQuery);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -79,7 +84,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={onToggleSidebar}
-            className="p-1.5 sm:p-2 rounded-lg text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors focus:outline-none"
+            className="hidden md:flex p-1.5 sm:p-2 rounded-lg text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors focus:outline-none"
             title="Fungua Menyu"
             aria-label="Toggle navigation menu"
           >
@@ -149,6 +154,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Search className="w-4 h-4" />
           </button>
 
+          {/* Data Saver Mode Toggle Button (Hidden on small mobile to prevent clutter) */}
+          <button
+            onClick={toggleDataSaver}
+            className={`hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ${
+              isDataSaver 
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-md shadow-amber-500/20' 
+                : 'bg-[#191E29] text-[#A7B0C0] hover:text-white border border-[#262E3E]'
+            }`}
+            title={isDataSaver ? 'Hali ya Kubana Bando Imewashwa (360p)' : 'Washa Hali ya Kubana Bando (Data Saver)'}
+          >
+            <Zap className={`w-3.5 h-3.5 ${isDataSaver ? 'text-amber-400 fill-amber-400' : ''}`} />
+            <span className="hidden md:inline text-[11px]">{isDataSaver ? 'Bando: 360p' : 'Bana Bando'}</span>
+          </button>
+
+          {/* Live Streaming Button (Hidden on small mobile to prevent clutter) */}
+          <button
+            onClick={() => onNavigate('live')}
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 text-xs font-bold transition-all shrink-0"
+            title="Tazama Mubashara (Live Streaming)"
+          >
+            <span className="w-2 h-2 rounded-full bg-[#FF3040] animate-pulse" />
+            <span className="hidden md:inline">Mubashara</span>
+          </button>
+
           {/* Quick Upload Button (Desktop/Tablet) */}
           <button
             onClick={onOpenUpload}
@@ -167,6 +196,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Crown className="w-3.5 h-3.5 text-amber-400" />
             <span>Premium</span>
+          </button>
+
+          {/* Install PWA Button */}
+          <button
+            onClick={() => setShowPWAModal(true)}
+            className="hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#10131B] border border-[#262E3E] hover:border-white/30 text-[11px] font-semibold text-white/90 hover:text-white transition-all shrink-0"
+            title="Weka App ya Tazama kwenye Simu yako"
+          >
+            <Download className="w-3.5 h-3.5 text-[#16C784]" />
+            <span>Weka App</span>
           </button>
 
           {/* Wallet Balance Badge (Mobile & Desktop) */}
@@ -279,13 +318,21 @@ export const Navbar: React.FC<NavbarProps> = ({
                 />
               </button>
             ) : (
-              <button
-                onClick={loginWithGoogle}
-                className="flex items-center gap-1 bg-[#FF3040]/10 border border-[#FF3040]/40 text-[#FF3040] hover:bg-[#FF3040] hover:text-white px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
-              >
-                <User className="w-3.5 h-3.5" />
-                <span className="text-[11px] sm:text-xs">{t.signIn}</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => onNavigate('login')}
+                  className="flex items-center gap-1 bg-[#FF3040] hover:bg-[#E02635] text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-[#FF3040]/25 active:scale-95"
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>{t.signIn}</span>
+                </button>
+                <button
+                  onClick={() => onNavigate('register')}
+                  className="hidden sm:flex items-center gap-1 bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-white px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                >
+                  <span>Jisajili</span>
+                </button>
+              </div>
             )}
 
             {/* Profile Dropdown Menu with Mobile Support */}
@@ -382,15 +429,30 @@ export const Navbar: React.FC<NavbarProps> = ({
                   )}
 
                   <button
+                    onClick={() => { setShowPWAModal(true); setShowProfileMenu(false); }}
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2 text-[#16C784] font-semibold"
+                  >
+                    <Download className="w-4 h-4 text-[#16C784]" />
+                    <span>Weka App kwenye Simu</span>
+                  </button>
+
+                  <button
                     onClick={() => { onNavigate('settings'); setShowProfileMenu(false); }}
                     className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2 text-[#A7B0C0]"
                   >
                     <span>{t.settings}</span>
                   </button>
 
-                  <div className="pt-1.5 border-t border-[#262E3E]">
+                  <div className="pt-1.5 border-t border-[#262E3E] space-y-1">
                     <button
-                      onClick={() => { logout(); setShowProfileMenu(false); }}
+                      onClick={() => { onNavigate('login'); setShowProfileMenu(false); }}
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] text-[#A7B0C0] hover:text-white flex items-center gap-2"
+                    >
+                      <User className="w-4 h-4 text-purple-400" />
+                      <span>Badili Akaunti (Switch Account)</span>
+                    </button>
+                    <button
+                      onClick={() => { logout(); onNavigate('login'); setShowProfileMenu(false); }}
                       className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-500/20 text-red-400 flex items-center gap-2"
                     >
                       <LogOut className="w-4 h-4" />
@@ -404,6 +466,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
       </div>
+
+      {/* Global PWA Install Modal */}
+      <PWAInstallModal 
+        isOpen={showPWAModal} 
+        onClose={() => setShowPWAModal(false)} 
+      />
 
       {/* Expandable Mobile Search Bar */}
       {showMobileSearch && (

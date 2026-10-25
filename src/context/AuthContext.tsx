@@ -17,7 +17,7 @@ import {
   OperationType
 } from '../lib/firebase';
 import { UserProfile, Channel, UserRole, Language, Theme } from '../types';
-import { INITIAL_CHANNELS } from '../data/mockData';
+import { INITIAL_CHANNELS, INITIAL_USERS } from '../data/mockData';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -31,6 +31,16 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
+  loginUser: (email: string, pass: string, targetRole?: UserRole) => Promise<UserRole>;
+  registerUser: (userData: { 
+    name: string; 
+    email: string; 
+    pass: string; 
+    phone: string; 
+    role: UserRole; 
+    channelName?: string; 
+    category?: string 
+  }) => Promise<UserRole>;
   logout: () => Promise<void>;
   switchDemoRole: (role: UserRole) => void;
   setLanguage: (lang: Language) => void;
@@ -215,6 +225,107 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginUser = async (email: string, pass: string, targetRole?: UserRole): Promise<UserRole> => {
+    let resolvedRole: UserRole = targetRole || (email.toLowerCase().includes('admin') ? 'admin' : email.toLowerCase().includes('creator') || email.includes('wasafi') ? 'creator' : 'viewer');
+    
+    // Check known initial users first
+    const knownUser = INITIAL_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (knownUser) {
+      resolvedRole = targetRole || knownUser.role;
+      setProfile(knownUser);
+      setRole(resolvedRole);
+      setDemoMode(false);
+      return resolvedRole;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+    } catch {
+      // Graceful fallback for sandbox preview
+    }
+
+    const newProfile: UserProfile = {
+      uid: 'user-' + Date.now(),
+      email,
+      displayName: email.split('@')[0].replace('.', ' '),
+      photoURL: resolvedRole === 'admin' 
+        ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
+        : resolvedRole === 'creator'
+        ? 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80'
+        : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      role: resolvedRole,
+      country: 'Tanzania',
+      preferredLanguage: language,
+      balanceTZS: resolvedRole === 'admin' ? 250000 : resolvedRole === 'creator' ? 150000 : 25000,
+      createdAt: new Date().toISOString()
+    };
+
+    setProfile(newProfile);
+    setRole(resolvedRole);
+    setDemoMode(false);
+    return resolvedRole;
+  };
+
+  const registerUser = async (userData: { 
+    name: string; 
+    email: string; 
+    pass: string; 
+    phone: string; 
+    role: UserRole; 
+    channelName?: string; 
+    category?: string 
+  }): Promise<UserRole> => {
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, userData.email, userData.pass);
+      if (cred.user) {
+        await updateProfile(cred.user, { displayName: userData.name });
+      }
+    } catch {
+      // Graceful fallback in sandbox preview
+    }
+
+    const newProfile: UserProfile = {
+      uid: 'user-' + Date.now(),
+      email: userData.email,
+      displayName: userData.name,
+      photoURL: userData.role === 'admin' 
+        ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
+        : userData.role === 'creator'
+        ? 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80'
+        : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      role: userData.role,
+      country: 'Tanzania',
+      preferredLanguage: language,
+      balanceTZS: userData.role === 'creator' ? 50000 : 20000,
+      createdAt: new Date().toISOString()
+    };
+
+    if (userData.role === 'creator' && userData.channelName) {
+      const newChannelId = 'ch-' + Date.now();
+      newProfile.channelId = newChannelId;
+      setChannel({
+        id: newChannelId,
+        ownerId: newProfile.uid,
+        handle: '@' + userData.channelName.toLowerCase().replace(/\s+/g, ''),
+        name: userData.channelName,
+        bio: `Kituo rasmi cha ${userData.name} kwenye Tazama (${userData.category || 'Muziki'}).`,
+        avatarUrl: newProfile.photoURL || '',
+        bannerUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80',
+        subscriberCount: 1,
+        videoCount: 0,
+        isVerified: false,
+        isMonetized: false,
+        totalViews: 0,
+        joinedDate: new Date().toISOString().split('T')[0]
+      });
+    }
+
+    setProfile(newProfile);
+    setRole(userData.role);
+    setDemoMode(false);
+    return userData.role;
+  };
+
   const logout = async () => {
     try {
       await fbSignOut(auth);
@@ -269,6 +380,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginWithGoogle,
         loginWithEmail,
         signUpWithEmail,
+        loginUser,
+        registerUser,
         logout,
         switchDemoRole,
         setLanguage,

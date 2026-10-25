@@ -12,7 +12,23 @@ import {
   UserRole,
   PremiumPlan,
   PlatformSettings,
-  AuditLogEntry
+  AuditLogEntry,
+  Playlist,
+  LiveStream,
+  OfflineDownload,
+  STKPushRequest,
+  LiveChatMessage,
+  CopyrightClaim,
+  CreatorVerificationRequest,
+  CreatorMonetizationApplication,
+  PromoCode,
+  UserAppeal,
+  SecurityLogEvent,
+  AdCampaign,
+  CommunityPost,
+  CreatorMembershipTier,
+  VideoSubtitleTrack,
+  CreatorPromotion
 } from '../types';
 import { 
   INITIAL_VIDEOS, 
@@ -22,7 +38,20 @@ import {
   INITIAL_USERS,
   INITIAL_PREMIUM_PLANS,
   INITIAL_PLATFORM_SETTINGS,
-  INITIAL_AUDIT_LOGS
+  INITIAL_AUDIT_LOGS,
+  INITIAL_PLAYLISTS,
+  INITIAL_LIVE_STREAMS,
+  INITIAL_COPYRIGHT_CLAIMS,
+  INITIAL_VERIFICATION_REQUESTS,
+  INITIAL_MONETIZATION_APPLICATIONS,
+  INITIAL_PROMO_CODES,
+  INITIAL_USER_APPEALS,
+  INITIAL_SECURITY_LOGS,
+  SAMPLE_AD_CAMPAIGNS,
+  INITIAL_COMMUNITY_POSTS,
+  INITIAL_CREATOR_MEMBERSHIP_TIERS,
+  INITIAL_VIDEO_SUBTITLES,
+  INITIAL_CREATOR_PROMOTIONS
 } from '../data/mockData';
 import { useAuth } from './AuthContext';
 
@@ -73,6 +102,85 @@ interface VideoContextType {
   updatePayoutStatus: (payoutId: string, status: 'approved' | 'rejected' | 'processed', notes?: string) => void;
   updatePlatformSettings: (settings: Partial<PlatformSettings>) => void;
   addAuditLog: (action: string, target: string, details: string, status?: 'SUCCESS' | 'WARNING' | 'REJECTED') => void;
+  // Mini Player
+  miniPlayerVideo: VideoItem | null;
+  isMiniPlayerPlaying: boolean;
+  setMiniPlayerVideo: (video: VideoItem | null) => void;
+  toggleMiniPlayerPlay: () => void;
+  closeMiniPlayer: () => void;
+  // Offline Downloads
+  offlineDownloads: OfflineDownload[];
+  downloadVideo: (video: VideoItem) => void;
+  removeDownload: (videoId: string) => void;
+  isDownloaded: (videoId: string) => boolean;
+  // Data Saver
+  isDataSaver: boolean;
+  toggleDataSaver: () => void;
+  // Playlists
+  playlists: Playlist[];
+  createPlaylist: (title: string, description?: string) => string;
+  addToPlaylist: (playlistId: string, videoId: string) => void;
+  removeFromPlaylist: (playlistId: string, videoId: string) => void;
+  deletePlaylist: (playlistId: string) => void;
+  // Live Streams
+  liveStreams: LiveStream[];
+  activeLiveStream: LiveStream | null;
+  setActiveLiveStream: (stream: LiveStream | null) => void;
+  liveChatMessages: Record<string, LiveChatMessage[]>;
+  sendLiveChatMessage: (streamId: string, text: string) => void;
+  sendLiveTip: (streamId: string, amountTZS: number, giftName: string) => Promise<boolean>;
+  // STK Push Simulator
+  stkPushRequest: STKPushRequest | null;
+  triggerSTKPush: (req: STKPushRequest) => void;
+  confirmSTKPush: (pin: string) => Promise<boolean>;
+  cancelSTKPush: () => void;
+  // Copyright Management
+  copyrightClaims: CopyrightClaim[];
+  updateCopyrightClaim: (claimId: string, status: CopyrightClaim['status'], actionTaken?: 'takedown_strike' | 'warning' | 'dismissed', notes?: string) => void;
+  // Creator Verification
+  verificationRequests: CreatorVerificationRequest[];
+  updateVerificationRequest: (reqId: string, status: 'approved' | 'rejected') => void;
+  // Creator Monetization
+  monetizationApplications: CreatorMonetizationApplication[];
+  updateMonetizationApplication: (appId: string, status: 'approved' | 'rejected', notes?: string) => void;
+  // Promo Codes & Discounts
+  promoCodes: PromoCode[];
+  addPromoCode: (promo: Omit<PromoCode, 'id' | 'usedCount'>) => void;
+  togglePromoCode: (promoId: string) => void;
+  deletePromoCode: (promoId: string) => void;
+  // User Appeals & Recovery
+  userAppeals: UserAppeal[];
+  updateUserAppeal: (appealId: string, status: 'approved' | 'rejected', notes?: string) => void;
+  // Security Logs & Events
+  securityLogs: SecurityLogEvent[];
+  addSecurityLog: (event: Omit<SecurityLogEvent, 'id' | 'timestamp'>) => void;
+  // Ad Campaigns
+  adCampaigns: AdCampaign[];
+  addAdCampaign: (campaign: Omit<AdCampaign, 'id' | 'impressions' | 'clicks' | 'spendTZS'>) => void;
+  updateAdCampaignStatus: (campaignId: string, status: AdCampaign['status']) => void;
+  // Featured Videos
+  featuredVideoIds: string[];
+  toggleFeaturedVideo: (videoId: string) => void;
+  // Creator Studio Specific Operations
+  editVideo: (videoId: string, updates: Partial<VideoItem>) => void;
+  bulkDeleteVideos: (videoIds: string[]) => void;
+  bulkUpdateVisibility: (videoIds: string[], visibility: 'public' | 'unlisted' | 'private') => void;
+  communityPosts: CommunityPost[];
+  addCommunityPost: (post: Omit<CommunityPost, 'id' | 'createdAt' | 'likesCount' | 'commentsCount'>) => void;
+  likeCommunityPost: (postId: string) => void;
+  deleteCommunityPost: (postId: string) => void;
+  membershipTiers: CreatorMembershipTier[];
+  addMembershipTier: (tier: Omit<CreatorMembershipTier, 'id' | 'memberCount'>) => void;
+  subtitles: VideoSubtitleTrack[];
+  addSubtitleTrack: (track: Omit<VideoSubtitleTrack, 'id' | 'updatedAt'>) => void;
+  deleteSubtitleTrack: (subId: string) => void;
+  creatorPromotions: CreatorPromotion[];
+  addCreatorPromotion: (promo: Omit<CreatorPromotion, 'id' | 'spentTZS' | 'impressions' | 'clicks' | 'startDate'>) => void;
+  togglePromotionStatus: (promoId: string) => void;
+  applyForVerification: (channelId: string, docType: CreatorVerificationRequest['documentType'], docNum: string) => boolean;
+  applyForMonetization: (channelId: string) => boolean;
+  submitCopyrightAppeal: (claimId: string, explanation: string) => void;
+  updateChannelInfo: (channelId: string, updates: Partial<Channel>) => void;
 }
 
 const VideoContext = createContext<VideoContextType | undefined>(undefined);
@@ -162,6 +270,494 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       notes: 'Imeidhinishwa na Msimamizi wa Fedha wa Tazama'
     }
   ]);
+
+  // Mini Player State
+  const [miniPlayerVideo, setMiniPlayerVideo] = useState<VideoItem | null>(null);
+  const [isMiniPlayerPlaying, setIsMiniPlayerPlaying] = useState<boolean>(true);
+
+  const toggleMiniPlayerPlay = () => {
+    setIsMiniPlayerPlaying(prev => !prev);
+  };
+
+  const closeMiniPlayer = () => {
+    setMiniPlayerVideo(null);
+  };
+
+  // Offline Downloads State
+  const [offlineDownloads, setOfflineDownloads] = useState<OfflineDownload[]>([
+    {
+      videoId: INITIAL_VIDEOS[0].id,
+      video: INITIAL_VIDEOS[0],
+      downloadedAt: new Date(Date.now() - 86400000).toISOString(),
+      fileSizeBytes: 42800000 // ~42.8 MB
+    }
+  ]);
+
+  const downloadVideo = (video: VideoItem) => {
+    setOfflineDownloads(prev => {
+      if (prev.some(d => d.videoId === video.id)) return prev;
+      return [
+        {
+          videoId: video.id,
+          video,
+          downloadedAt: new Date().toISOString(),
+          fileSizeBytes: Math.floor(Math.random() * 35000000) + 18000000
+        },
+        ...prev
+      ];
+    });
+  };
+
+  const removeDownload = (videoId: string) => {
+    setOfflineDownloads(prev => prev.filter(d => d.videoId !== videoId));
+  };
+
+  const isDownloaded = (videoId: string) => {
+    return offlineDownloads.some(d => d.videoId === videoId);
+  };
+
+  // Data Saver Mode State
+  const [isDataSaver, setIsDataSaver] = useState<boolean>(false);
+
+  const toggleDataSaver = () => {
+    setIsDataSaver(prev => !prev);
+  };
+
+  // Playlists State
+  const [playlists, setPlaylists] = useState<Playlist[]>(INITIAL_PLAYLISTS);
+
+  const createPlaylist = (title: string, description?: string): string => {
+    const newId = `pl-${Date.now()}`;
+    const newPlaylist: Playlist = {
+      id: newId,
+      title,
+      description,
+      coverUrl: INITIAL_VIDEOS[0].thumbnailUrl,
+      videoIds: [],
+      createdAt: new Date().toISOString()
+    };
+    setPlaylists(prev => [newPlaylist, ...prev]);
+    return newId;
+  };
+
+  const addToPlaylist = (playlistId: string, videoId: string) => {
+    setPlaylists(prev => prev.map(p => {
+      if (p.id === playlistId && !p.videoIds.includes(videoId)) {
+        return { ...p, videoIds: [...p.videoIds, videoId] };
+      }
+      return p;
+    }));
+  };
+
+  const removeFromPlaylist = (playlistId: string, videoId: string) => {
+    setPlaylists(prev => prev.map(p => {
+      if (p.id === playlistId) {
+        return { ...p, videoIds: p.videoIds.filter(id => id !== videoId) };
+      }
+      return p;
+    }));
+  };
+
+  const deletePlaylist = (playlistId: string) => {
+    setPlaylists(prev => prev.filter(p => p.id !== playlistId));
+  };
+
+  // Live Streams State
+  const [liveStreams, setLiveStreams] = useState<LiveStream[]>(INITIAL_LIVE_STREAMS);
+  const [activeLiveStream, setActiveLiveStream] = useState<LiveStream | null>(null);
+  const [liveChatMessages, setLiveChatMessages] = useState<Record<string, LiveChatMessage[]>>({
+    'live-diamond-dar': [
+      {
+        id: 'msg-1',
+        senderName: 'Bakari Mwita',
+        senderAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
+        message: 'Kituo cha Wasafi hewani kipo moto sana leo! 🔥🔥',
+        timestamp: '19:42'
+      },
+      {
+        id: 'msg-2',
+        senderName: 'Halima Khamis (Zanzibar)',
+        senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+        message: 'Wimbo unaofuata tafadhali Aje na Sukari!',
+        timestamp: '19:43'
+      },
+      {
+        id: 'msg-3',
+        senderName: 'Kelvin Mushi',
+        senderAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+        message: 'Sauti iko safi sana, Tazama mmeweza sana hii!',
+        isTip: true,
+        tipAmountTZS: 5000,
+        timestamp: '19:44'
+      }
+    ]
+  });
+
+  const sendLiveChatMessage = (streamId: string, text: string) => {
+    const newMessage: LiveChatMessage = {
+      id: `msg-${Date.now()}`,
+      senderName: profile?.displayName || 'Mtazamaji',
+      senderAvatar: profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+      message: text,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setLiveChatMessages(prev => ({
+      ...prev,
+      [streamId]: [...(prev[streamId] || []), newMessage]
+    }));
+  };
+
+  const sendLiveTip = async (streamId: string, amountTZS: number, giftName: string): Promise<boolean> => {
+    if (!profile || profile.balanceTZS < amountTZS) {
+      return false;
+    }
+    const success = deductBalance(amountTZS);
+    if (success) {
+      const tipMsg: LiveChatMessage = {
+        id: `tip-${Date.now()}`,
+        senderName: profile?.displayName || 'Shabiki Mkuu',
+        senderAvatar: profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+        message: `Ametuma zawadi ya ${giftName}! TZS ${amountTZS.toLocaleString()}`,
+        isTip: true,
+        tipAmountTZS: amountTZS,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setLiveChatMessages(prev => ({
+        ...prev,
+        [streamId]: [...(prev[streamId] || []), tipMsg]
+      }));
+      return true;
+    }
+    return false;
+  };
+
+  // STK Push Simulator State
+  const [stkPushRequest, setStkPushRequest] = useState<STKPushRequest | null>(null);
+
+  const triggerSTKPush = (req: STKPushRequest) => {
+    setStkPushRequest(req);
+  };
+
+  const confirmSTKPush = async (pin: string): Promise<boolean> => {
+    if (!pin || pin.length < 4) return false;
+    // Simulate real network STK verification delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    setStkPushRequest(null);
+    return true;
+  };
+
+  const cancelSTKPush = () => {
+    setStkPushRequest(null);
+  };
+
+  // Copyright State & Actions
+  const [copyrightClaims, setCopyrightClaims] = useState<CopyrightClaim[]>(INITIAL_COPYRIGHT_CLAIMS);
+
+  const updateCopyrightClaim = (
+    claimId: string, 
+    status: CopyrightClaim['status'], 
+    actionTaken?: 'takedown_strike' | 'warning' | 'dismissed', 
+    notes?: string
+  ) => {
+    setCopyrightClaims(prev => prev.map(c => {
+      if (c.id === claimId) {
+        return { ...c, status, actionTaken, notes: notes || c.notes };
+      }
+      return c;
+    }));
+    addAuditLog(
+      `COPYRIGHT_CLAIM_${status.toUpperCase()}`,
+      `Claim ID: ${claimId}`,
+      `Hatua: ${actionTaken || status}. Maelezo: ${notes || 'Hakuna'}`,
+      status === 'approved' ? 'SUCCESS' : 'WARNING'
+    );
+  };
+
+  // Creator Verification Requests
+  const [verificationRequests, setVerificationRequests] = useState<CreatorVerificationRequest[]>(INITIAL_VERIFICATION_REQUESTS);
+
+  const updateVerificationRequest = (reqId: string, status: 'approved' | 'rejected') => {
+    setVerificationRequests(prev => prev.map(r => {
+      if (r.id === reqId) {
+        return { ...r, status, reviewedAt: new Date().toISOString() };
+      }
+      return r;
+    }));
+    const req = verificationRequests.find(r => r.id === reqId);
+    if (req && status === 'approved') {
+      toggleChannelVerification(req.channelId);
+    }
+    addAuditLog(
+      `CREATOR_VERIFICATION_${status.toUpperCase()}`,
+      `Channel: ${req?.channelName || reqId}`,
+      `Ombi la uthibitisho wa akaunti limekuwa ${status === 'approved' ? 'limeidhinishwa' : 'limekataliwa'}.`,
+      status === 'approved' ? 'SUCCESS' : 'WARNING'
+    );
+  };
+
+  // Creator Monetization Applications
+  const [monetizationApplications, setMonetizationApplications] = useState<CreatorMonetizationApplication[]>(INITIAL_MONETIZATION_APPLICATIONS);
+
+  const updateMonetizationApplication = (appId: string, status: 'approved' | 'rejected', notes?: string) => {
+    setMonetizationApplications(prev => prev.map(a => {
+      if (a.id === appId) {
+        return { ...a, status, notes: notes || a.notes };
+      }
+      return a;
+    }));
+    const app = monetizationApplications.find(a => a.id === appId);
+    if (app && status === 'approved') {
+      setChannels(prev => prev.map(c => c.id === app.channelId ? { ...c, isMonetized: true } : c));
+    }
+    addAuditLog(
+      `MONETIZATION_${status.toUpperCase()}`,
+      `Creator: ${app?.channelName || appId}`,
+      `Ombi la monetization ${status === 'approved' ? 'limeidhinishwa' : 'limekataliwa'}. ${notes || ''}`,
+      status === 'approved' ? 'SUCCESS' : 'WARNING'
+    );
+  };
+
+  // Promo Codes State
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>(INITIAL_PROMO_CODES);
+
+  const addPromoCode = (promo: Omit<PromoCode, 'id' | 'usedCount'>) => {
+    const newPromo: PromoCode = {
+      ...promo,
+      id: `promo-${Date.now()}`,
+      usedCount: 0
+    };
+    setPromoCodes(prev => [newPromo, ...prev]);
+    addAuditLog('PROMO_CODE_CREATED', `Code: ${promo.code}`, `Punguzo la ${promo.discountPercent}% linafanya kazi hadi ${promo.validUntil}.`, 'SUCCESS');
+  };
+
+  const togglePromoCode = (promoId: string) => {
+    setPromoCodes(prev => prev.map(p => p.id === promoId ? { ...p, isActive: !p.isActive } : p));
+  };
+
+  const deletePromoCode = (promoId: string) => {
+    setPromoCodes(prev => prev.filter(p => p.id !== promoId));
+    addAuditLog('PROMO_CODE_DELETED', `Promo ID: ${promoId}`, `Msimbo wa promo umefutwa.`, 'WARNING');
+  };
+
+  // User Appeals & Recovery
+  const [userAppeals, setUserAppeals] = useState<UserAppeal[]>(INITIAL_USER_APPEALS);
+
+  const updateUserAppeal = (appealId: string, status: 'approved' | 'rejected', notes?: string) => {
+    setUserAppeals(prev => prev.map(a => {
+      if (a.id === appealId) {
+        return { ...a, status, decisionNotes: notes };
+      }
+      return a;
+    }));
+    const appeal = userAppeals.find(a => a.id === appealId);
+    if (appeal && status === 'approved') {
+      toggleBlockUser(appeal.userId);
+    }
+    addAuditLog(
+      `APPEAL_${status.toUpperCase()}`,
+      `User: ${appeal?.userName || appealId}`,
+      `Rufaa ya mtumiaji ${status === 'approved' ? 'imekubaliwa na akaunti imefunguliwa' : 'imekataliwa'}. ${notes || ''}`,
+      status === 'approved' ? 'SUCCESS' : 'WARNING'
+    );
+  };
+
+  // Security Logs & Events
+  const [securityLogs, setSecurityLogs] = useState<SecurityLogEvent[]>(INITIAL_SECURITY_LOGS);
+
+  const addSecurityLog = (event: Omit<SecurityLogEvent, 'id' | 'timestamp'>) => {
+    const newEvent: SecurityLogEvent = {
+      ...event,
+      id: `sec-${Date.now()}`,
+      timestamp: new Date().toISOString()
+    };
+    setSecurityLogs(prev => [newEvent, ...prev]);
+  };
+
+  // Ad Campaigns State
+  const [adCampaigns, setAdCampaigns] = useState<AdCampaign[]>(SAMPLE_AD_CAMPAIGNS);
+
+  const addAdCampaign = (campaign: Omit<AdCampaign, 'id' | 'impressions' | 'clicks' | 'spendTZS'>) => {
+    const newCamp: AdCampaign = {
+      ...campaign,
+      id: `ad-${Date.now()}`,
+      impressions: 0,
+      clicks: 0,
+      spendTZS: 0
+    };
+    setAdCampaigns(prev => [newCamp, ...prev]);
+    addAuditLog('AD_CAMPAIGN_CREATED', `Campaign: ${campaign.title}`, `Mtangazaji: ${campaign.advertiserName}, Bajeti: TZS ${campaign.budgetTZS.toLocaleString()}`, 'SUCCESS');
+  };
+
+  const updateAdCampaignStatus = (campaignId: string, status: AdCampaign['status']) => {
+    setAdCampaigns(prev => prev.map(c => c.id === campaignId ? { ...c, status } : c));
+    addAuditLog('AD_CAMPAIGN_STATUS', `Campaign ID: ${campaignId}`, `Hali mpya: ${status}`, 'SUCCESS');
+  };
+
+  // Featured Videos State
+  const [featuredVideoIds, setFeaturedVideoIds] = useState<string[]>(['vid-wasafi-fest', 'vid-sgr-dar']);
+
+  const toggleFeaturedVideo = (videoId: string) => {
+    setFeaturedVideoIds(prev => {
+      const exists = prev.includes(videoId);
+      const next = exists ? prev.filter(id => id !== videoId) : [...prev, videoId];
+      addAuditLog(
+        exists ? 'FEATURED_VIDEO_REMOVED' : 'FEATURED_VIDEO_ADDED',
+        `Video ID: ${videoId}`,
+        exists ? 'Video imeondolewa kwenye zilizopendekezwa ukurasa mkuu.' : 'Video imewekwa kuwa Featured kwenye ukurasa mkuu.',
+        'SUCCESS'
+      );
+      return next;
+    });
+  };
+
+  // Creator Studio Specific Operations & State
+  const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(INITIAL_COMMUNITY_POSTS);
+  const [membershipTiers, setMembershipTiers] = useState<CreatorMembershipTier[]>(INITIAL_CREATOR_MEMBERSHIP_TIERS);
+  const [subtitles, setSubtitles] = useState<VideoSubtitleTrack[]>(INITIAL_VIDEO_SUBTITLES);
+  const [creatorPromotions, setCreatorPromotions] = useState<CreatorPromotion[]>(INITIAL_CREATOR_PROMOTIONS);
+
+  const editVideo = (videoId: string, updates: Partial<VideoItem>) => {
+    setVideos(prev => prev.map(v => v.id === videoId ? { ...v, ...updates } : v));
+    setShorts(prev => prev.map(s => s.id === videoId ? { ...s, ...updates } : s));
+  };
+
+  const bulkDeleteVideos = (videoIds: string[]) => {
+    setVideos(prev => prev.filter(v => !videoIds.includes(v.id)));
+    setShorts(prev => prev.filter(s => !videoIds.includes(s.id)));
+  };
+
+  const bulkUpdateVisibility = (videoIds: string[], visibility: 'public' | 'unlisted' | 'private') => {
+    setVideos(prev => prev.map(v => videoIds.includes(v.id) ? { ...v, visibility } : v));
+    setShorts(prev => prev.map(s => videoIds.includes(s.id) ? { ...s, visibility } : s));
+  };
+
+  const addCommunityPost = (post: Omit<CommunityPost, 'id' | 'createdAt' | 'likesCount' | 'commentsCount'>) => {
+    const newPost: CommunityPost = {
+      ...post,
+      id: 'post-' + Date.now(),
+      likesCount: 0,
+      commentsCount: 0,
+      createdAt: new Date().toISOString()
+    };
+    setCommunityPosts(prev => [newPost, ...prev]);
+  };
+
+  const likeCommunityPost = (postId: string) => {
+    setCommunityPosts(prev => prev.map(p => {
+      if (p.id === postId) {
+        return {
+          ...p,
+          isLiked: !p.isLiked,
+          likesCount: p.isLiked ? Math.max(0, p.likesCount - 1) : p.likesCount + 1
+        };
+      }
+      return p;
+    }));
+  };
+
+  const deleteCommunityPost = (postId: string) => {
+    setCommunityPosts(prev => prev.filter(p => p.id !== postId));
+  };
+
+  const addMembershipTier = (tier: Omit<CreatorMembershipTier, 'id' | 'memberCount'>) => {
+    const newTier: CreatorMembershipTier = {
+      ...tier,
+      id: 'tier-' + Date.now(),
+      memberCount: 0
+    };
+    setMembershipTiers(prev => [...prev, newTier]);
+  };
+
+  const addSubtitleTrack = (track: Omit<VideoSubtitleTrack, 'id' | 'updatedAt'>) => {
+    const newTrack: VideoSubtitleTrack = {
+      ...track,
+      id: 'sub-' + Date.now(),
+      updatedAt: new Date().toISOString()
+    };
+    setSubtitles(prev => [newTrack, ...prev]);
+  };
+
+  const deleteSubtitleTrack = (subId: string) => {
+    setSubtitles(prev => prev.filter(s => s.id !== subId));
+  };
+
+  const addCreatorPromotion = (promo: Omit<CreatorPromotion, 'id' | 'spentTZS' | 'impressions' | 'clicks' | 'startDate'>) => {
+    const newPromo: CreatorPromotion = {
+      ...promo,
+      id: 'promo-' + Date.now(),
+      spentTZS: 0,
+      impressions: 0,
+      clicks: 0,
+      startDate: new Date().toISOString()
+    };
+    setCreatorPromotions(prev => [newPromo, ...prev]);
+  };
+
+  const togglePromotionStatus = (promoId: string) => {
+    setCreatorPromotions(prev => prev.map(p => {
+      if (p.id === promoId) {
+        return { ...p, status: p.status === 'active' ? 'paused' : 'active' };
+      }
+      return p;
+    }));
+  };
+
+  const applyForVerification = (channelId: string, docType: CreatorVerificationRequest['documentType'], docNum: string): boolean => {
+    const ch = channels.find(c => c.id === channelId);
+    const newReq: CreatorVerificationRequest = {
+      id: 'verif-' + Date.now(),
+      userId: profile?.uid || 'user-current',
+      userName: profile?.displayName || 'Creator User',
+      channelId,
+      channelName: ch?.name || 'My Channel',
+      subscriberCount: ch?.subscriberCount || 1200,
+      documentType: docType,
+      documentNumber: docNum,
+      status: 'pending',
+      submittedAt: new Date().toISOString()
+    };
+    setVerificationRequests(prev => [newReq, ...prev]);
+    return true;
+  };
+
+  const applyForMonetization = (channelId: string): boolean => {
+    const ch = channels.find(c => c.id === channelId);
+    const newApp: CreatorMonetizationApplication = {
+      id: 'mon-' + Date.now(),
+      userId: profile?.uid || 'user-current',
+      userName: profile?.displayName || 'Creator User',
+      channelId,
+      channelName: ch?.name || 'My Channel',
+      subscriberCount: ch?.subscriberCount || 1200,
+      watchHours: 4120,
+      totalViews: 92400,
+      strikesCount: 0,
+      paymentDetailsConfigured: true,
+      status: 'pending',
+      submittedAt: new Date().toISOString(),
+      notes: 'Ombi la kujiunga na Mpango wa Mapato ya Waumbaji (Tazama Creator Partner Program)'
+    };
+    setMonetizationApplications(prev => [newApp, ...prev]);
+    return true;
+  };
+
+  const submitCopyrightAppeal = (claimId: string, explanation: string) => {
+    setCopyrightClaims(prev => prev.map(c => {
+      if (c.id === claimId) {
+        return {
+          ...c,
+          status: 'disputed',
+          notes: `Rufaa imewasilishwa na Creator: ${explanation}`
+        };
+      }
+      return c;
+    }));
+  };
+
+  const updateChannelInfo = (channelId: string, updates: Partial<Channel>) => {
+    setChannels(prev => prev.map(c => c.id === channelId ? { ...c, ...updates } : c));
+  };
+
 
   // Track deduplicated views in current session
   const [viewedVideoIds, setViewedVideoIds] = useState<Set<string>>(new Set());
@@ -693,7 +1289,86 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         subscribeToPremiumPlan,
         updatePayoutStatus,
         updatePlatformSettings,
-        addAuditLog
+        addAuditLog,
+        // Mini Player
+        miniPlayerVideo,
+        isMiniPlayerPlaying,
+        setMiniPlayerVideo,
+        toggleMiniPlayerPlay,
+        closeMiniPlayer,
+        // Offline Downloads
+        offlineDownloads,
+        downloadVideo,
+        removeDownload,
+        isDownloaded,
+        // Data Saver
+        isDataSaver,
+        toggleDataSaver,
+        // Playlists
+        playlists,
+        createPlaylist,
+        addToPlaylist,
+        removeFromPlaylist,
+        deletePlaylist,
+        // Live Streams
+        liveStreams,
+        activeLiveStream,
+        setActiveLiveStream,
+        liveChatMessages,
+        sendLiveChatMessage,
+        sendLiveTip,
+        // STK Push Simulator
+        stkPushRequest,
+        triggerSTKPush,
+        confirmSTKPush,
+        cancelSTKPush,
+        // Copyright
+        copyrightClaims,
+        updateCopyrightClaim,
+        // Verification
+        verificationRequests,
+        updateVerificationRequest,
+        // Monetization
+        monetizationApplications,
+        updateMonetizationApplication,
+        // Promo Codes
+        promoCodes,
+        addPromoCode,
+        togglePromoCode,
+        deletePromoCode,
+        // User Appeals
+        userAppeals,
+        updateUserAppeal,
+        // Security
+        securityLogs,
+        addSecurityLog,
+        // Ad Campaigns
+        adCampaigns,
+        addAdCampaign,
+        updateAdCampaignStatus,
+        // Featured
+        featuredVideoIds,
+        toggleFeaturedVideo,
+        // Creator Studio
+        editVideo,
+        bulkDeleteVideos,
+        bulkUpdateVisibility,
+        communityPosts,
+        addCommunityPost,
+        likeCommunityPost,
+        deleteCommunityPost,
+        membershipTiers,
+        addMembershipTier,
+        subtitles,
+        addSubtitleTrack,
+        deleteSubtitleTrack,
+        creatorPromotions,
+        addCreatorPromotion,
+        togglePromotionStatus,
+        applyForVerification,
+        applyForMonetization,
+        submitCopyrightAppeal,
+        updateChannelInfo
       }}
     >
       {children}

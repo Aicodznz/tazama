@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   ThumbsUp, 
   ThumbsDown, 
@@ -12,7 +12,9 @@ import {
   ChevronUp, 
   ChevronDown,
   CheckCircle2,
-  Film
+  Film,
+  Maximize,
+  Minimize
 } from 'lucide-react';
 import { useVideo } from '../context/VideoContext';
 import { useAuth } from '../context/AuthContext';
@@ -33,8 +35,11 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({ onSelectChannel, onOpenW
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [showGiftModal, setShowGiftModal] = useState<boolean>(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef<number | null>(null);
 
   const currentShort = shorts[currentIndex] || shorts[0];
 
@@ -52,6 +57,25 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({ onSelectChannel, onOpenW
     }
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartY.current === null) return;
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaY = touchStartY.current - touchEndY;
+    // Swipe up for next
+    if (deltaY > 50) {
+      handleNext();
+    } 
+    // Swipe down for previous
+    else if (deltaY < -50) {
+      handlePrev();
+    }
+    touchStartY.current = null;
+  };
+
   const togglePlay = () => {
     if (!videoRef.current) return;
     if (isPlaying) {
@@ -63,14 +87,58 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({ onSelectChannel, onOpenW
     }
   };
 
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      try {
+        if (containerRef.current?.requestFullscreen) {
+          containerRef.current.requestFullscreen().catch(() => {});
+        } else if ((videoRef.current as any)?.webkitEnterFullscreen) {
+          (videoRef.current as any).webkitEnterFullscreen();
+        }
+      } catch (err) {}
+      setIsFullscreen(true);
+    } else {
+      try {
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch(() => {});
+        }
+      } catch (err) {}
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleNativeFullscreen = () => {
+      const isNative = !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
+      if (!isNative && isFullscreen) setIsFullscreen(false);
+    };
+    document.addEventListener('fullscreenchange', handleNativeFullscreen);
+    return () => document.removeEventListener('fullscreenchange', handleNativeFullscreen);
+  }, [isFullscreen]);
+
   const isLiked = likedVideoIds.includes(currentShort?.id);
   const isSubscribed = userSubscriptions.includes(currentShort?.channelId);
 
   return (
-    <div className="flex justify-center items-center h-[calc(100vh-120px)] max-h-[820px] pb-12 select-none">
+    <div 
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      className={`flex justify-center items-center select-none w-full transition-all ${
+        isFullscreen
+          ? 'fixed inset-0 z-[99999] w-screen h-screen bg-black'
+          : 'h-[calc(100dvh-5.5rem)] sm:h-[calc(100vh-120px)] sm:max-h-[840px] sm:pb-6'
+      }`}
+    >
       
-      {/* Central Phone Canvas for Shorts */}
-      <div className="relative w-full max-w-[420px] h-full rounded-3xl overflow-hidden bg-black shadow-2xl border border-[#262E3E] flex items-center justify-center">
+      {/* Central Phone Canvas for Shorts: Full width & height on mobile */}
+      <div 
+        ref={containerRef}
+        className={`relative w-full h-full bg-black flex items-center justify-center overflow-hidden transition-all ${
+          isFullscreen 
+            ? 'w-screen h-screen rounded-none' 
+            : 'sm:max-w-[420px] rounded-none sm:rounded-3xl shadow-2xl border-0 sm:border border-[#262E3E]'
+        }`}
+      >
         
         {/* Video Element */}
         <video
@@ -97,19 +165,29 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({ onSelectChannel, onOpenW
           </div>
         )}
 
-        {/* Top Controls: Sound & Tag */}
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+        {/* Top Controls: Tag, Mute & Fullscreen */}
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-bold text-white border border-white/10">
             <Film className="w-3.5 h-3.5 text-[#FF3040]" />
             <span>Shorts ({currentIndex + 1}/{shorts.length})</span>
           </div>
 
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className="p-2 rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-black/80 transition-colors"
-          >
-            {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsMuted(!isMuted)}
+              className="p-2 rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-black/80 transition-colors"
+              title={isMuted ? 'Washa sauti' : 'Zima sauti'}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={toggleFullscreen}
+              className="p-2 rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-black/80 transition-colors"
+              title={isFullscreen ? 'Toka Skrini Nzima' : 'Skrini Nzima (Fulu)'}
+            >
+              {isFullscreen ? <Minimize className="w-4 h-4 text-[#FF3040]" /> : <Maximize className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         {/* Bottom Overlay: Creator info & Video title */}

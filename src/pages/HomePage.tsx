@@ -13,6 +13,7 @@ import {
 import { useVideo } from '../context/VideoContext';
 import { useAuth } from '../context/AuthContext';
 import { VideoCard } from '../components/video/VideoCard';
+import { StoriesBar } from '../components/home/StoriesBar';
 import { formatDuration, formatViews, formatRelativeTime, translations } from '../lib/i18n';
 import { VideoItem } from '../types';
 
@@ -20,12 +21,14 @@ interface HomePageProps {
   onSelectVideo: (video: VideoItem) => void;
   onSelectChannel: (channelId: string) => void;
   onNavigate: (page: string) => void;
+  onOpenUpload?: () => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ 
   onSelectVideo, 
   onSelectChannel,
-  onNavigate 
+  onNavigate,
+  onOpenUpload
 }) => {
   const { 
     videos, 
@@ -52,10 +55,17 @@ export const HomePage: React.FC<HomePageProps> = ({
     : videos.filter(v => v.category === selectedCategory);
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-4 sm:space-y-6 pb-20 select-none">
       
-      {/* Category Pills Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      {/* 1. Top Creator Stories Bar (Matching Screenshot 1 & 7) */}
+      <StoriesBar
+        onSelectChannel={onSelectChannel}
+        onOpenUpload={onOpenUpload || (() => onNavigate('studio'))}
+        onNavigateShorts={() => onNavigate('shorts')}
+      />
+
+      {/* 2. Category Pills Bar */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
         {categories.map((cat) => {
           const isSelected = selectedCategory === cat;
           return (

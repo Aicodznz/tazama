@@ -66,7 +66,7 @@ export const GiftModal: React.FC<GiftModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-[#191E29] border border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6 overflow-hidden">
+      <div className="relative w-full max-w-lg bg-[#191E29] border border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6 overflow-y-auto max-h-[90vh]">
         
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-[#262E3E]">

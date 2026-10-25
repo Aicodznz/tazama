@@ -1,0 +1,23 @@
+{
+  "name": "Tazama — Jukwaa la Video Tanzania",
+  "short_name": "Tazama",
+  "description": "Tazama maudhui unayopenda, unda video zako, na pata mapato.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#10131B",
+  "theme_color": "#FF3040",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=192&auto=format&fit=crop&q=80",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=512&auto=format&fit=crop&q=80",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
