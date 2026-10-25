@@ -36,6 +36,7 @@ export interface Channel {
   isMonetized: boolean;
   isBlocked?: boolean;
   blockReason?: string;
+  copyrightStrikes?: number;
   totalViews: number;
   monthlyEarningsTZS?: number;
   joinedDate: string;
@@ -261,12 +262,16 @@ export interface CopyrightClaim {
   id: string;
   claimantName: string;
   claimantOrg: string;
+  claimantChannelId?: string;
   infringedWorkTitle: string;
   targetVideoId: string;
   targetVideoTitle: string;
   targetChannelName: string;
   matchPercentage: number;
   status: 'pending' | 'approved' | 'rejected' | 'disputed';
+  actionTaken?: 'takedown_strike' | 'divert_revenue' | 'revenue_share' | 'warning' | 'dismissed';
+  divertedRevenueTZS?: number;
+  isPayoutFrozen?: boolean;
   evidenceUrl?: string;
   createdAt: string;
   notes?: string;

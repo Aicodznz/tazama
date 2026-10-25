@@ -497,9 +497,18 @@ export const AdminPage: React.FC = () => {
   };
 
   // Copyright Claim Handler
-  const handleResolveClaim = (claimId: string, status: CopyrightClaim['status'], actionTaken?: 'takedown_strike' | 'warning' | 'dismissed') => {
+  const handleResolveClaim = (
+    claimId: string, 
+    status: CopyrightClaim['status'], 
+    actionTaken?: 'takedown_strike' | 'divert_revenue' | 'revenue_share' | 'warning' | 'dismissed'
+  ) => {
     updateCopyrightClaim(claimId, status, actionTaken, claimNotes);
-    showToast(`Dai la hakimiliki limeshughulikiwa: ${status === 'approved' ? 'LIMEKUBALIWA & HATUA ZIMECHUKULIWA' : 'LIMEKATALIWA'}`, 'success');
+    showToast(
+      actionTaken === 'divert_revenue'
+        ? 'Mapato yote (100%) ya video hii yameelekezwa kwa mmiliki halisi! Kituo kilichoiga kimefungiwa kutoa fedha.'
+        : `Dai la hakimiliki limeshughulikiwa: ${status === 'approved' ? 'LIMEKUBALIWA & HATUA ZIMECHUKULIWA' : 'LIMEKATALIWA'}`,
+      'success'
+    );
     setSelectedClaim(null);
     setClaimNotes('');
   };
@@ -2036,13 +2045,43 @@ export const AdminPage: React.FC = () => {
                   <strong>Maelezo ya Dai:</strong> {claim.notes}
                 </p>
 
+                {/* Real-time Resolution Outcome Banner */}
+                {claim.actionTaken === 'divert_revenue' && (
+                  <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-2.5">
+                    <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <div className="text-xs space-y-1">
+                      <p className="font-extrabold text-emerald-300">
+                        Mapato Yameelekezwa 100% kwa Mmiliki Halisi ({claim.claimantName})
+                      </p>
+                      <p className="text-[#A7B0C0] text-[11px]">
+                        Video imebaki mtandaoni ili isiathiri watazamaji, lakini TZS {claim.divertedRevenueTZS?.toLocaleString() || '245,000'} za matangazo na zawadi zote zimelipwa kwa mmiliki wa kazi. Salio la kituo kilichoiga limezuiwa (Frozen).
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {claim.actionTaken === 'takedown_strike' && (
+                  <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center gap-2 text-xs text-red-400 font-bold">
+                    <XCircle className="w-4 h-4 shrink-0" />
+                    <span>Video imefutwa kabisa na kituo cha "{claim.targetChannelName}" kimepewa Copyright Strike 1/3 chini ya sera za COSOTA.</span>
+                  </div>
+                )}
+
                 {claim.status === 'pending' && (
                   <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#262E3E]">
+                    <button
+                      onClick={() => handleResolveClaim(claim.id, 'approved', 'divert_revenue')}
+                      className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md flex items-center gap-1.5"
+                      title="Video inabaki hewani lakini pesa zote zinaenda kwa mwenye kazi halisi"
+                    >
+                      <DollarSign className="w-3.5 h-3.5" />
+                      <span>Elekeza Mapato 100% kwa Mwenye Kazi (Divert)</span>
+                    </button>
                     <button
                       onClick={() => handleResolveClaim(claim.id, 'approved', 'takedown_strike')}
                       className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs shadow-md"
                     >
-                      Thibitisha &amp; Ondoa Video (Strike)
+                      Futa Video &amp; Toa Strike (Takedown)
                     </button>
                     <button
                       onClick={() => handleResolveClaim(claim.id, 'approved', 'warning')}

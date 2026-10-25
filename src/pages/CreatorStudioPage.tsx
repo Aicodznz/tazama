@@ -112,6 +112,7 @@ export const CreatorStudioPage: React.FC<CreatorStudioPageProps> = ({
     payoutRequests, 
     requestPayout,
     copyrightClaims,
+    updateCopyrightClaim,
     verificationRequests,
     monetizationApplications,
     uploadNewVideo,
@@ -142,6 +143,10 @@ export const CreatorStudioPage: React.FC<CreatorStudioPageProps> = ({
   // Active navigation tab
   const [activeTab, setActiveTab] = useState<StudioTab>('dashboard');
   const [dateRange, setDateRange] = useState<string>('28d');
+  const [copyrightSubTab, setCopyrightSubTab] = useState<'shield' | 'claims' | 'registry'>('shield');
+  const [newWorkTitle, setNewWorkTitle] = useState('');
+  const [newWorkCosotaNumber, setNewWorkCosotaNumber] = useState('');
+  const [workProtectionSuccess, setWorkProtectionSuccess] = useState(false);
 
   // Channel reference: Match user's channel or default to primary creator channel
   const creatorChannel = useMemo(() => {
@@ -2132,8 +2137,44 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             
             <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#262E3E]">
               <div>
-                <h2 className="text-xl font-black text-white">Uhakiki wa Hakimiliki &amp; Sera (Copyright &amp; Policy Center)</h2>
-                <p className="text-xs text-[#A7B0C0]">Ufuatiliaji wa miongozo ya COSOTA Tanzania, madai ya video, na rufaa za kisheria.</p>
+                <h2 className="text-xl font-black text-white flex items-center gap-2">
+                  <ShieldAlert className="w-6 h-6 text-[#FF3040]" />
+                  <span>Ulinzi wa Hakimiliki &amp; Maudhui (Tazama Content Shield)</span>
+                </h2>
+                <p className="text-xs text-[#A7B0C0]">
+                  Komesha wizi wa kazi: Zuia watu kupakia kazi zako na kutengeneza faida kubwa kuliko wewe mwenyewe.
+                </p>
+              </div>
+
+              {/* Sub-tabs for Copyright Center */}
+              <div className="flex items-center gap-1.5 bg-[#10131B] p-1 rounded-2xl border border-[#262E3E] text-xs">
+                <button
+                  type="button"
+                  onClick={() => setCopyrightSubTab('shield')}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                    copyrightSubTab === 'shield' ? 'bg-[#FF3040] text-white shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                  }`}
+                >
+                  🛡️ Waliopakia Kazi Zangu ({copyrightClaims.filter(c => c.matchPercentage >= 70).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCopyrightSubTab('registry')}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                    copyrightSubTab === 'registry' ? 'bg-[#FF3040] text-white shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                  }`}
+                >
+                  📑 Sajili Kazi za Asili (COSOTA)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCopyrightSubTab('claims')}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
+                    copyrightSubTab === 'claims' ? 'bg-[#FF3040] text-white shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                  }`}
+                >
+                  ⚖️ Madai Dhidi Yangu ({copyrightClaims.length})
+                </button>
               </div>
             </div>
 
@@ -2145,7 +2186,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">Akaunti Iko Salama Kabisa (Zero Copyright Strikes)</h3>
-                  <p className="text-xs text-[#A7B0C0]">Hakuna video yoyote iliyokiuka sheria za hakimiliki au miongozo ya jamii.</p>
+                  <p className="text-xs text-[#A7B0C0]">Maudhui yako yanatambuliwa na kulindwa na mfumo wa Alama za Kidijitali wa Tazama.</p>
                 </div>
               </div>
               <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#16C784]/20 text-[#16C784]">
@@ -2153,62 +2194,250 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               </span>
             </div>
 
-            {/* Copyright Claims Table */}
-            <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-              <h3 className="text-sm font-extrabold text-white pb-3 border-b border-[#262E3E]/60">
-                Madai ya Haki Miliki (Copyright Claims)
-              </h3>
+            {/* ---------------- SUBTAB 1: CONTENT SHIELD ANTI-THEFT MATCHES ---------------- */}
+            {copyrightSubTab === 'shield' && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-[#191E29] to-transparent border border-amber-500/30">
+                  <h3 className="text-sm font-bold text-amber-300 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    <span>Jinsi Mfumo Unavyokomesha Wizi wa Maudhui Yako:</span>
+                  </h3>
+                  <p className="text-xs text-[#A7B0C0] mt-1 leading-relaxed">
+                    Mtu akipakia video, sauti, au kipande cha kazi yako: badala ya kuifuta tu na kupoteza watazamaji, unaweza kuchagua 
+                    <strong className="text-white"> "Elekeza Mapato 100% Kwangu"</strong>. Video inabaki ikitazamwa, lakini pesa zote za matangazo na zawadi zinaingia moja kwa moja kwenye wallet yako ya Tazama (M-Pesa/Tigo Pesa), mwizi anapata TZS 0!
+                  </p>
+                </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs min-w-[650px]">
-                  <thead>
-                    <tr className="border-b border-[#262E3E] text-[#A7B0C0]">
-                      <th className="pb-2.5">Video Yako</th>
-                      <th className="pb-2.5">Mmiliki wa Haki (Mdai)</th>
-                      <th className="pb-2.5">Kazi Inayodaiwa</th>
-                      <th className="pb-2.5">Ulinganifu (Match)</th>
-                      <th className="pb-2.5">Hali</th>
-                      <th className="pb-2.5 text-right">Hatua / Rufaa</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#262E3E]/50">
-                    {copyrightClaims.map((claim) => (
-                      <tr key={claim.id}>
-                        <td className="py-3 font-semibold text-white max-w-xs truncate">{claim.targetVideoTitle}</td>
-                        <td className="py-3 text-white">{claim.claimantName} ({claim.claimantOrg})</td>
-                        <td className="py-3 text-[#A7B0C0]">{claim.infringedWorkTitle}</td>
-                        <td className="py-3 font-mono text-amber-400 font-bold">{claim.matchPercentage}%</td>
-                        <td className="py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            claim.status === 'disputed' 
-                              ? 'bg-blue-500/20 text-blue-400' 
-                              : claim.status === 'approved' 
-                              ? 'bg-red-500/20 text-red-400' 
-                              : 'bg-amber-500/20 text-amber-400'
-                          }`}>
-                            {claim.status === 'disputed' ? 'Rufaa Inapitiwa' : claim.status === 'approved' ? 'Imethibitishwa' : 'Inachunguzwa'}
+                <div className="space-y-3">
+                  {copyrightClaims.map((claim) => (
+                    <div key={claim.id} className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] bg-red-600/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase">
+                            Imelinganishwa: {claim.matchPercentage}% Match
                           </span>
-                        </td>
-                        <td className="py-3 text-right">
+                          <span className="text-xs font-bold text-white">
+                            Chaneli Iliyopakia: <strong className="text-amber-400">{claim.targetChannelName}</strong>
+                          </span>
+                        </div>
+
+                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
+                          claim.actionTaken === 'divert_revenue'
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : claim.actionTaken === 'takedown_strike'
+                            ? 'bg-red-500/20 text-red-400'
+                            : 'bg-yellow-500/20 text-yellow-400'
+                        }`}>
+                          {claim.actionTaken === 'divert_revenue'
+                            ? '💰 Mapato Yanaingia Kwako (100%)'
+                            : claim.actionTaken === 'takedown_strike'
+                            ? '🚫 Video Imefutwa (Strike)'
+                            : 'Inasubiri Hatua Yako'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-[#10131B] p-3.5 rounded-2xl border border-[#262E3E]">
+                        <div>
+                          <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Kazi Yako ya Asili:</span>
+                          <p className="font-bold text-white text-sm mt-0.5">{claim.infringedWorkTitle}</p>
+                          <span className="text-[11px] text-emerald-400 font-semibold block mt-1">Usajili: COSOTA TZ Digital Fingerprint #84920</span>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Video Iliyopakiwa na Mwizi:</span>
+                          <p className="font-bold text-white text-sm mt-0.5 truncate">{claim.targetVideoTitle}</p>
+                          <div className="flex items-center gap-3 mt-1 font-mono text-[11px]">
+                            <span className="text-[#A7B0C0]">Watazamaji: <strong>142,500</strong></span>
+                            <span className="text-emerald-400 font-bold">Faida Iliyopatikana: TZS 185,000</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {claim.actionTaken === 'divert_revenue' && (
+                        <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 shrink-0" />
+                          <span>
+                            <strong>Hongera!</strong> Mapato ya video hii (TZS 185,000) yametumwa kwenye akaunti yako. Kituo cha "{claim.targetChannelName}" kimefungiwa kutoa fedha.
+                          </span>
+                        </div>
+                      )}
+
+                      {(!claim.actionTaken || claim.actionTaken === 'warning') && (
+                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#262E3E]">
                           <button
+                            type="button"
                             onClick={() => {
-                              const reason = prompt('Taja sababu za rufaa yako (Uthibitisho wa COSOTA / License):');
-                              if (reason) {
-                                submitCopyrightAppeal(claim.id, reason);
-                                alert('Rufaa yako imewasilishwa kwa kitengo cha hakimiliki.');
-                              }
+                              updateCopyrightClaim(claim.id, 'approved', 'divert_revenue', 'Mapato yameelekezwa kwa muumbaji asili.');
+                              alert(`Umefanikiwa! Kuanzia sasa, 100% ya mapato ya video "${claim.targetVideoTitle}" yataingia moja kwa moja kwenye akaunti yako ya Tazama.`);
                             }}
-                            className="px-3 py-1 rounded-xl bg-[#191E29] hover:bg-[#262E3E] text-white text-xs font-bold border border-[#262E3E]"
+                            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md flex items-center gap-1.5"
                           >
-                            Kata Rufaa (Dispute)
+                            <DollarSign className="w-4 h-4" />
+                            <span>Elekeza Mapato 100% Kwangu (Claim &amp; Monetize)</span>
                           </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              updateCopyrightClaim(claim.id, 'approved', 'takedown_strike', 'Video imefutwa kwa ombi la mwenye haki.');
+                              alert(`Video ya "${claim.targetVideoTitle}" imeondolewa mara moja na aliyepakia amepewa Copyright Strike 1.`);
+                            }}
+                            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs shadow-md flex items-center gap-1.5"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Futa Mara Moja &amp; Mpe Strike (Takedown)</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              updateCopyrightClaim(claim.id, 'approved', 'revenue_share', 'Mgawanyo wa 50/50 kwa remix.');
+                              alert('Umekubali mgawanyo wa 50% ya mapato kwa sababu ni Remix / Reaction video.');
+                            }}
+                            className="px-3.5 py-2 rounded-xl bg-[#191E29] hover:bg-[#262E3E] text-white font-semibold text-xs border border-[#262E3E]"
+                          >
+                            🤝 Gawana 50/50 (Remix / Reaction)
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* ---------------- SUBTAB 2: REGISTER ORIGINAL WORKS ---------------- */}
+            {copyrightSubTab === 'registry' && (
+              <div className="p-6 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-5">
+                <div className="pb-3 border-b border-[#262E3E]">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-amber-400" />
+                    <span>Usajili wa Alama za Kidijitali &amp; COSOTA (Digital Rights Registry)</span>
+                  </h3>
+                  <p className="text-xs text-[#A7B0C0] mt-1">
+                    Weka alama ya kidijitali (Audio/Video Fingerprint) kabla hujachapisha hadharani. Mfumo utamlinda muumbaji wa kwanza na kumzuia mtu yeyote asipate faida kwa jasho lako.
+                  </p>
+                </div>
+
+                {workProtectionSuccess && (
+                  <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                    <span>Kazi yako imesajiliwa kikamilifu kwenye Tazama Content Shield na COSOTA Database! Mtu yeyote atakayeipakia atagunduliwa mara moja.</span>
+                  </div>
+                )}
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!newWorkTitle.trim()) return;
+                    setWorkProtectionSuccess(true);
+                    setTimeout(() => setWorkProtectionSuccess(false), 5000);
+                    setNewWorkTitle('');
+                    setNewWorkCosotaNumber('');
+                  }}
+                  className="space-y-4 max-w-xl text-xs"
+                >
+                  <div>
+                    <label className="block text-[#A7B0C0] mb-1 font-bold">Jina la Kazi ya Asili (Wimbo, Filamu, Skit, au Kipindi):</label>
+                    <input
+                      type="text"
+                      required
+                      value={newWorkTitle}
+                      onChange={(e) => setNewWorkTitle(e.target.value)}
+                      placeholder="k.m. 'Bongo Flava Anthem 2026' au 'Kichekesho cha Vunjambavu Episode 4'"
+                      className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs placeholder-[#A7B0C0]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#A7B0C0] mb-1 font-bold">Namba ya Cheti cha COSOTA au Hati Miliki (Hiari):</label>
+                    <input
+                      type="text"
+                      value={newWorkCosotaNumber}
+                      onChange={(e) => setNewWorkCosotaNumber(e.target.value)}
+                      placeholder="k.m. COSOTA-TZ-2026-9041"
+                      className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs font-mono placeholder-[#A7B0C0]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[#A7B0C0] mb-1 font-bold">Sera ya Moja kwa Moja Iwapo Mtu Ataiba Kazi Hii:</label>
+                    <select className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs">
+                      <option value="monetize">💰 Elekeza Mapato Yote 100% Kwangu Moja kwa Moja (Inapendekezwa)</option>
+                      <option value="block">🚫 Zuia Video Isionekane na Mpe Onyo Kali (Block &amp; Strike)</option>
+                      <option value="share">🤝 Ruhusu kwa Masharti ya Mgawanyo wa 50% ya Mapato</option>
+                    </select>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-[#FF3040] hover:bg-[#E02635] text-white font-extrabold text-xs shadow-lg transition-transform active:scale-95"
+                  >
+                    Washa Ulinzi wa Content Shield Sasa
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* ---------------- SUBTAB 3: CLAIMS AGAINST ME ---------------- */}
+            {copyrightSubTab === 'claims' && (
+              <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
+                <h3 className="text-sm font-extrabold text-white pb-3 border-b border-[#262E3E]/60">
+                  Madai ya Hakimiliki Dhidi ya Kituo Chako
+                </h3>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs min-w-[650px]">
+                    <thead>
+                      <tr className="border-b border-[#262E3E] text-[#A7B0C0]">
+                        <th className="pb-2.5">Video Yako</th>
+                        <th className="pb-2.5">Mmiliki wa Haki (Mdai)</th>
+                        <th className="pb-2.5">Kazi Inayodaiwa</th>
+                        <th className="pb-2.5">Ulinganifu (Match)</th>
+                        <th className="pb-2.5">Hali</th>
+                        <th className="pb-2.5 text-right">Hatua / Rufaa</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#262E3E]/50">
+                      {copyrightClaims.map((claim) => (
+                        <tr key={claim.id}>
+                          <td className="py-3 font-semibold text-white max-w-xs truncate">{claim.targetVideoTitle}</td>
+                          <td className="py-3 text-white">{claim.claimantName} ({claim.claimantOrg})</td>
+                          <td className="py-3 text-[#A7B0C0]">{claim.infringedWorkTitle}</td>
+                          <td className="py-3 font-mono text-amber-400 font-bold">{claim.matchPercentage}%</td>
+                          <td className="py-3">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              claim.status === 'disputed' 
+                                ? 'bg-blue-500/20 text-blue-400' 
+                                : claim.status === 'approved' 
+                                ? 'bg-red-500/20 text-red-400' 
+                                : 'bg-amber-500/20 text-amber-400'
+                            }`}>
+                              {claim.status === 'disputed' ? 'Rufaa Inapitiwa' : claim.status === 'approved' ? 'Imethibitishwa' : 'Inachunguzwa'}
+                            </span>
+                          </td>
+                          <td className="py-3 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const reason = prompt('Taja sababu za rufaa yako (Uthibitisho wa COSOTA / License):');
+                                if (reason) {
+                                  submitCopyrightAppeal(claim.id, reason);
+                                  alert('Rufaa yako imewasilishwa kwa kitengo cha hakimiliki.');
+                                }
+                              }}
+                              className="px-3 py-1 rounded-xl bg-[#191E29] hover:bg-[#262E3E] text-white text-xs font-bold border border-[#262E3E]"
+                            >
+                              Kata Rufaa (Dispute)
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
           </div>
         )}

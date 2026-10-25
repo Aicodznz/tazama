@@ -134,9 +134,13 @@ interface VideoContextType {
   triggerSTKPush: (req: STKPushRequest) => void;
   confirmSTKPush: (pin: string) => Promise<boolean>;
   cancelSTKPush: () => void;
-  // Copyright Management
   copyrightClaims: CopyrightClaim[];
-  updateCopyrightClaim: (claimId: string, status: CopyrightClaim['status'], actionTaken?: 'takedown_strike' | 'warning' | 'dismissed', notes?: string) => void;
+  updateCopyrightClaim: (
+    claimId: string, 
+    status: CopyrightClaim['status'], 
+    actionTaken?: 'takedown_strike' | 'divert_revenue' | 'revenue_share' | 'warning' | 'dismissed', 
+    notes?: string
+  ) => void;
   // Creator Verification
   verificationRequests: CreatorVerificationRequest[];
   updateVerificationRequest: (reqId: string, status: 'approved' | 'rejected') => void;
@@ -456,19 +460,71 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateCopyrightClaim = (
     claimId: string, 
     status: CopyrightClaim['status'], 
-    actionTaken?: 'takedown_strike' | 'warning' | 'dismissed', 
+    actionTaken?: 'takedown_strike' | 'divert_revenue' | 'revenue_share' | 'warning' | 'dismissed', 
     notes?: string
   ) => {
+    const claim = copyrightClaims.find(c => c.id === claimId);
+    let divertedTZS = 0;
+
+    if (actionTaken === 'divert_revenue') {
+      // Divert 100% of pirate's video earnings directly to original creator
+      divertedTZS = 245000; // Estimated ad views & gift pool
+      if (claim?.claimantChannelId) {
+        // Credit claimant
+        const originalUser = users.find(u => u.channelId === claim.claimantChannelId);
+        if (originalUser) {
+          updateUserBalance(originalUser.uid, divertedTZS);
+        }
+      }
+      // Also automatically freeze any pending payout requests for target channel
+      setPayoutRequests(prev => prev.map(p => {
+        if (claim && p.channelName.toLowerCase().includes(claim.targetChannelName.toLowerCase())) {
+          return { ...p, status: 'rejected', notes: 'ZUIO LA HAKIMILIKI: Salio limesimamishwa kwa uchunguzi wa maudhui ya kuiga.' };
+        }
+        return p;
+      }));
+    }
+
+    if (actionTaken === 'takedown_strike' && claim?.targetVideoId) {
+      deleteVideo(claim.targetVideoId);
+      // Increment strikes on the violating channel
+      setChannels(prev => prev.map(ch => {
+        if (ch.name.toLowerCase() === claim.targetChannelName.toLowerCase()) {
+          const newStrikes = (ch.copyrightStrikes || 0) + 1;
+          const isBlocked = newStrikes >= 3;
+          return {
+            ...ch,
+            copyrightStrikes: newStrikes,
+            isBlocked: isBlocked || ch.isBlocked,
+            blockReason: isBlocked ? 'Akaunti imefungwa kabisa kwa kufikisha Copyright Strikes 3 (COSOTA Policy).' : ch.blockReason
+          };
+        }
+        return ch;
+      }));
+    }
+
     setCopyrightClaims(prev => prev.map(c => {
       if (c.id === claimId) {
-        return { ...c, status, actionTaken, notes: notes || c.notes };
+        return { 
+          ...c, 
+          status, 
+          actionTaken, 
+          divertedRevenueTZS: divertedTZS > 0 ? divertedTZS : c.divertedRevenueTZS,
+          isPayoutFrozen: actionTaken === 'divert_revenue' || actionTaken === 'takedown_strike',
+          notes: notes || c.notes 
+        };
       }
       return c;
     }));
+
     addAuditLog(
-      `COPYRIGHT_CLAIM_${status.toUpperCase()}`,
-      `Claim ID: ${claimId}`,
-      `Hatua: ${actionTaken || status}. Maelezo: ${notes || 'Hakuna'}`,
+      `COPYRIGHT_${actionTaken ? actionTaken.toUpperCase() : status.toUpperCase()}`,
+      `Dai: ${claim?.infringedWorkTitle || claimId}`,
+      actionTaken === 'divert_revenue' 
+        ? `Mapato ya video "${claim?.targetVideoTitle}" yameelekezwa 100% (TZS ${divertedTZS.toLocaleString()}) kwa mmiliki halisi (${claim?.claimantName}). Mwizi hapati chochote.` 
+        : actionTaken === 'takedown_strike'
+        ? `Video "${claim?.targetVideoTitle}" imefutwa na kituo kimepewa Copyright Strike.`
+        : `Hatua: ${actionTaken || status}. Maelezo: ${notes || 'Hakuna'}`,
       status === 'approved' ? 'SUCCESS' : 'WARNING'
     );
   };
