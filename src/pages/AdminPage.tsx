@@ -2045,16 +2045,47 @@ export const AdminPage: React.FC = () => {
                   <strong>Maelezo ya Dai:</strong> {claim.notes}
                 </p>
 
+                {/* Escrow and Proportional Freeze Breakdown */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-2xl bg-[#191E29] border border-[#262E3E] text-xs">
+                  <div>
+                    <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Hali ya Escrow (Fedha):</span>
+                    <span className="font-mono font-bold text-amber-300">
+                      TZS {(claim.disputedRevenueTZS || 185000).toLocaleString()} {claim.escrowStatus === 'released_to_claimant' ? '(Yametolewa)' : claim.escrowStatus === 'returned_to_uploader' ? '(Yamerudishwa)' : '(Yameshikiwa)'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Upeo wa Zuio (Proportional):</span>
+                    <span className="text-emerald-400 font-semibold">Video hii pekee (Salio lingine lipo huru)</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Ushahidi wa COSOTA:</span>
+                    <span className="text-blue-300 font-semibold">{claim.cosotaCertNumber ? `#${claim.cosotaCertNumber}` : 'Hakuna Cheti'} (Ushahidi wa Kusaidia)</span>
+                  </div>
+                </div>
+
+                {/* Counter Notice Alert if submitted */}
+                {claim.counterNoticeSubmitted && (
+                  <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-xs space-y-1">
+                    <p className="font-bold text-blue-300 flex items-center gap-1.5">
+                      <FileText className="w-4 h-4 text-blue-400" />
+                      <span>Uploader Amewasilisha Counter-Notice (Kipingamizi cha Kisheria):</span>
+                    </p>
+                    <p className="text-[#A7B0C0] bg-[#10131B] p-2.5 rounded-xl border border-[#262E3E]">
+                      &ldquo;{claim.counterNoticeText || claim.notes}&rdquo;
+                    </p>
+                  </div>
+                )}
+
                 {/* Real-time Resolution Outcome Banner */}
                 {claim.actionTaken === 'divert_revenue' && (
                   <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-2.5">
                     <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                     <div className="text-xs space-y-1">
                       <p className="font-extrabold text-emerald-300">
-                        Mapato Yameelekezwa 100% kwa Mmiliki Halisi ({claim.claimantName})
+                        Uamuzi: Mapato ya Escrow Yameidhinishwa kwa Mmiliki Halisi ({claim.claimantName})
                       </p>
                       <p className="text-[#A7B0C0] text-[11px]">
-                        Video imebaki mtandaoni ili isiathiri watazamaji, lakini TZS {claim.divertedRevenueTZS?.toLocaleString() || '245,000'} za matangazo na zawadi zote zimelipwa kwa mmiliki wa kazi. Salio la kituo kilichoiga limezuiwa (Frozen).
+                        Uhakiki umekamilika. TZS {claim.divertedRevenueTZS?.toLocaleString() || (claim.disputedRevenueTZS || 185000).toLocaleString()} zilizokuwa zimeshikiliwa kwenye Escrow zimeingizwa kwenye akaunti ya mwenye kazi. Salio la mtumiaji kwa video zake zingine halali halijaathiriwa.
                       </p>
                     </div>
                   </div>
@@ -2063,37 +2094,38 @@ export const AdminPage: React.FC = () => {
                 {claim.actionTaken === 'takedown_strike' && (
                   <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center gap-2 text-xs text-red-400 font-bold">
                     <XCircle className="w-4 h-4 shrink-0" />
-                    <span>Video imefutwa kabisa na kituo cha "{claim.targetChannelName}" kimepewa Copyright Strike 1/3 chini ya sera za COSOTA.</span>
+                    <span>Video imefutwa. Notisi ya Strike imetolewa na dirisha la siku 14 la rufaa linafuatiliwa chini ya miongozo ya faragha na haki.</span>
                   </div>
                 )}
 
-                {claim.status === 'pending' && (
+                {(claim.status === 'pending' || claim.status === 'under_investigation' || claim.status === 'disputed') && (
                   <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#262E3E]">
                     <button
                       onClick={() => handleResolveClaim(claim.id, 'approved', 'divert_revenue')}
                       className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md flex items-center gap-1.5"
-                      title="Video inabaki hewani lakini pesa zote zinaenda kwa mwenye kazi halisi"
+                      title="Idhinisha uhalisi wa haki na toa fedha za escrow kwenda kwa mmiliki"
                     >
                       <DollarSign className="w-3.5 h-3.5" />
-                      <span>Elekeza Mapato 100% kwa Mwenye Kazi (Divert)</span>
+                      <span>Thibitisha Haki &amp; Toa Escrow (Release to Claimant)</span>
                     </button>
                     <button
                       onClick={() => handleResolveClaim(claim.id, 'approved', 'takedown_strike')}
                       className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs shadow-md"
                     >
-                      Futa Video &amp; Toa Strike (Takedown)
+                      Futa Video &amp; Toa Ilani ya Strike
                     </button>
                     <button
                       onClick={() => handleResolveClaim(claim.id, 'approved', 'warning')}
                       className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md"
                     >
-                      Toa Onyo kwa Mtayarishaji
+                      Toa Onyo la Kisheria
                     </button>
                     <button
                       onClick={() => handleResolveClaim(claim.id, 'rejected', 'dismissed')}
                       className="px-3.5 py-1.5 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-white font-semibold text-xs"
+                      title="Kataa dai na urejeshe fedha zilizoshikiliwa kwenye escrow kwenda kwa uploader"
                     >
-                      Kataa Dai (False Claim)
+                      Kataa Dai &amp; Rejesha Escrow kwa Uploader
                     </button>
                   </div>
                 )}

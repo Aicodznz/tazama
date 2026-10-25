@@ -812,29 +812,49 @@ export const INITIAL_COPYRIGHT_CLAIMS: CopyrightClaim[] = [
     id: 'cpr-001',
     claimantName: 'Kassim Mganga (Kassim Music Ltd)',
     claimantOrg: 'COSOTA Tanzania',
+    claimantChannelId: 'ch-wasafi',
     infringedWorkTitle: 'Awena (Official Audio Copyright 2018)',
     targetVideoId: 'vid-wasafi-fest',
     targetVideoTitle: 'WASAFIBURN LIVE MWANZA: Diamond Platnumz Akiamsha Umati',
     targetChannelName: 'Wasafi Media',
     matchPercentage: 94,
-    status: 'pending',
+    status: 'under_investigation',
+    escrowStatus: 'held_in_escrow',
+    disputedRevenueTZS: 185000,
+    isPayoutFrozen: true,
+    freezeScope: 'disputed_video_only',
+    freezeReason: 'Zuio la muda la TZS 185,000 zinazotokana na video hii pekee wakati wa dirisha la counter-notice la siku 14.',
+    freezeExpiresAt: '2026-11-08T00:00:00.000Z',
+    strikeStage: 'appeal_window',
+    appealDeadline: '2026-11-08T00:00:00.000Z',
+    cosotaCertNumber: 'COSOTA-TZ-2018-09482',
+    cosotaEvidenceStatus: 'supporting_evidence',
     evidenceUrl: 'https://cosota.go.tz/registry/cert/TZ-2018-09482',
     createdAt: new Date(Date.now() - 3600000 * 14).toISOString(),
-    notes: 'Kipande cha sekunde 45 cha wimbo wa Awena kilitumika kwenye utangulizi bila kibali rasmi cha COSOTA.'
+    notes: 'Kipande cha sekunde 45 cha wimbo wa Awena kilitumika kwenye utangulizi. Mapato yameshikiliwa kwenye Escrow kwanza kabla ya uamuzi rasmi.'
   },
   {
     id: 'cpr-002',
     claimantName: 'Azam Media Legal Dept',
     claimantOrg: 'Azam TV Rights Holder',
+    claimantChannelId: 'ch-azam',
     infringedWorkTitle: 'Ligi Kuu NBC: Simba vs Yanga Mechi Nzima',
     targetVideoId: 'vid-kariakoo-derby',
     targetVideoTitle: 'SIMBA SC VS YANGA SC (2-2): Mabao Yote na Matukio ya Kusisimua',
     targetChannelName: 'Azam Sports HD',
     matchPercentage: 99,
     status: 'approved',
+    actionTaken: 'divert_revenue',
+    escrowStatus: 'released_to_claimant',
+    disputedRevenueTZS: 420000,
+    divertedRevenueTZS: 420000,
+    isPayoutFrozen: false,
+    strikeStage: 'none',
+    cosotaCertNumber: 'COSOTA-BROADCAST-2024-88',
+    cosotaEvidenceStatus: 'verified_with_authority',
     evidenceUrl: 'https://azamtv.co.tz/broadcast-rights/nbc-premier',
     createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-    notes: 'Dai limethibitishwa: Haki zote za matangazo ya Ligi Kuu Tanzania Bara zimesajiliwa.'
+    notes: 'Dai limethibitishwa baada ya dirisha la rufaa kumalizika bila kipingamizi. Mapato ya Escrow ya TZS 420,000 yameidhinishwa na kuhamishiwa kwa mmiliki halisi.'
   },
   {
     id: 'cpr-003',
@@ -846,8 +866,14 @@ export const INITIAL_COPYRIGHT_CLAIMS: CopyrightClaim[] = [
     targetChannelName: 'Swahili Techies',
     matchPercentage: 18,
     status: 'rejected',
+    actionTaken: 'dismissed',
+    escrowStatus: 'returned_to_uploader',
+    disputedRevenueTZS: 45000,
+    isPayoutFrozen: false,
+    strikeStage: 'none',
+    cosotaEvidenceStatus: 'unverified_lead',
     createdAt: new Date(Date.now() - 3600000 * 72).toISOString(),
-    notes: 'Dai limekataliwa baada ya ukaguzi: Video ni ya mafunzo ya kompyuta na hakuna ukiukaji wowote wa sauti.'
+    notes: 'Dai limekataliwa baada ya ukaguzi: Video ni ya mafunzo ya kompyuta na hakuna ukiukaji wowote. Salio lililokuwa kwenye escrow limerejeshwa kwa uploader.'
   }
 ];
 

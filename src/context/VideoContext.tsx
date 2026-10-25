@@ -141,6 +141,7 @@ interface VideoContextType {
     actionTaken?: 'takedown_strike' | 'divert_revenue' | 'revenue_share' | 'warning' | 'dismissed', 
     notes?: string
   ) => void;
+  submitCounterNotice: (claimId: string, counterText: string) => void;
   // Creator Verification
   verificationRequests: CreatorVerificationRequest[];
   updateVerificationRequest: (reqId: string, status: 'approved' | 'rejected') => void;
@@ -464,30 +465,34 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     notes?: string
   ) => {
     const claim = copyrightClaims.find(c => c.id === claimId);
-    let divertedTZS = 0;
+    const amountInEscrow = claim?.disputedRevenueTZS || 185000;
+    let newEscrowStatus: CopyrightClaim['escrowStatus'] = claim?.escrowStatus || 'held_in_escrow';
 
-    if (actionTaken === 'divert_revenue') {
-      // Divert 100% of pirate's video earnings directly to original creator
-      divertedTZS = 245000; // Estimated ad views & gift pool
+    if (actionTaken === 'divert_revenue' && status === 'approved') {
+      // 1. Claim & Divert Revenue: ONLY release from escrow after formal verification
+      newEscrowStatus = 'released_to_claimant';
       if (claim?.claimantChannelId) {
-        // Credit claimant
         const originalUser = users.find(u => u.channelId === claim.claimantChannelId);
         if (originalUser) {
-          updateUserBalance(originalUser.uid, divertedTZS);
+          updateUserBalance(originalUser.uid, amountInEscrow);
         }
       }
-      // Also automatically freeze any pending payout requests for target channel
-      setPayoutRequests(prev => prev.map(p => {
-        if (claim && p.channelName.toLowerCase().includes(claim.targetChannelName.toLowerCase())) {
-          return { ...p, status: 'rejected', notes: 'ZUIO LA HAKIMILIKI: Salio limesimamishwa kwa uchunguzi wa maudhui ya kuiga.' };
-        }
-        return p;
-      }));
+      // Deduct escrow hold from target user without blocking their entire unrelated balance
+      const targetUser = users.find(u => u.channelId === claim?.targetChannelName);
+      if (targetUser) {
+        setUsers(prev => prev.map(u => u.uid === targetUser.uid ? {
+          ...u,
+          escrowHeldTZS: Math.max(0, (u.escrowHeldTZS || 0) - amountInEscrow)
+        } : u));
+      }
+    } else if (status === 'rejected' || actionTaken === 'dismissed') {
+      // Return escrow to uploader if claim was dismissed or false
+      newEscrowStatus = 'returned_to_uploader';
     }
 
     if (actionTaken === 'takedown_strike' && claim?.targetVideoId) {
       deleteVideo(claim.targetVideoId);
-      // Increment strikes on the violating channel
+      // Increment strikes with due-process review window
       setChannels(prev => prev.map(ch => {
         if (ch.name.toLowerCase() === claim.targetChannelName.toLowerCase()) {
           const newStrikes = (ch.copyrightStrikes || 0) + 1;
@@ -496,7 +501,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             ...ch,
             copyrightStrikes: newStrikes,
             isBlocked: isBlocked || ch.isBlocked,
-            blockReason: isBlocked ? 'Akaunti imefungwa kabisa kwa kufikisha Copyright Strikes 3 (COSOTA Policy).' : ch.blockReason
+            blockReason: isBlocked ? 'Akaunti imesimamishwa kwa kufikisha Copyright Strikes 3. Haki ya kukata rufaa (Appeal) inapatikana.' : ch.blockReason
           };
         }
         return ch;
@@ -509,8 +514,13 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           ...c, 
           status, 
           actionTaken, 
-          divertedRevenueTZS: divertedTZS > 0 ? divertedTZS : c.divertedRevenueTZS,
-          isPayoutFrozen: actionTaken === 'divert_revenue' || actionTaken === 'takedown_strike',
+          escrowStatus: newEscrowStatus,
+          divertedRevenueTZS: actionTaken === 'divert_revenue' && status === 'approved' ? amountInEscrow : c.divertedRevenueTZS,
+          isPayoutFrozen: status === 'under_investigation' || status === 'pending',
+          freezeScope: 'disputed_video_only',
+          freezeReason: status === 'under_investigation' 
+            ? `Zuio la muda la TZS ${amountInEscrow.toLocaleString()} kwa video ya "${c.targetVideoTitle}". Fedha zingine ziko huru.` 
+            : undefined,
           notes: notes || c.notes 
         };
       }
@@ -520,12 +530,34 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     addAuditLog(
       `COPYRIGHT_${actionTaken ? actionTaken.toUpperCase() : status.toUpperCase()}`,
       `Dai: ${claim?.infringedWorkTitle || claimId}`,
-      actionTaken === 'divert_revenue' 
-        ? `Mapato ya video "${claim?.targetVideoTitle}" yameelekezwa 100% (TZS ${divertedTZS.toLocaleString()}) kwa mmiliki halisi (${claim?.claimantName}). Mwizi hapati chochote.` 
+      actionTaken === 'divert_revenue' && status === 'approved'
+        ? `Uchunguzi umekamilika: Mapato ya Escrow (TZS ${amountInEscrow.toLocaleString()}) yametolewa kwa mmiliki halisi (${claim?.claimantName}).` 
         : actionTaken === 'takedown_strike'
-        ? `Video "${claim?.targetVideoTitle}" imefutwa na kituo kimepewa Copyright Strike.`
-        : `Hatua: ${actionTaken || status}. Maelezo: ${notes || 'Hakuna'}`,
+        ? `Video "${claim?.targetVideoTitle}" imefutwa. Notisi ya Strike imetolewa ikiwa na dirisha la siku 14 la rufaa.`
+        : `Hatua ya hakimiliki: ${actionTaken || status}. Maelezo: ${notes || 'Hakuna'}`,
       status === 'approved' ? 'SUCCESS' : 'WARNING'
+    );
+  };
+
+  const submitCounterNotice = (claimId: string, counterText: string) => {
+    setCopyrightClaims(prev => prev.map(c => {
+      if (c.id === claimId) {
+        return {
+          ...c,
+          status: 'disputed',
+          counterNoticeSubmitted: true,
+          counterNoticeText: counterText,
+          notes: `Counter-Notice imewasilishwa: "${counterText}". Inasubiri ukaguzi wa jopo la kisheria.`
+        };
+      }
+      return c;
+    }));
+
+    addAuditLog(
+      'COPYRIGHT_COUNTER_NOTICE',
+      `Claim ID: ${claimId}`,
+      `Uploader amewasilisha rufaa rasmi (Counter-Notice) ya kisheria. Zuio la video linabaki kwenye Escrow hadi uamuzi ufanyike.`,
+      'SUCCESS'
     );
   };
 
@@ -1381,6 +1413,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Copyright
         copyrightClaims,
         updateCopyrightClaim,
+        submitCounterNotice,
         // Verification
         verificationRequests,
         updateVerificationRequest,

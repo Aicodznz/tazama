@@ -13,6 +13,7 @@ export interface UserProfile {
   preferredLanguage: Language;
   channelId?: string;
   balanceTZS: number;
+  escrowHeldTZS?: number;
   isBlocked?: boolean;
   blockReason?: string;
   premiumPlanId?: string;
@@ -268,13 +269,34 @@ export interface CopyrightClaim {
   targetVideoTitle: string;
   targetChannelName: string;
   matchPercentage: number;
-  status: 'pending' | 'approved' | 'rejected' | 'disputed';
+  status: 'pending' | 'under_investigation' | 'approved' | 'rejected' | 'disputed';
   actionTaken?: 'takedown_strike' | 'divert_revenue' | 'revenue_share' | 'warning' | 'dismissed';
+  
+  // 1. Claim & Divert Revenue with Escrow
+  escrowStatus?: 'held_in_escrow' | 'released_to_claimant' | 'returned_to_uploader' | 'none';
+  disputedRevenueTZS?: number;
   divertedRevenueTZS?: number;
+
+  // 2. Proportional Payout Freeze
   isPayoutFrozen?: boolean;
+  freezeScope?: 'disputed_video_only' | 'full_account';
+  freezeReason?: string;
+  freezeExpiresAt?: string;
+
+  // 3. Due Process & Strike Appeals
+  strikeStage?: 'none' | 'proposed' | 'appeal_window' | 'confirmed' | 'revoked';
+  appealDeadline?: string;
+  counterNoticeSubmitted?: boolean;
+  counterNoticeText?: string;
+
+  // 4. COSOTA Supporting Evidence
+  cosotaCertNumber?: string;
+  cosotaEvidenceStatus?: 'unverified_lead' | 'supporting_evidence' | 'verified_with_authority' | 'rejected';
+
   evidenceUrl?: string;
   createdAt: string;
   notes?: string;
+  investigationNotes?: string;
 }
 
 export interface CreatorVerificationRequest {
