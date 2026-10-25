@@ -218,8 +218,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
-        {/* Admin Section (If admin role active) */}
-        {role === 'admin' && (
+        {/* Admin Section (Only for authenticated admin/moderators) */}
+        {profile && (role === 'admin' || role === 'moderator' || role === 'finance') && (
           <div className="pt-3 pb-3 border-b border-[#262E3E] space-y-1">
             {isOpen && (
               <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-amber-400">
@@ -241,13 +241,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {/* Account & Panels Section */}
-        <div className="pt-3 pb-3 border-b border-[#262E3E] space-y-1">
-          {isOpen && (
-            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#A7B0C0]">
-              Akaunti &amp; Kuingia
-            </p>
-          )}
+        {/* Account & Login Section (Only shown when not logged in) */}
+        {!profile && (
+          <div className="pt-3 pb-3 border-b border-[#262E3E] space-y-1">
+            {isOpen && (
+              <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#A7B0C0]">
+                Akaunti &amp; Kuingia
+              </p>
+            )}
           <button
             onClick={() => handleItemClick('login')}
             className={`w-full flex items-center gap-3.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
@@ -273,6 +274,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isOpen && <span className="truncate">Kujisajili (Register)</span>}
           </button>
         </div>
+      )}
 
         {/* Footer links in sidebar */}
         {isOpen && (
@@ -427,8 +429,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               })}
             </div>
 
-            {/* Admin Section (If admin) */}
-            {role === 'admin' && (
+            {/* Admin Section (If admin/moderator) */}
+            {profile && (role === 'admin' || role === 'moderator' || role === 'finance') && (
               <div className="space-y-1 pb-3 border-b border-[#262E3E]">
                 <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-amber-400">
                   Usimamizi wa Mfumo

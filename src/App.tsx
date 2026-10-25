@@ -26,7 +26,7 @@ import { VideoItem, VideoCategory, UserRole } from './types';
 import { Sparkles, Shield, Info, CheckCircle2 } from 'lucide-react';
 
 const AppContent: React.FC = () => {
-  const { role, switchDemoRole } = useAuth();
+  const { role, profile, switchDemoRole } = useAuth();
   const { setSelectedCategory, videos } = useVideo();
 
   const [activePage, setActivePage] = useState<string>('home');
@@ -39,7 +39,6 @@ const AppContent: React.FC = () => {
   const [isWalletOpen, setIsWalletOpen] = useState<boolean>(false);
   const [isPremiumOpen, setIsPremiumOpen] = useState<boolean>(false);
   const [premiumTarget, setPremiumTarget] = useState<'viewer' | 'creator'>('viewer');
-  const [showDemoBanner, setShowDemoBanner] = useState<boolean>(true);
 
   const handleSelectVideo = (video: VideoItem) => {
     setSelectedVideo(video);
@@ -73,6 +72,22 @@ const AppContent: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleOpenUpload = () => {
+    if (!profile) {
+      setActivePage('login');
+      return;
+    }
+    setIsUploadOpen(true);
+  };
+
+  const handleOpenWallet = () => {
+    if (!profile) {
+      setActivePage('login');
+      return;
+    }
+    setIsWalletOpen(true);
+  };
+
   const handleAuthSuccess = (targetRole: UserRole) => {
     switchDemoRole(targetRole);
     if (targetRole === 'admin' || targetRole === 'moderator' || targetRole === 'finance') {
@@ -88,76 +103,11 @@ const AppContent: React.FC = () => {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#10131B] text-white flex flex-col font-sans selection:bg-[#FF3040] selection:text-white">
       
-      {/* Top Demo Notice & Role Selector Banner (Hidden in watch & shorts for full immersion) */}
-      {showDemoBanner && activePage !== 'watch' && activePage !== 'shorts' && (
-        <div className="bg-gradient-to-r from-[#191E29] via-[#232A39] to-[#191E29] border-b border-[#262E3E] px-4 py-2 text-xs flex flex-wrap items-center justify-between gap-3 text-[#A7B0C0] z-50">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#16C784] animate-ping" />
-            <span className="text-white font-semibold">Tazama Platform Live</span>
-            <span className="hidden md:inline">• Panel &amp; Auth Hub</span>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] hidden sm:inline">Panel za Moja kwa Moja:</span>
-            <button
-              onClick={() => { switchDemoRole('viewer'); setActivePage('home'); }}
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${role === 'viewer' ? 'bg-[#FF3040] text-white' : 'bg-[#10131B] text-[#A7B0C0] hover:text-white'}`}
-            >
-              Mtazamaji (Viewer)
-            </button>
-            <button
-              onClick={() => { switchDemoRole('creator'); setActivePage('studio'); }}
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${role === 'creator' ? 'bg-[#16C784] text-black font-extrabold' : 'bg-[#10131B] text-[#A7B0C0] hover:text-white'}`}
-            >
-              Muundaji (Creator)
-            </button>
-            <button
-              onClick={() => { switchDemoRole('admin'); setActivePage('admin'); }}
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${role === 'admin' ? 'bg-amber-400 text-black font-extrabold' : 'bg-[#10131B] text-[#A7B0C0] hover:text-white'}`}
-            >
-              Mkuu (Admin)
-            </button>
-
-            <div className="w-[1px] h-3 bg-[#262E3E] mx-1" />
-
-            <button
-              onClick={() => setActivePage('login')}
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
-                activePage === 'login' 
-                  ? 'bg-purple-500 text-white shadow-md' 
-                  : 'bg-[#191E29] hover:bg-[#232A39] text-purple-300 border border-purple-500/30'
-              }`}
-            >
-              Kuingia (Login)
-            </button>
-
-            <button
-              onClick={() => setActivePage('register')}
-              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition-all ${
-                activePage === 'register' 
-                  ? 'bg-blue-500 text-white shadow-md' 
-                  : 'bg-[#191E29] hover:bg-[#232A39] text-blue-300 border border-blue-500/30'
-              }`}
-            >
-              Kujisajili (Register)
-            </button>
-
-            <button
-              onClick={() => setShowDemoBanner(false)}
-              className="text-[#A7B0C0] hover:text-white ml-1 text-xs"
-              title="Funga taarifa hii"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Main App Navbar (Hidden on mobile watch page for focused immersion) */}
       <div className={activePage === 'watch' ? 'hidden sm:block' : 'block'}>
         <Navbar
-          onOpenUpload={() => setIsUploadOpen(true)}
-          onOpenWallet={() => setIsWalletOpen(true)}
+          onOpenUpload={handleOpenUpload}
+          onOpenWallet={handleOpenWallet}
           onOpenPremium={(target) => {
             setPremiumTarget(target || 'viewer');
             setIsPremiumOpen(true);
@@ -178,7 +128,7 @@ const AppContent: React.FC = () => {
             setIsSidebarOpen(false);
           }}
           onOpenUpload={() => {
-            setIsUploadOpen(true);
+            handleOpenUpload();
             setIsSidebarOpen(false);
           }}
           onOpenPremium={(target) => {
@@ -203,7 +153,7 @@ const AppContent: React.FC = () => {
               onSelectVideo={handleSelectVideo}
               onSelectChannel={handleSelectChannel}
               onNavigate={handleNavigate}
-              onOpenUpload={() => setIsUploadOpen(true)}
+              onOpenUpload={handleOpenUpload}
             />
           )}
 
@@ -227,7 +177,7 @@ const AppContent: React.FC = () => {
               video={selectedVideo}
               onSelectVideo={handleSelectVideo}
               onSelectChannel={handleSelectChannel}
-              onOpenWallet={() => setIsWalletOpen(true)}
+              onOpenWallet={handleOpenWallet}
               onMinimize={() => {
                 setActivePage('home');
               }}
@@ -237,25 +187,55 @@ const AppContent: React.FC = () => {
           {activePage === 'shorts' && (
             <ShortsPage
               onSelectChannel={handleSelectChannel}
-              onOpenWallet={() => setIsWalletOpen(true)}
+              onOpenWallet={handleOpenWallet}
             />
           )}
 
           {activePage === 'studio' && (
-            <CreatorStudioPage
-              onOpenUpload={() => setIsUploadOpen(true)}
-              onOpenPremium={() => {
-                setPremiumTarget('creator');
-                setIsPremiumOpen(true);
-              }}
-            />
+            profile && (role === 'creator' || role === 'admin') ? (
+              <CreatorStudioPage
+                onOpenUpload={handleOpenUpload}
+                onOpenPremium={() => {
+                  setPremiumTarget('creator');
+                  setIsPremiumOpen(true);
+                }}
+              />
+            ) : (
+              <div className="min-h-[60vh] flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-[#191E29] border border-[#262E3E] rounded-3xl p-8 text-center space-y-5 shadow-2xl">
+                  <div className="w-16 h-16 rounded-2xl bg-[#16C784]/15 border border-[#16C784]/30 flex items-center justify-center mx-auto text-[#16C784]">
+                    <Sparkles className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-black text-white">Studio ya Waumbaji wa Tazama</h2>
+                    <p className="text-xs text-[#A7B0C0] leading-relaxed">
+                      Kupakia video, kusimamia chaneli yako, na kuangalia mapato ya kazi zako, tafadhali ingia au jisajili kama Muundaji wa Maudhui.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+                    <button
+                      onClick={() => setActivePage('login')}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#16C784] hover:bg-[#13ab71] text-black text-xs font-bold transition-all shadow-lg shadow-[#16C784]/25"
+                    >
+                      Ingia Kwenye Akaunti
+                    </button>
+                    <button
+                      onClick={() => setActivePage('register')}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-white text-xs font-semibold border border-[#262E3E] transition-all"
+                    >
+                      Jisajili kama Muundaji
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
           )}
 
           {activePage === 'channel' && (
             <ChannelPage
               channelId={selectedChannelId}
               onSelectVideo={handleSelectVideo}
-              onOpenUpload={() => setIsUploadOpen(true)}
+              onOpenUpload={handleOpenUpload}
               onNavigateHome={() => handleNavigate('home')}
             />
           )}
@@ -264,7 +244,7 @@ const AppContent: React.FC = () => {
             <LibraryPage
               onSelectVideo={handleSelectVideo}
               onSelectChannel={handleSelectChannel}
-              onOpenWallet={() => setIsWalletOpen(true)}
+              onOpenWallet={handleOpenWallet}
               onOpenPremium={() => {
                 setPremiumTarget('viewer');
                 setIsPremiumOpen(true);
@@ -273,7 +253,37 @@ const AppContent: React.FC = () => {
           )}
 
           {activePage === 'admin' && (
-            <AdminPage />
+            profile && (role === 'admin' || role === 'moderator' || role === 'finance') ? (
+              <AdminPage />
+            ) : (
+              <div className="min-h-[60vh] flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-[#191E29] border border-[#262E3E] rounded-3xl p-8 text-center space-y-5 shadow-2xl">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+                    <Shield className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-black text-white">Jopo la Mfumo Limelindwa</h2>
+                    <p className="text-xs text-[#A7B0C0] leading-relaxed">
+                      Jopo hili la Usimamizi (Admin Hub) linahitaji uingie na akaunti iliyothibitishwa ya Msimamizi Mkuu wa Tazama. Wageni na watazamaji wa kawaida hawaruhusiwi kufikia eneo hili.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+                    <button
+                      onClick={() => setActivePage('login')}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#FF3040] hover:bg-[#E02635] text-white text-xs font-bold transition-all shadow-lg shadow-[#FF3040]/25"
+                    >
+                      Ingia Kama Msimamizi
+                    </button>
+                    <button
+                      onClick={() => setActivePage('home')}
+                      className="py-2.5 px-4 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-[#A7B0C0] hover:text-white text-xs font-semibold border border-[#262E3E] transition-all"
+                    >
+                      Rudi Nyumbani
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
           )}
 
           {activePage === 'policies' && (
@@ -287,7 +297,7 @@ const AppContent: React.FC = () => {
           {activePage === 'live' && (
             <LivePage
               onSelectChannel={handleSelectChannel}
-              onOpenWallet={() => setIsWalletOpen(true)}
+              onOpenWallet={handleOpenWallet}
             />
           )}
 

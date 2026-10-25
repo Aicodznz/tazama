@@ -25,9 +25,9 @@ interface LoginPageProps {
 export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess }) => {
   const { loginUser, loginWithGoogle } = useAuth();
 
-  const [email, setEmail] = useState<string>('diamond@wasafi.co.tz');
-  const [password, setPassword] = useState<string>('tazama2026');
-  const [selectedRole, setSelectedRole] = useState<UserRole>('creator');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [selectedRole, setSelectedRole] = useState<UserRole>('viewer');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);

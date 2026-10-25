@@ -56,10 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [channel, setChannel] = useState<Channel | null>(null);
-  const [role, setRole] = useState<UserRole>('creator'); // Default to creator for rich evaluation
+  const [role, setRole] = useState<UserRole>('viewer');
   const [language, setLanguageState] = useState<Language>('sw');
   const [theme, setTheme] = useState<Theme>('dark');
-  const [demoMode, setDemoMode] = useState<boolean>(true);
+  const [demoMode, setDemoMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Initialize demo user profile
@@ -145,11 +145,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         }
       } else {
-        // Fallback to interactive demo profile
+        // Unauthenticated visitor: guest state without privileged access
         setUser(null);
-        setProfile(demoProfile);
-        setChannel(INITIAL_CHANNELS[0]);
-        setRole('admin'); // Enable admin & creator evaluation out of the box
+        setProfile(null);
+        setChannel(null);
+        setRole('viewer');
+        setDemoMode(false);
       }
       setIsLoading(false);
     });
@@ -338,6 +339,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setUser(null);
     setProfile(null);
+    setChannel(null);
+    setRole('viewer');
+    setDemoMode(false);
   };
 
   const switchDemoRole = (newRole: UserRole) => {

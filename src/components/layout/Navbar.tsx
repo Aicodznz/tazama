@@ -59,7 +59,6 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showRolePicker, setShowRolePicker] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [showPWAModal, setShowPWAModal] = useState(false);
   const [searchInput, setSearchInput] = useState(searchQuery);
@@ -69,11 +68,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     setSearchQuery(searchInput);
     onNavigate('search');
     setShowMobileSearch(false);
-  };
-
-  const handleSelectRole = (newRole: UserRole) => {
-    switchDemoRole(newRole);
-    setShowRolePicker(false);
   };
 
   return (
@@ -208,51 +202,35 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>Weka App</span>
           </button>
 
-          {/* Wallet Balance Badge (Mobile & Desktop) */}
-          <button
-            onClick={onOpenWallet}
-            className="flex items-center gap-1.5 bg-[#191E29] border border-[#262E3E] hover:border-[#16C784] px-2 sm:px-2.5 py-1.5 rounded-full text-xs font-semibold text-[#16C784] transition-all shrink-0"
-            title="Mfuko wa Pesa (Mobile Money)"
-          >
-            <Wallet className="w-3.5 h-3.5 text-[#16C784]" />
-            <span className="font-mono text-[11px] sm:text-xs">
-              {profile?.balanceTZS 
-                ? (profile.balanceTZS >= 1000000 
-                    ? `${(profile.balanceTZS/1000000).toFixed(1)}M` 
-                    : `${Math.round(profile.balanceTZS/1000)}k`) 
-                : '0'}
-            </span>
-          </button>
-
-          {/* Role Switcher (Desktop) */}
-          <div className="relative hidden md:block">
+          {/* Wallet Balance Badge (Mobile & Desktop - Only visible when logged in) */}
+          {profile && (
             <button
-              onClick={() => setShowRolePicker(!showRolePicker)}
-              className="flex items-center gap-1 bg-[#232A39] hover:bg-[#2E3748] border border-[#262E3E] px-2 py-1.5 rounded-full text-[11px] font-medium text-white transition-colors"
-              title="Badilisha Nafasi (Role)"
+              onClick={onOpenWallet}
+              className="flex items-center gap-1.5 bg-[#191E29] border border-[#262E3E] hover:border-[#16C784] px-2 sm:px-2.5 py-1.5 rounded-full text-xs font-semibold text-[#16C784] transition-all shrink-0"
+              title="Mfuko wa Pesa (Mobile Money)"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-[#FF3040]" />
-              <span className="capitalize">{role}</span>
+              <Wallet className="w-3.5 h-3.5 text-[#16C784]" />
+              <span className="font-mono text-[11px] sm:text-xs">
+                {profile.balanceTZS 
+                  ? (profile.balanceTZS >= 1000000 
+                      ? `${(profile.balanceTZS/1000000).toFixed(1)}M` 
+                      : `${Math.round(profile.balanceTZS/1000)}k`) 
+                  : '0'}
+              </span>
             </button>
+          )}
 
-            {showRolePicker && (
-              <div className="absolute right-0 mt-2 w-48 bg-[#191E29] border border-[#262E3E] rounded-xl shadow-2xl py-2 z-50">
-                <div className="px-3 py-1.5 text-[11px] font-bold text-[#A7B0C0] uppercase tracking-wider border-b border-[#262E3E]">
-                  Nafasi za Mtumiaji
-                </div>
-                {(['viewer', 'creator', 'moderator', 'admin'] as UserRole[]).map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => handleSelectRole(r)}
-                    className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-[#232A39] transition-colors ${role === r ? 'text-[#FF3040] font-bold' : 'text-white'}`}
-                  >
-                    <span className="capitalize">{r === 'viewer' ? 'Mtazamaji (Viewer)' : r === 'creator' ? 'Muundaji (Creator)' : r === 'moderator' ? 'Msimamizi (Moderator)' : 'Mkuu (Admin)'}</span>
-                    {role === r && <CheckCircle className="w-3.5 h-3.5 text-[#FF3040]" />}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Admin Badge (Only for verified admin/moderators) */}
+          {profile && (role === 'admin' || role === 'moderator' || role === 'finance') && (
+            <button
+              onClick={() => onNavigate('admin')}
+              className="hidden md:flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0"
+              title="Jopo la Msimamizi Mkuu (Admin Hub)"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <span>Admin</span>
+            </button>
+          )}
 
           {/* Language Switcher (Desktop) */}
           <button
@@ -273,36 +251,34 @@ export const Navbar: React.FC<NavbarProps> = ({
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
           </button>
 
-          {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-1.5 sm:p-2 rounded-full text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors"
-              title="Taarifa (Notifications)"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 w-2 h-2 rounded-full bg-[#FF3040]" />
-            </button>
+          {/* Notifications (Only for authenticated users) */}
+          {profile && (
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-1.5 sm:p-2 rounded-full text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors"
+                title="Taarifa (Notifications)"
+              >
+                <Bell className="w-4 h-4" />
+                <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 w-2 h-2 rounded-full bg-[#FF3040]" />
+              </button>
 
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-[#191E29] border border-[#262E3E] rounded-2xl shadow-2xl p-3 z-50">
-                <div className="flex items-center justify-between pb-2 border-b border-[#262E3E]">
-                  <h4 className="text-sm font-bold text-white">Taarifa Mpya</h4>
-                  <span className="text-[10px] text-[#16C784] font-semibold">Zote zimesomwa</span>
-                </div>
-                <div className="divide-y divide-[#262E3E]/60 text-xs">
-                  <div className="py-2.5">
-                    <p className="font-semibold text-white">Umejiunga rasmi na Tazama!</p>
-                    <p className="text-[11px] text-[#A7B0C0]">Karibu kwenye jukwaa la video la Tanzania. Anza kutazama na kupata mapato.</p>
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-[#191E29] border border-[#262E3E] rounded-2xl shadow-2xl p-3 z-50">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#262E3E]">
+                    <h4 className="text-sm font-bold text-white">Taarifa Mpya</h4>
+                    <span className="text-[10px] text-[#16C784] font-semibold">Zote zimesomwa</span>
                   </div>
-                  <div className="py-2.5">
-                    <p className="font-semibold text-white">Wasafi Media wamepakia video mpya</p>
-                    <p className="text-[11px] text-[#A7B0C0]">WASAFIBURN LIVE MWANZA sasa ipo hewani.</p>
+                  <div className="divide-y divide-[#262E3E]/60 text-xs">
+                    <div className="py-2.5">
+                      <p className="font-semibold text-white">Karibu Tazama!</p>
+                      <p className="text-[11px] text-[#A7B0C0]">Akaunti yako ipo tayari. Anza kutazama na kushiriki maudhui.</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* User Profile / Auth */}
           <div className="relative">
@@ -318,53 +294,34 @@ export const Navbar: React.FC<NavbarProps> = ({
                 />
               </button>
             ) : (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <button
                   onClick={() => onNavigate('login')}
-                  className="flex items-center gap-1 bg-[#FF3040] hover:bg-[#E02635] text-white px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-[#FF3040]/25 active:scale-95"
+                  className="flex items-center gap-1.5 bg-[#FF3040] hover:bg-[#E02635] text-white px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-[#FF3040]/25 active:scale-95"
                 >
                   <User className="w-3.5 h-3.5" />
-                  <span>{t.signIn}</span>
+                  <span>Kuingia</span>
                 </button>
                 <button
                   onClick={() => onNavigate('register')}
                   className="hidden sm:flex items-center gap-1 bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-white px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
                 >
-                  <span>Jisajili</span>
+                  <span>Kujisajili</span>
                 </button>
               </div>
             )}
 
             {/* Profile Dropdown Menu with Mobile Support */}
-            {showProfileMenu && (
+            {showProfileMenu && profile && (
               <div className="absolute right-0 mt-2 w-72 max-w-[90vw] bg-[#191E29] border border-[#262E3E] rounded-2xl shadow-2xl p-2.5 z-50">
                 <div className="px-3 py-2 border-b border-[#262E3E] mb-2">
-                  <p className="text-sm font-bold text-white truncate">{profile?.displayName}</p>
-                  <p className="text-xs text-[#A7B0C0] truncate font-mono">{profile?.email}</p>
+                  <p className="text-sm font-bold text-white truncate">{profile.displayName}</p>
+                  <p className="text-xs text-[#A7B0C0] truncate font-mono">{profile.email}</p>
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-[10px] bg-[#232A39] text-[#16C784] font-semibold px-2 py-0.5 rounded-full uppercase">
                       {role}
                     </span>
-                    <span className="text-xs font-bold font-mono text-[#16C784]">{formatTZS(profile?.balanceTZS || 0)}</span>
-                  </div>
-                </div>
-
-                {/* Mobile Role Switcher */}
-                <div className="md:hidden pb-2 mb-2 border-b border-[#262E3E] space-y-1">
-                  <p className="px-2 text-[10px] font-bold uppercase text-[#A7B0C0]">Nafasi ya Akaunti (Role)</p>
-                  <div className="grid grid-cols-2 gap-1 px-1">
-                    {(['viewer', 'creator', 'moderator', 'admin'] as UserRole[]).map((r) => (
-                      <button
-                        key={r}
-                        onClick={() => handleSelectRole(r)}
-                        className={`text-left px-2 py-1.5 rounded-lg text-[11px] font-semibold transition-colors flex items-center justify-between ${
-                          role === r ? 'bg-[#FF3040] text-white' : 'bg-[#10131B] text-[#A7B0C0] hover:text-white'
-                        }`}
-                      >
-                        <span className="capitalize">{r}</span>
-                        {role === r && <CheckCircle className="w-3 h-3" />}
-                      </button>
-                    ))}
+                    <span className="text-xs font-bold font-mono text-[#16C784]">{formatTZS(profile.balanceTZS || 0)}</span>
                   </div>
                 </div>
 
