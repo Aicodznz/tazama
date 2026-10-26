@@ -36,6 +36,7 @@ interface SidebarProps {
   onOpenUpload: () => void;
   onOpenPremium?: (target?: 'viewer' | 'creator') => void;
   onClose?: () => void;
+  onStartCreator?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -44,9 +45,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onNavigate,
   onOpenUpload,
   onOpenPremium,
-  onClose
+  onClose,
+  onStartCreator
 }) => {
-  const { language, role, profile } = useAuth();
+  const { language, role, profile, upgradeToCreator, logout } = useAuth();
   const [showPWAModal, setShowPWAModal] = useState(false);
   const t = translations[language];
 
@@ -119,34 +121,83 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
-        {/* Creator Economy Section */}
-        <div className="pt-3 pb-3 border-b border-[#262E3E] space-y-1">
-          {isOpen && (
-            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#16C784]">
-              {language === 'sw' ? 'Uchumi wa Waumbaji' : 'Creator Economy'}
-            </p>
-          )}
-          {creatorItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activePage === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleItemClick(item.id)}
-                className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                  isActive 
-                    ? 'bg-[#16C784] text-white shadow-md shadow-[#16C784]/20' 
-                    : 'text-[#A7B0C0] hover:text-white hover:bg-[#191E29]'
-                }`}
-                title={item.label}
-              >
-                <Icon className={`w-5 h-5 shrink-0 ${item.highlight ? 'text-[#16C784]' : ''}`} />
-                {isOpen && <span className="truncate">{item.label}</span>}
-              </button>
-            );
-          })}
+        {/* Creator Economy Section - Strictly guarded by role */}
+        {profile && (role === 'creator' || role === 'admin') ? (
+          <div className="pt-3 pb-3 border-b border-[#262E3E] space-y-1">
+            {isOpen && (
+              <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-[#16C784]">
+                {language === 'sw' ? 'Uchumi wa Waumbaji' : 'Creator Economy'}
+              </p>
+            )}
+            {creatorItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activePage === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleItemClick(item.id)}
+                  className={`w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    isActive 
+                      ? 'bg-[#16C784] text-white shadow-md shadow-[#16C784]/20' 
+                      : 'text-[#A7B0C0] hover:text-white hover:bg-[#191E29]'
+                  }`}
+                  title={item.label}
+                >
+                  <Icon className={`w-5 h-5 shrink-0 ${item.highlight ? 'text-[#16C784]' : ''}`} />
+                  {isOpen && <span className="truncate">{item.label}</span>}
+                </button>
+              );
+            })}
+          </div>
+        ) : profile && role === 'viewer' && !profile.channelId ? (
+          /* Logged-in Viewer: Trigger 6-Step Channel Creation */
+          isOpen && (
+            <div className="pt-3 pb-3 border-b border-[#262E3E]">
+              <div className="p-3 mx-1 rounded-2xl bg-gradient-to-br from-[#191E29] to-[#121622] border border-[#262E3E] space-y-2">
+                <div className="flex items-center gap-2 text-[#16C784]">
+                  <Sparkles className="w-4 h-4 text-[#16C784]" />
+                  <span className="text-xs font-bold text-white">Anza Kuwa Creator</span>
+                </div>
+                <p className="text-[11px] text-[#A7B0C0] leading-snug">
+                  Fungua channel yako ya Tazama, weka kazi zako, linda hakimiliki na uanze kupata mapato.
+                </p>
+                <button
+                  onClick={() => {
+                    if (onStartCreator) onStartCreator();
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-[#16C784] to-[#13ab71] hover:brightness-110 text-black font-black text-xs transition-colors shadow-md shadow-[#16C784]/20 flex items-center justify-center gap-1.5"
+                >
+                  <Sparkles className="w-3.5 h-3.5 fill-black" />
+                  <span>Anza Kuwa Creator</span>
+                </button>
+              </div>
+            </div>
+          )
+        ) : (
+          /* Unauthenticated Guest: Clean Creator Promo */
+          isOpen && (
+            <div className="pt-3 pb-3 border-b border-[#262E3E]">
+              <div className="p-3 mx-1 rounded-2xl bg-[#191E29] border border-[#262E3E] space-y-2">
+                <div className="flex items-center gap-2 text-[#16C784]">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="text-xs font-bold text-white">Wewe ni Muundaji?</span>
+                </div>
+                <p className="text-[11px] text-[#A7B0C0] leading-snug">
+                  Pakia kazi zako, linda hakimiliki na COSOTA, na upokee mapato.
+                </p>
+                <button
+                  onClick={() => handleItemClick('register')}
+                  className="w-full py-1.5 px-3 rounded-xl bg-[#16C784]/20 hover:bg-[#16C784]/30 border border-[#16C784]/40 text-[#16C784] font-bold text-xs transition-colors text-center"
+                >
+                  Jisajili kama Muundaji
+                </button>
+              </div>
+            </div>
+          )
+        )}
 
-          {/* Tazama Platform Premium Button */}
+        {/* Tazama Platform Premium Button */}
+        <div className="pt-3 pb-3 border-b border-[#262E3E]">
           <button
             onClick={() => onOpenPremium && onOpenPremium(role === 'creator' ? 'creator' : 'viewer')}
             className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-amber-500/20 to-amber-400/10 border border-amber-500/30 text-amber-300 hover:border-amber-400 hover:text-white"
@@ -330,25 +381,64 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </div>
 
-            {/* Profile status pill */}
-            <div className="p-3 rounded-2xl bg-[#191E29] border border-[#262E3E] flex items-center gap-3">
-              <img 
-                src={profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'} 
-                alt={profile?.displayName}
-                className="w-10 h-10 rounded-full object-cover border border-[#262E3E]"
-              />
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-white truncate">{profile?.displayName}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[9px] bg-[#FF3040]/20 text-[#FF3040] font-bold px-1.5 py-0.2 rounded uppercase">
-                    {role}
-                  </span>
-                  <span className="text-[10px] font-mono text-[#16C784]">
-                    TZS {(profile?.balanceTZS || 0).toLocaleString()}
-                  </span>
+            {/* Profile status pill or Guest login invitation */}
+            {profile ? (
+              <div className="p-3 rounded-2xl bg-[#191E29] border border-[#262E3E] flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <img 
+                    src={profile.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'} 
+                    alt={profile.displayName}
+                    className="w-9 h-9 rounded-full object-cover border border-[#262E3E] shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-white truncate">{profile.displayName}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${
+                        role === 'admin' ? 'bg-amber-500/20 text-amber-400' : role === 'creator' ? 'bg-[#16C784]/20 text-[#16C784]' : 'bg-purple-500/20 text-purple-400'
+                      }`}>
+                        {role}
+                      </span>
+                      <span className="text-[10px] font-mono text-[#16C784]">
+                        TZS {(profile.balanceTZS || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    await logout();
+                    if (onClose) onClose();
+                  }}
+                  className="p-1.5 rounded-lg text-[#A7B0C0] hover:text-white hover:bg-[#232A39] transition-colors"
+                  title="Toka (Logout)"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="p-3.5 rounded-2xl bg-[#191E29] border border-[#262E3E] space-y-2.5">
+                <div>
+                  <p className="text-xs font-bold text-white">Karibu Tazama!</p>
+                  <p className="text-[11px] text-[#A7B0C0] leading-snug mt-0.5">
+                    Ingia au sajili akaunti kufurahia maudhui na kusimamia huduma zote.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleItemClick('login')}
+                    className="flex-1 py-1.5 rounded-xl bg-[#FF3040] text-white font-bold text-xs text-center hover:bg-[#E02635] transition-colors shadow-md shadow-[#FF3040]/25"
+                  >
+                    Kuingia
+                  </button>
+                  <button
+                    onClick={() => handleItemClick('register')}
+                    className="flex-1 py-1.5 rounded-xl bg-[#232A39] border border-[#262E3E] text-white font-semibold text-xs text-center hover:bg-[#2E3748] transition-colors"
+                  >
+                    Kujisajili
+                  </button>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Main Menu Links */}
             <div className="space-y-1 pb-3 border-b border-[#262E3E]">
@@ -404,30 +494,61 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </div>
 
-            {/* Creator Economy Mobile */}
-            <div className="space-y-1 pb-3 border-b border-[#262E3E]">
-              <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-[#16C784]">
-                Uchumi wa Waumbaji
-              </p>
-              {creatorItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activePage === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleItemClick(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
-                      isActive 
-                        ? 'bg-[#16C784] text-black font-bold' 
-                        : 'text-[#A7B0C0] hover:text-white hover:bg-[#191E29]'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5 shrink-0 text-[#16C784]" />
-                    <span>{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
+            {/* Creator Economy Mobile - Strictly guarded */}
+            {profile && (role === 'creator' || role === 'admin') ? (
+              <div className="space-y-1 pb-3 border-b border-[#262E3E]">
+                <p className="px-2 text-[10px] font-bold uppercase tracking-wider text-[#16C784]">
+                  Uchumi wa Waumbaji
+                </p>
+                {creatorItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activePage === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => handleItemClick(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                        isActive 
+                          ? 'bg-[#16C784] text-black font-bold' 
+                          : 'text-[#A7B0C0] hover:text-white hover:bg-[#191E29]'
+                      }`}
+                    >
+                      <Icon className="w-5 h-5 shrink-0 text-[#16C784]" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : profile && role === 'viewer' && !profile.channelId ? (
+              <div className="pb-3 border-b border-[#262E3E]">
+                <button
+                  onClick={() => {
+                    if (onClose) onClose();
+                    if (onStartCreator) onStartCreator();
+                  }}
+                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-[#16C784]/15 border border-[#16C784]/30 text-[#16C784] font-bold text-xs hover:bg-[#16C784]/25 transition-all"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-4 h-4 text-[#16C784]" />
+                    <span>Anza Kuwa Creator</span>
+                  </div>
+                  <span className="text-[9px] bg-[#16C784] text-black px-1.5 py-0.5 rounded font-black uppercase">Fungua Channel</span>
+                </button>
+              </div>
+            ) : (
+              <div className="pb-3 border-b border-[#262E3E]">
+                <button
+                  onClick={() => handleItemClick('register')}
+                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-[#191E29] border border-[#262E3E] text-[#16C784] font-bold text-xs hover:bg-[#232A39] transition-all"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-4 h-4 text-[#16C784]" />
+                    <span>Jiunge kama Muundaji</span>
+                  </div>
+                  <span className="text-[9px] bg-[#16C784]/20 text-[#16C784] px-1.5 py-0.5 rounded font-semibold uppercase">Pata Mapato</span>
+                </button>
+              </div>
+            )}
 
             {/* Admin Section (If admin/moderator) */}
             {profile && (role === 'admin' || role === 'moderator' || role === 'finance') && (

@@ -42,7 +42,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({
           </button>
         </div>
         <span className="text-[11px] font-semibold text-white/90 truncate max-w-[64px]">
-          Your shorts
+          Shorts Zako
         </span>
       </div>
 

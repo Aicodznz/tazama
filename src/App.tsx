@@ -22,11 +22,12 @@ import { UploadModal } from './components/upload/UploadModal';
 import { WalletModal } from './components/wallet/WalletModal';
 import { USSDPushModal } from './components/wallet/USSDPushModal';
 import { PremiumPlansModal } from './components/modals/PremiumPlansModal';
+import { CreateChannelModal } from './components/channel/CreateChannelModal';
 import { VideoItem, VideoCategory, UserRole } from './types';
 import { Sparkles, Shield, Info, CheckCircle2 } from 'lucide-react';
 
 const AppContent: React.FC = () => {
-  const { role, profile, switchDemoRole } = useAuth();
+  const { role, profile, switchDemoRole, upgradeToCreator } = useAuth();
   const { setSelectedCategory, videos } = useVideo();
 
   const [activePage, setActivePage] = useState<string>('home');
@@ -38,6 +39,7 @@ const AppContent: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
   const [isWalletOpen, setIsWalletOpen] = useState<boolean>(false);
   const [isPremiumOpen, setIsPremiumOpen] = useState<boolean>(false);
+  const [isCreateChannelOpen, setIsCreateChannelOpen] = useState<boolean>(false);
   const [premiumTarget, setPremiumTarget] = useState<'viewer' | 'creator'>('viewer');
 
   const handleSelectVideo = (video: VideoItem) => {
@@ -90,13 +92,7 @@ const AppContent: React.FC = () => {
 
   const handleAuthSuccess = (targetRole: UserRole) => {
     switchDemoRole(targetRole);
-    if (targetRole === 'admin' || targetRole === 'moderator' || targetRole === 'finance') {
-      setActivePage('admin');
-    } else if (targetRole === 'creator') {
-      setActivePage('studio');
-    } else {
-      setActivePage('home');
-    }
+    setActivePage('home');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -114,6 +110,7 @@ const AppContent: React.FC = () => {
           }}
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           onNavigate={handleNavigate}
+          onStartCreator={() => setIsCreateChannelOpen(true)}
         />
       </div>
 
@@ -135,6 +132,10 @@ const AppContent: React.FC = () => {
             setPremiumTarget(target || 'viewer');
             setIsPremiumOpen(true);
             setIsSidebarOpen(false);
+          }}
+          onStartCreator={() => {
+            setIsSidebarOpen(false);
+            setIsCreateChannelOpen(true);
           }}
         />
 
@@ -200,6 +201,35 @@ const AppContent: React.FC = () => {
                   setIsPremiumOpen(true);
                 }}
               />
+            ) : profile && role === 'viewer' ? (
+              <div className="min-h-[60vh] flex items-center justify-center p-6">
+                <div className="max-w-md w-full bg-[#191E29] border border-[#262E3E] rounded-3xl p-8 text-center space-y-5 shadow-2xl">
+                  <div className="w-16 h-16 rounded-2xl bg-[#16C784]/15 border border-[#16C784]/30 flex items-center justify-center mx-auto text-[#16C784]">
+                    <Sparkles className="w-8 h-8" />
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-black text-white">Kuwa Muundaji wa Tazama</h2>
+                    <p className="text-xs text-[#A7B0C0] leading-relaxed">
+                      Akaunti yako ({profile.displayName}) kwa sasa ipo katika hadhi ya Mtazamaji. Boresha sasa uwe Muundaji wa Maudhui ili ufungue Studio ya Waumbaji, upakie video, na upate mapato ya M-Pesa.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+                    <button
+                      onClick={() => setIsCreateChannelOpen(true)}
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#16C784] to-[#13ab71] hover:brightness-110 text-black text-xs font-bold transition-all shadow-lg shadow-[#16C784]/25 flex items-center justify-center gap-1.5"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 fill-black" />
+                      <span>Anza Kuwa Creator</span>
+                    </button>
+                    <button
+                      onClick={() => setActivePage('home')}
+                      className="py-2.5 px-4 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-white text-xs font-semibold border border-[#262E3E] transition-all"
+                    >
+                      Rudi Nyumbani
+                    </button>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="min-h-[60vh] flex items-center justify-center p-6">
                 <div className="max-w-md w-full bg-[#191E29] border border-[#262E3E] rounded-3xl p-8 text-center space-y-5 shadow-2xl">
@@ -367,6 +397,16 @@ const AppContent: React.FC = () => {
 
       {/* Global Interactive Mobile Money STK Push USSD Modal */}
       <USSDPushModal />
+
+      {/* Global 6-Step Channel Creation Wizard Modal */}
+      <CreateChannelModal
+        isOpen={isCreateChannelOpen}
+        onClose={() => setIsCreateChannelOpen(false)}
+        onSuccess={(createdChannel) => {
+          setSelectedChannelId(createdChannel.id);
+          setActivePage('studio');
+        }}
+      />
 
     </div>
   );

@@ -32,6 +32,7 @@ interface NavbarProps {
   onOpenPremium?: (target?: 'viewer' | 'creator') => void;
   onToggleSidebar: () => void;
   onNavigate: (page: string) => void;
+  onStartCreator?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -39,7 +40,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenWallet, 
   onOpenPremium,
   onToggleSidebar,
-  onNavigate 
+  onNavigate,
+  onStartCreator
 }) => {
   const { 
     user, 
@@ -220,15 +222,39 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* Admin Badge (Only for verified admin/moderators) */}
-          {profile && (role === 'admin' || role === 'moderator' || role === 'finance') && (
+          {/* 1. Admin Icon Button (Only for verified admin) */}
+          {profile && (role === 'admin' || profile.email === 'amytzee@gmail.com') && (
             <button
               onClick={() => onNavigate('admin')}
-              className="hidden md:flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0"
+              className="flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-amber-500/10 shrink-0"
               title="Jopo la Msimamizi Mkuu (Admin Hub)"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
               <span>Admin</span>
+            </button>
+          )}
+
+          {/* 2. Studio / Dashboard Button (For users who are creators or have a channel) */}
+          {profile && (role === 'creator' || profile.channelId) && (
+            <button
+              onClick={() => onNavigate('studio')}
+              className="flex items-center gap-1.5 bg-[#16C784]/20 hover:bg-[#16C784]/30 border border-[#16C784]/40 text-[#16C784] px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-[#16C784]/15 shrink-0"
+              title="Dashibodi ya Studio ya Kituo Chako"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#16C784]" />
+              <span>Studio</span>
+            </button>
+          )}
+
+          {/* 3. 'Anza Kuwa Creator' Button (For viewers who haven't opened a channel yet) */}
+          {profile && role === 'viewer' && !profile.channelId && (
+            <button
+              onClick={onStartCreator}
+              className="flex items-center gap-1.5 bg-gradient-to-r from-[#16C784] to-[#13ab71] hover:brightness-110 text-black px-3.5 py-1.5 rounded-full text-xs font-black shadow-md shadow-[#16C784]/25 transition-all active:scale-95 shrink-0"
+              title="Fungua Channel Yako ya Tazama"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-black" />
+              <span>Anza Kuwa Creator</span>
             </button>
           )}
 
@@ -359,23 +385,45 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.2 rounded font-extrabold uppercase">VIP</span>
                   </button>
 
-                  <button
-                    onClick={() => { onNavigate('studio'); setShowProfileMenu(false); }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2"
-                  >
-                    <Sparkles className="w-4 h-4 text-[#FF3040]" />
-                    <span>{t.creatorStudio}</span>
-                  </button>
+                  {/* If user hasn't created a channel, show Anza Kuwa Creator */}
+                  {role === 'viewer' && !profile.channelId && (
+                    <button
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        if (onStartCreator) onStartCreator();
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#16C784]/20 to-[#16C784]/10 hover:from-[#16C784]/30 hover:to-[#16C784]/20 border border-[#16C784]/40 text-[#16C784] font-bold flex items-center justify-between transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-[#16C784]" />
+                        <span>Anza Kuwa Creator</span>
+                      </div>
+                      <span className="text-[9px] bg-[#16C784] text-black px-1.5 py-0.5 rounded font-black uppercase">Fungua Channel</span>
+                    </button>
+                  )}
 
-                  <button
-                    onClick={() => { onNavigate('channel'); setShowProfileMenu(false); }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2"
-                  >
-                    <VideoIcon className="w-4 h-4 text-[#A7B0C0]" />
-                    <span>Kituo Changu (My Channel)</span>
-                  </button>
+                  {/* If user is creator or has channel */}
+                  {(role === 'creator' || profile.channelId) && (
+                    <>
+                      <button
+                        onClick={() => { onNavigate('studio'); setShowProfileMenu(false); }}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2 text-white font-semibold"
+                      >
+                        <Sparkles className="w-4 h-4 text-[#16C784]" />
+                        <span>{t.creatorStudio}</span>
+                      </button>
 
-                  {role === 'admin' && (
+                      <button
+                        onClick={() => { onNavigate('channel'); setShowProfileMenu(false); }}
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2 text-[#A7B0C0] hover:text-white"
+                      >
+                        <VideoIcon className="w-4 h-4 text-[#A7B0C0]" />
+                        <span>Kituo Changu (My Channel)</span>
+                      </button>
+                    </>
+                  )}
+
+                  {(role === 'admin' || profile.email === 'amytzee@gmail.com') && (
                     <button
                       onClick={() => { onNavigate('admin'); setShowProfileMenu(false); }}
                       className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2 text-amber-400 font-bold"

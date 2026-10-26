@@ -23,6 +23,28 @@ export interface UserProfile {
   updatedAt?: string;
 }
 
+export type CreatorIdentityStatus = 'Haijathibitishwa' | 'Inasubiri ukaguzi' | 'Imethibitishwa' | 'Inahitaji hatua zaidi';
+
+export interface ChannelPolicyAgreement {
+  version: string;
+  acceptedAt: string;
+  accountId: string;
+  termsAccepted: boolean;
+  contentPolicyAccepted: boolean;
+  rightsConfirmed: boolean;
+  monetizationAcknowledged: boolean;
+}
+
+export interface ChannelRightsInfo {
+  ownershipType: string;
+  rightsHolderName?: string;
+  rightsType?: string;
+  productionDate?: string;
+  cosotaNumber?: string;
+  licenseTerritory?: string;
+  revenueTerms?: string;
+}
+
 export interface Channel {
   id: string;
   ownerId: string;
@@ -41,6 +63,19 @@ export interface Channel {
   totalViews: number;
   monthlyEarningsTZS?: number;
   joinedDate: string;
+  categories?: string[];
+  primaryLanguage?: string;
+  country?: string;
+  identityStatus?: CreatorIdentityStatus;
+  publicEmail?: string;
+  showPublicEmail?: boolean;
+  publicPhone?: string;
+  websiteUrl?: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  facebookUrl?: string;
+  rightsInfo?: ChannelRightsInfo;
+  policyAgreement?: ChannelPolicyAgreement;
 }
 
 export type VideoCategory = 

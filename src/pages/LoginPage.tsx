@@ -27,7 +27,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
 
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
-  const [selectedRole, setSelectedRole] = useState<UserRole>('viewer');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -36,7 +35,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
-      setErrorMsg('Tafadhali jaza barua pepe na nenosiri.');
+      setErrorMsg('Tafadhali jaza barua pepe au namba ya simu na nenosiri.');
       return;
     }
 
@@ -44,7 +43,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
     setErrorMsg(null);
 
     try {
-      const loggedInRole = await loginUser(email.trim(), password.trim(), selectedRole);
+      const loggedInRole = await loginUser(email.trim(), password.trim());
       setIsLoading(false);
       onLoginSuccess(loggedInRole);
     } catch (err: any) {
@@ -53,28 +52,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
     }
   };
 
-  const handleQuickDemoLogin = async (demoEmail: string, demoRole: UserRole) => {
-    setEmail(demoEmail);
-    setSelectedRole(demoRole);
-    setIsLoading(true);
-    setErrorMsg(null);
-
-    try {
-      const loggedInRole = await loginUser(demoEmail, 'demo123', demoRole);
-      setIsLoading(false);
-      onLoginSuccess(loggedInRole);
-    } catch {
-      setIsLoading(false);
-      onLoginSuccess(demoRole);
-    }
-  };
-
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
       await loginWithGoogle();
       setIsLoading(false);
-      onLoginSuccess('admin');
+      onLoginSuccess('viewer');
     } catch {
       setIsLoading(false);
       onLoginSuccess('viewer');
@@ -92,58 +75,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
           </div>
           <h1 className="text-2xl font-black text-white tracking-tight">Ingia Tazama</h1>
           <p className="text-xs text-[#A7B0C0]">
-            Weka taarifa zako kuelekea moja kwa moja kwenye dashibodi na jopo (panel) lako husika.
+            Weka barua pepe au namba ya simu na nenosiri lako kuingia kwenye akaunti yako.
           </p>
-        </div>
-
-        {/* 1-Click Role Login Demo Pills */}
-        <div className="space-y-2">
-          <span className="text-[11px] font-bold text-[#A7B0C0] uppercase tracking-wider block text-center">
-            Au Ingia kwa Mbofyo Mmoja (Jaribu Panel):
-          </span>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin('amina.salum@gmail.com', 'viewer')}
-              className={`p-2 rounded-xl border text-center transition-all ${
-                selectedRole === 'viewer' 
-                  ? 'border-[#FF3040] bg-[#FF3040]/15 text-white font-bold' 
-                  : 'border-[#262E3E] bg-[#10131B] text-[#A7B0C0] hover:text-white'
-              }`}
-            >
-              <Users className="w-4 h-4 mx-auto mb-1 text-purple-400" />
-              <span className="text-[11px] block font-bold">Mtazamaji</span>
-              <span className="text-[9px] text-[#A7B0C0]">Viewer Feed</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin('diamond@wasafi.co.tz', 'creator')}
-              className={`p-2 rounded-xl border text-center transition-all ${
-                selectedRole === 'creator' 
-                  ? 'border-[#16C784] bg-[#16C784]/15 text-white font-bold' 
-                  : 'border-[#262E3E] bg-[#10131B] text-[#A7B0C0] hover:text-white'
-              }`}
-            >
-              <Sparkles className="w-4 h-4 mx-auto mb-1 text-[#16C784]" />
-              <span className="text-[11px] block font-bold">Muundaji</span>
-              <span className="text-[9px] text-[#A7B0C0]">Creator Studio</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin('amytzee@gmail.com', 'admin')}
-              className={`p-2 rounded-xl border text-center transition-all ${
-                selectedRole === 'admin' 
-                  ? 'border-amber-400 bg-amber-400/15 text-white font-bold' 
-                  : 'border-[#262E3E] bg-[#10131B] text-[#A7B0C0] hover:text-white'
-              }`}
-            >
-              <ShieldCheck className="w-4 h-4 mx-auto mb-1 text-amber-400" />
-              <span className="text-[11px] block font-bold">Mkuu</span>
-              <span className="text-[9px] text-[#A7B0C0]">Admin Panel</span>
-            </button>
-          </div>
         </div>
 
         {/* Error Alert */}
@@ -225,7 +158,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
               <span>Inaingia...</span>
             ) : (
               <>
-                <span>Ingia Kwenye Panel Yako</span>
+                <span>Ingia Kwenye Tazama</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
