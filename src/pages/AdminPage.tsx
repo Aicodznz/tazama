@@ -67,6 +67,8 @@ import {
   AdCampaign,
   Channel
 } from '../types';
+import { AdminAdsManager } from '../components/admin/AdminAdsManager';
+import { CreateAdModal } from '../components/ads/CreateAdModal';
 
 export const AdminPage: React.FC = () => {
   const { 
@@ -589,7 +591,12 @@ export const AdminPage: React.FC = () => {
           { id: 'videos', label: `Maudhui & Video (${totalVideosCount})`, icon: Tv },
           { id: 'payouts', label: `Maombi ya Malipo (${pendingPayoutsList.length})`, icon: CreditCard, badge: pendingPayoutsList.length > 0 ? pendingPayoutsList.length : undefined },
           { id: 'copyright', label: `Uhakiki wa Hakimiliki (${pendingCopyrightClaimsCount})`, icon: Flag, badge: pendingCopyrightClaimsCount > 0 ? pendingCopyrightClaimsCount : undefined },
-          { id: 'system', label: 'Mfumo & Matangazo', icon: Sliders },
+          { 
+            id: 'system', 
+            label: `Mfumo & Matangazo (${adCampaigns.length})`, 
+            icon: Sliders,
+            badge: adCampaigns.filter(a => a.status === 'pending_approval').length > 0 ? adCampaigns.filter(a => a.status === 'pending_approval').length : undefined 
+          },
           { id: 'security', label: `Kumbukumbu za Usalama (${auditLogs.length})`, icon: Activity }
         ].map((tab) => {
           const Icon = tab.icon;
@@ -2252,56 +2259,9 @@ export const AdminPage: React.FC = () => {
             </div>
           )}
 
-          {/* Subtab 2: Ad Campaigns */}
+          {/* Subtab 2: Ad Campaigns & Approval Hub */}
           {systemSubTab === 'ads' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {adCampaigns.map(ad => (
-                  <div key={ad.id} className="p-5 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase font-mono px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                        {ad.adType}
-                      </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        ad.status === 'active' ? 'bg-[#16C784]/20 text-[#16C784]' : 'bg-gray-500/20 text-gray-400'
-                      }`}>
-                        {ad.status === 'active' ? 'Inaonyeshwa' : 'Imesitishwa'}
-                      </span>
-                    </div>
-
-                    <h4 className="font-extrabold text-white text-sm">{ad.title}</h4>
-                    <p className="text-xs text-[#A7B0C0]">Mtangazaji: <strong className="text-white">{ad.advertiserName}</strong> | Kundi: {ad.targetCategory}</p>
-
-                    <div className="grid grid-cols-3 gap-2 py-2 border-y border-[#262E3E] text-center text-xs">
-                      <div>
-                        <span className="text-[10px] text-[#A7B0C0] block">Impressions</span>
-                        <span className="font-bold font-mono text-white">{ad.impressions.toLocaleString()}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-[#A7B0C0] block">Clicks</span>
-                        <span className="font-bold font-mono text-white">{ad.clicks.toLocaleString()}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-[#A7B0C0] block">Matumizi (Spend)</span>
-                        <span className="font-bold font-mono text-[#16C784]">{formatTZS(ad.spendTZS)}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-[11px] text-[#A7B0C0]">Bajeti: {formatTZS(ad.budgetTZS)}</span>
-                      <button
-                        onClick={() => {
-                          updateAdCampaignStatus(ad.id, ad.status === 'active' ? 'paused' : 'active');
-                        }}
-                        className="px-3 py-1.5 rounded-xl bg-[#232A39] hover:bg-amber-500 hover:text-black text-white font-bold text-xs"
-                      >
-                        {ad.status === 'active' ? 'Sitisha (Pause)' : 'Washa (Resume)'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <AdminAdsManager onOpenCreateModal={() => setShowCreateAdModal(true)} />
           )}
 
         </div>
@@ -2883,6 +2843,12 @@ export const AdminPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Create Ad Campaign Modal */}
+      <CreateAdModal 
+        isOpen={showCreateAdModal} 
+        onClose={() => setShowCreateAdModal(false)} 
+      />
 
     </div>
   );

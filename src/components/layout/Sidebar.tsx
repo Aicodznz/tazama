@@ -23,7 +23,8 @@ import {
   ShieldCheck,
   Compass,
   Radio,
-  Download
+  Download,
+  Megaphone
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { translations } from '../../lib/i18n';
@@ -37,6 +38,7 @@ interface SidebarProps {
   onOpenPremium?: (target?: 'viewer' | 'creator') => void;
   onClose?: () => void;
   onStartCreator?: () => void;
+  onOpenCreateAd?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -46,7 +48,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenUpload,
   onOpenPremium,
   onClose,
-  onStartCreator
+  onStartCreator,
+  onOpenCreateAd
 }) => {
   const { language, role, profile, upgradeToCreator, logout } = useAuth();
   const [showPWAModal, setShowPWAModal] = useState(false);
@@ -208,6 +211,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="truncate flex items-center justify-between flex-1">
                 Tazama Premium
                 <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.2 rounded font-extrabold uppercase">VIP</span>
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Tazama Ads Button (Viewer & Creator) */}
+        <div className="pt-3 pb-3 border-b border-[#262E3E]">
+          <button
+            onClick={() => {
+              if (onOpenCreateAd) onOpenCreateAd();
+              if (onClose) onClose();
+            }}
+            className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-xs font-bold transition-all bg-gradient-to-r from-amber-500/15 to-amber-600/10 border border-amber-500/30 text-amber-300 hover:border-amber-400 hover:text-white"
+            title="Weka Tangazo (Tazama Ads)"
+          >
+            <Megaphone className="w-5 h-5 shrink-0 text-amber-400" />
+            {isOpen && (
+              <span className="truncate flex items-center justify-between flex-1">
+                Weka Tangazo
+                <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-extrabold uppercase">Ads</span>
               </span>
             )}
           </button>

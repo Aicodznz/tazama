@@ -18,7 +18,8 @@ import {
   Crown,
   Zap,
   Radio,
-  Download
+  Download,
+  Megaphone
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useVideo } from '../../context/VideoContext';
@@ -33,6 +34,7 @@ interface NavbarProps {
   onToggleSidebar: () => void;
   onNavigate: (page: string) => void;
   onStartCreator?: () => void;
+  onOpenCreateAd?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -41,7 +43,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenPremium,
   onToggleSidebar,
   onNavigate,
-  onStartCreator
+  onStartCreator,
+  onOpenCreateAd
 }) => {
   const { 
     user, 
@@ -192,6 +195,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Crown className="w-3.5 h-3.5 text-amber-400" />
             <span>Premium</span>
+          </button>
+
+          {/* Weka Tangazo Button (Tazama Ads - For Viewers & Creators) */}
+          <button
+            onClick={onOpenCreateAd}
+            className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500/20 to-amber-600/10 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-amber-500/10 hover:scale-102 active:scale-95 shrink-0"
+            title="Weka Tangazo la Biashara (Tazama Ads)"
+          >
+            <Megaphone className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Weka Tangazo</span>
+            <span className="sm:hidden text-[11px]">Tangaza</span>
           </button>
 
           {/* Install PWA Button */}
@@ -383,6 +397,20 @@ export const Navbar: React.FC<NavbarProps> = ({
                       <span>Tazama Premium Plans</span>
                     </div>
                     <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.2 rounded font-extrabold uppercase">VIP</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (onOpenCreateAd) onOpenCreateAd();
+                      setShowProfileMenu(false);
+                    }}
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center justify-between text-white font-medium"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Megaphone className="w-4 h-4 text-amber-400" />
+                      <span>Weka Tangazo (Tazama Ads)</span>
+                    </div>
+                    <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold">Tangaza</span>
                   </button>
 
                   {/* If user hasn't created a channel, show Anza Kuwa Creator */}

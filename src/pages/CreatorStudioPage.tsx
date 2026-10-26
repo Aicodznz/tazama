@@ -70,8 +70,10 @@ import {
   VideoSubtitleTrack, 
   CreatorPromotion,
   CreatorVerificationRequest,
-  VideoCategory
+  VideoCategory,
+  AdCampaign
 } from '../types';
+import { CreateAdModal } from '../components/ads/CreateAdModal';
 
 interface CreatorStudioPageProps {
   onOpenUpload: () => void;
@@ -136,7 +138,8 @@ export const CreatorStudioPage: React.FC<CreatorStudioPageProps> = ({
     applyForVerification,
     applyForMonetization,
     submitCopyrightAppeal,
-    updateChannelInfo
+    updateChannelInfo,
+    adCampaigns
   } = useVideo();
 
   const t = translations[language];
@@ -148,6 +151,7 @@ export const CreatorStudioPage: React.FC<CreatorStudioPageProps> = ({
   const [newWorkTitle, setNewWorkTitle] = useState('');
   const [newWorkCosotaNumber, setNewWorkCosotaNumber] = useState('');
   const [workProtectionSuccess, setWorkProtectionSuccess] = useState(false);
+  const [showCreateAdModal, setShowCreateAdModal] = useState(false);
 
   // Channel reference: Match user's channel or default to primary creator channel
   const creatorChannel = useMemo(() => {

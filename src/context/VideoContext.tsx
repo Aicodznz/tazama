@@ -25,6 +25,8 @@ import {
   UserAppeal,
   SecurityLogEvent,
   AdCampaign,
+  AdFormat,
+  AdStatus,
   CommunityPost,
   CreatorMembershipTier,
   VideoSubtitleTrack,
@@ -161,8 +163,13 @@ interface VideoContextType {
   addSecurityLog: (event: Omit<SecurityLogEvent, 'id' | 'timestamp'>) => void;
   // Ad Campaigns
   adCampaigns: AdCampaign[];
-  addAdCampaign: (campaign: Omit<AdCampaign, 'id' | 'impressions' | 'clicks' | 'spendTZS'>) => void;
+  addAdCampaign: (campaign: Omit<AdCampaign, 'id' | 'impressions' | 'clicks' | 'spendTZS' | 'createdAt'>) => string;
   updateAdCampaignStatus: (campaignId: string, status: AdCampaign['status']) => void;
+  approveAdCampaign: (campaignId: string, adminEmail?: string) => void;
+  rejectAdCampaign: (campaignId: string, reason: string, adminEmail?: string) => void;
+  recordAdImpression: (campaignId: string) => void;
+  recordAdClick: (campaignId: string) => void;
+  getActiveAds: (format?: AdFormat | AdFormat[]) => AdCampaign[];
   // Featured Videos
   featuredVideoIds: string[];
   toggleFeaturedVideo: (videoId: string) => void;
@@ -664,21 +671,101 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Ad Campaigns State
   const [adCampaigns, setAdCampaigns] = useState<AdCampaign[]>(SAMPLE_AD_CAMPAIGNS);
 
-  const addAdCampaign = (campaign: Omit<AdCampaign, 'id' | 'impressions' | 'clicks' | 'spendTZS'>) => {
+  const addAdCampaign = (campaign: Omit<AdCampaign, 'id' | 'impressions' | 'clicks' | 'spendTZS' | 'createdAt'>): string => {
+    const newId = `ad-${Date.now()}`;
     const newCamp: AdCampaign = {
       ...campaign,
-      id: `ad-${Date.now()}`,
+      id: newId,
       impressions: 0,
       clicks: 0,
-      spendTZS: 0
+      spendTZS: 0,
+      createdAt: new Date().toISOString(),
+      title: campaign.campaignName,
+      advertiserName: campaign.creatorName
     };
     setAdCampaigns(prev => [newCamp, ...prev]);
-    addAuditLog('AD_CAMPAIGN_CREATED', `Campaign: ${campaign.title}`, `Mtangazaji: ${campaign.advertiserName}, Bajeti: TZS ${campaign.budgetTZS.toLocaleString()}`, 'SUCCESS');
+    addAuditLog(
+      'AD_CAMPAIGN_CREATED', 
+      `Kampeni: ${campaign.campaignName}`, 
+      `Mtangazaji: ${campaign.creatorName} (${campaign.creatorRole}). Muundo: ${campaign.adFormat}. Bajeti: TZS ${campaign.budgetTZS.toLocaleString()}. Hali: ${campaign.status}`, 
+      'SUCCESS'
+    );
+    return newId;
   };
 
   const updateAdCampaignStatus = (campaignId: string, status: AdCampaign['status']) => {
     setAdCampaigns(prev => prev.map(c => c.id === campaignId ? { ...c, status } : c));
     addAuditLog('AD_CAMPAIGN_STATUS', `Campaign ID: ${campaignId}`, `Hali mpya: ${status}`, 'SUCCESS');
+  };
+
+  const approveAdCampaign = (campaignId: string, adminEmail: string = 'amytzee@gmail.com') => {
+    const target = adCampaigns.find(c => c.id === campaignId);
+    setAdCampaigns(prev => prev.map(c => c.id === campaignId ? {
+      ...c,
+      status: 'active',
+      reviewedBy: adminEmail,
+      reviewedAt: new Date().toISOString()
+    } : c));
+    addAuditLog(
+      'AD_CAMPAIGN_APPROVED',
+      `Campaign: ${target?.campaignName || campaignId}`,
+      `Tangazo limeidhinishwa na Msimamizi (${adminEmail}). Sasa lipo hewani kwa watazamaji wote.`,
+      'SUCCESS'
+    );
+  };
+
+  const rejectAdCampaign = (campaignId: string, reason: string, adminEmail: string = 'amytzee@gmail.com') => {
+    const target = adCampaigns.find(c => c.id === campaignId);
+    setAdCampaigns(prev => prev.map(c => c.id === campaignId ? {
+      ...c,
+      status: 'rejected',
+      rejectionReason: reason,
+      reviewedBy: adminEmail,
+      reviewedAt: new Date().toISOString()
+    } : c));
+    addAuditLog(
+      'AD_CAMPAIGN_REJECTED',
+      `Campaign: ${target?.campaignName || campaignId}`,
+      `Tangazo limekataliwa na Admin (${adminEmail}). Sababu: ${reason}`,
+      'WARNING'
+    );
+  };
+
+  const recordAdImpression = (campaignId: string) => {
+    setAdCampaigns(prev => prev.map(c => {
+      if (c.id === campaignId) {
+        // Increment impression and calculate micro-spend
+        const newImpressions = c.impressions + 1;
+        const microSpend = Math.min(c.budgetTZS, c.spendTZS + Math.round((c.budgetTZS / Math.max(1, (c.impressions + 500)))));
+        return {
+          ...c,
+          impressions: newImpressions,
+          spendTZS: microSpend
+        };
+      }
+      return c;
+    }));
+  };
+
+  const recordAdClick = (campaignId: string) => {
+    setAdCampaigns(prev => prev.map(c => {
+      if (c.id === campaignId) {
+        return {
+          ...c,
+          clicks: c.clicks + 1
+        };
+      }
+      return c;
+    }));
+  };
+
+  const getActiveAds = (format?: AdFormat | AdFormat[]): AdCampaign[] => {
+    const activeOnly = adCampaigns.filter(c => c.status === 'active');
+    if (!format) return activeOnly;
+    if (Array.isArray(format)) {
+      return activeOnly.filter(c => format.includes(c.adFormat));
+    }
+    return activeOnly.filter(c => c.adFormat === format);
   };
 
   // Featured Videos State
@@ -1435,6 +1522,11 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         adCampaigns,
         addAdCampaign,
         updateAdCampaignStatus,
+        approveAdCampaign,
+        rejectAdCampaign,
+        recordAdImpression,
+        recordAdClick,
+        getActiveAds,
         // Featured
         featuredVideoIds,
         toggleFeaturedVideo,

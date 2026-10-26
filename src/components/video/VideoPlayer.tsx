@@ -11,9 +11,11 @@ import {
   RotateCcw,
   Sparkles
 } from 'lucide-react';
-import { VideoItem } from '../../types';
+import { VideoItem, AdCampaign } from '../../types';
 import { formatDuration } from '../../lib/i18n';
 import { useVideo } from '../../context/VideoContext';
+import { useAuth } from '../../context/AuthContext';
+import { ExternalLink } from 'lucide-react';
 
 interface VideoPlayerProps {
   video: VideoItem;
@@ -23,7 +25,16 @@ interface VideoPlayerProps {
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { recordView } = useVideo();
+  const { recordView, adCampaigns, recordAdImpression, recordAdClick } = useVideo();
+  const { profile } = useAuth();
+
+  // In-Stream Video Ad State
+  const [activeAd, setActiveAd] = useState<AdCampaign | null>(null);
+  const [isAdPlaying, setIsAdPlaying] = useState<boolean>(false);
+  const [adTimeLeft, setAdTimeLeft] = useState<number>(10);
+  const [adSkipCountdown, setAdSkipCountdown] = useState<number>(5);
+  const [canSkipAd, setCanSkipAd] = useState<boolean>(false);
+  const [hasShownAdForVideo, setHasShownAdForVideo] = useState<boolean>(false);
 
   const [isPlaying, setIsPlaying] = useState<boolean>(autoPlay);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -39,6 +50,90 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
   const [hasRecordedView, setHasRecordedView] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(true);
   const controlsTimeoutRef = useRef<any>(null);
+
+  // Initialize Ad check when video changes (VIP users are ad-free)
+  useEffect(() => {
+    setHasRecordedView(false);
+    setHasShownAdForVideo(false);
+
+    const isVIP = profile?.premiumPlanId === 'plan-viewer-monthly' || profile?.premiumPlanId === 'plan-viewer-yearly';
+    
+    if (!isVIP) {
+      // Find eligible active video ad (skippable, non-skippable, bumper, preroll)
+      const eligibleAds = adCampaigns.filter(a => 
+        a.status === 'active' && 
+        ['skippable_instream', 'non_skippable_instream', 'bumper', 'preroll'].includes(a.adFormat) &&
+        a.mediaType === 'video'
+      );
+
+      if (eligibleAds.length > 0) {
+        // Pick one ad randomly or sequentially
+        const chosenAd = eligibleAds[Math.floor(Math.random() * eligibleAds.length)];
+        setActiveAd(chosenAd);
+        setIsAdPlaying(true);
+        const initialDuration = chosenAd.adFormat === 'bumper' ? 6 : chosenAd.adFormat === 'non_skippable_instream' ? 15 : 12;
+        setAdTimeLeft(initialDuration);
+        setAdSkipCountdown(5);
+        setCanSkipAd(chosenAd.adFormat === 'bumper' ? false : false);
+        recordAdImpression(chosenAd.id);
+      } else {
+        setActiveAd(null);
+        setIsAdPlaying(false);
+      }
+    } else {
+      setActiveAd(null);
+      setIsAdPlaying(false);
+    }
+  }, [video.id, profile?.premiumPlanId, adCampaigns]);
+
+  // Ad Timer Countdown Effect
+  useEffect(() => {
+    let timer: any = null;
+    if (isAdPlaying && activeAd) {
+      timer = setInterval(() => {
+        setAdTimeLeft(prev => {
+          if (prev <= 1) {
+            handleCompleteAd();
+            return 0;
+          }
+          return prev - 1;
+        });
+
+        setAdSkipCountdown(prev => {
+          if (prev <= 1) {
+            if (activeAd.adFormat !== 'non_skippable_instream' && activeAd.adFormat !== 'bumper') {
+              setCanSkipAd(true);
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isAdPlaying, activeAd]);
+
+  const handleSkipAd = () => {
+    handleCompleteAd();
+  };
+
+  const handleCompleteAd = () => {
+    setIsAdPlaying(false);
+    setActiveAd(null);
+    setHasShownAdForVideo(true);
+    if (videoRef.current) {
+      videoRef.current.src = video.videoUrl;
+      videoRef.current.load();
+      videoRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+    }
+  };
+
+  const handleAdCtaClick = () => {
+    if (activeAd) {
+      recordAdClick(activeAd.id);
+      window.open(activeAd.destinationUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   // Deduplicated view increment: record after 5 seconds of active watch
   useEffect(() => {
@@ -221,14 +316,20 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
           : 'aspect-video-player rounded-none sm:rounded-2xl overflow-hidden shadow-2xl group'
       }`}
     >
-      {/* HTML5 video element with Cloudflare Stream / CDN source */}
+      {/* HTML5 video element with Cloudflare Stream / CDN or Ad source */}
       <video
         ref={videoRef}
-        src={video.videoUrl}
-        poster={video.thumbnailUrl}
+        src={isAdPlaying && activeAd ? activeAd.mediaUrl : video.videoUrl}
+        poster={isAdPlaying && activeAd ? undefined : video.thumbnailUrl}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
-        onEnded={() => setIsPlaying(false)}
+        onEnded={() => {
+          if (isAdPlaying) {
+            handleCompleteAd();
+          } else {
+            setIsPlaying(false);
+          }
+        }}
         onClick={togglePlay}
         onDoubleClick={toggleFullscreen}
         className={`w-full h-full cursor-pointer ${
@@ -236,6 +337,78 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
         }`}
         playsInline
       />
+
+      {/* IN-STREAM AD OVERLAY UI */}
+      {isAdPlaying && activeAd && (
+        <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-3 sm:p-5 z-40 bg-gradient-to-t from-black/80 via-transparent to-black/60">
+          
+          {/* Top Bar: Ad Badge & Skip Countdown */}
+          <div className="flex items-center justify-between pointer-events-auto">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-md bg-amber-500 text-black font-black text-[10px] uppercase tracking-wider shadow-lg">
+                Tangazo &bull; 1 kati ya 1
+              </span>
+              <span className="text-xs text-white/90 font-medium hidden sm:inline drop-shadow">
+                {activeAd.campaignName}
+              </span>
+            </div>
+
+            {/* Skip / Non-skippable timer */}
+            <div>
+              {canSkipAd ? (
+                <button
+                  onClick={handleSkipAd}
+                  className="px-4 py-2 rounded-full bg-black/80 hover:bg-[#FF3040] text-white border border-white/30 text-xs font-black shadow-2xl flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer backdrop-blur-md"
+                >
+                  <span>Ruka Tangazo (Skip Ad)</span>
+                  <span className="text-amber-300">&rarr;</span>
+                </button>
+              ) : (
+                <div className="px-3.5 py-1.5 rounded-full bg-black/80 border border-white/20 text-white font-mono text-xs flex items-center gap-2 backdrop-blur-md shadow-xl">
+                  {activeAd.adFormat === 'non_skippable_instream' || activeAd.adFormat === 'bumper' ? (
+                    <span>Tangazo litakamilika: <strong className="text-amber-400">{adTimeLeft}s</strong></span>
+                  ) : (
+                    <span>Unaweza kuruka baada ya: <strong className="text-amber-400">{adSkipCountdown}s</strong></span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Bottom Bar: Advertiser Details & CTA Button */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pointer-events-auto">
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-black/85 backdrop-blur-md border border-white/20 flex items-center justify-between sm:justify-start gap-4 shadow-2xl max-w-lg">
+              <div className="space-y-0.5">
+                <span className="text-[9px] font-mono font-bold text-amber-400 uppercase block">
+                  {activeAd.creatorName} ({activeAd.adFormat.replace('_', ' ')})
+                </span>
+                <h4 className="text-xs sm:text-sm font-black text-white line-clamp-1">
+                  {activeAd.headline}
+                </h4>
+                <p className="text-[11px] text-[#A7B0C0] line-clamp-1 hidden sm:block">
+                  {activeAd.description}
+                </p>
+              </div>
+
+              <button
+                onClick={handleAdCtaClick}
+                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-black shrink-0 flex items-center gap-1.5 shadow-lg shadow-amber-500/25 transition-all cursor-pointer active:scale-95"
+              >
+                <span>{activeAd.ctaText}</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <button
+              onClick={handleCompleteAd}
+              className="text-[10px] text-white/70 hover:text-white underline self-end sm:self-center bg-black/50 px-2 py-1 rounded"
+            >
+              Funga tangazo
+            </button>
+          </div>
+
+        </div>
+      )}
 
       {/* Floating Exit Fullscreen Button in Fullscreen Mode */}
       {isFullscreen && (

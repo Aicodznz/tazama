@@ -23,6 +23,7 @@ import { WalletModal } from './components/wallet/WalletModal';
 import { USSDPushModal } from './components/wallet/USSDPushModal';
 import { PremiumPlansModal } from './components/modals/PremiumPlansModal';
 import { CreateChannelModal } from './components/channel/CreateChannelModal';
+import { CreateAdModal } from './components/ads/CreateAdModal';
 import { VideoItem, VideoCategory, UserRole } from './types';
 import { Sparkles, Shield, Info, CheckCircle2 } from 'lucide-react';
 
@@ -40,6 +41,7 @@ const AppContent: React.FC = () => {
   const [isWalletOpen, setIsWalletOpen] = useState<boolean>(false);
   const [isPremiumOpen, setIsPremiumOpen] = useState<boolean>(false);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState<boolean>(false);
+  const [isCreateAdOpen, setIsCreateAdOpen] = useState<boolean>(false);
   const [premiumTarget, setPremiumTarget] = useState<'viewer' | 'creator'>('viewer');
 
   const handleSelectVideo = (video: VideoItem) => {
@@ -111,6 +113,7 @@ const AppContent: React.FC = () => {
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           onNavigate={handleNavigate}
           onStartCreator={() => setIsCreateChannelOpen(true)}
+          onOpenCreateAd={() => setIsCreateAdOpen(true)}
         />
       </div>
 
@@ -136,6 +139,10 @@ const AppContent: React.FC = () => {
           onStartCreator={() => {
             setIsSidebarOpen(false);
             setIsCreateChannelOpen(true);
+          }}
+          onOpenCreateAd={() => {
+            setIsSidebarOpen(false);
+            setIsCreateAdOpen(true);
           }}
         />
 
@@ -406,6 +413,12 @@ const AppContent: React.FC = () => {
           setSelectedChannelId(createdChannel.id);
           setActivePage('studio');
         }}
+      />
+
+      {/* Global Create Ad Campaign Modal (Viewer & Creator) */}
+      <CreateAdModal
+        isOpen={isCreateAdOpen}
+        onClose={() => setIsCreateAdOpen(false)}
       />
 
     </div>

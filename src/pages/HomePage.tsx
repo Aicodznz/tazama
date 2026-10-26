@@ -14,6 +14,8 @@ import { useVideo } from '../context/VideoContext';
 import { useAuth } from '../context/AuthContext';
 import { VideoCard } from '../components/video/VideoCard';
 import { StoriesBar } from '../components/home/StoriesBar';
+import { MastheadAdBanner } from '../components/ads/MastheadAdBanner';
+import { InFeedAdCard } from '../components/ads/InFeedAdCard';
 import { formatDuration, formatViews, formatRelativeTime, translations } from '../lib/i18n';
 import { VideoItem } from '../types';
 
@@ -38,7 +40,8 @@ export const HomePage: React.FC<HomePageProps> = ({
     setSelectedCategory, 
     watchHistory,
     userSubscriptions,
-    toggleSubscribe 
+    toggleSubscribe,
+    adCampaigns
   } = useVideo();
   
   const { language } = useAuth();
@@ -49,6 +52,14 @@ export const HomePage: React.FC<HomePageProps> = ({
   ];
 
   const featuredVideo = videos[0];
+
+  const mastheadAd = React.useMemo(() => {
+    return adCampaigns.find(a => a.status === 'active' && a.adFormat === 'masthead');
+  }, [adCampaigns]);
+
+  const inFeedAds = React.useMemo(() => {
+    return adCampaigns.filter(a => a.status === 'active' && ['in_feed', 'sponsored_placement', 'image_ad'].includes(a.adFormat));
+  }, [adCampaigns]);
 
   const filteredVideos = selectedCategory === 'Zote'
     ? videos
@@ -83,6 +94,11 @@ export const HomePage: React.FC<HomePageProps> = ({
           );
         })}
       </div>
+
+      {/* YouTube Masthead Video Ad (Top Hero Slot) */}
+      {mastheadAd && selectedCategory === 'Zote' && (
+        <MastheadAdBanner ad={mastheadAd} />
+      )}
 
       {/* Hero Featured Video Banner (Spotlight Tanzanian Content) */}
       {featuredVideo && selectedCategory === 'Zote' && (
@@ -210,14 +226,24 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredVideos.map((video) => (
-              <VideoCard
-                key={video.id}
-                video={video}
-                onSelectVideo={onSelectVideo}
-                onSelectChannel={onSelectChannel}
-              />
-            ))}
+            {filteredVideos.map((video, idx) => {
+              const shouldShowInFeedAd = inFeedAds.length > 0 && (idx === 2 || (idx > 2 && (idx + 1) % 5 === 0));
+              const adIndex = Math.floor(idx / 3) % inFeedAds.length;
+              const adToShow = inFeedAds[adIndex];
+
+              return (
+                <React.Fragment key={video.id}>
+                  <VideoCard
+                    video={video}
+                    onSelectVideo={onSelectVideo}
+                    onSelectChannel={onSelectChannel}
+                  />
+                  {shouldShowInFeedAd && adToShow && (
+                    <InFeedAdCard ad={adToShow} />
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
         )}
       </div>

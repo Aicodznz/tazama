@@ -198,17 +198,68 @@ export interface ContentReport {
   createdAt: string;
 }
 
+export type AdFormat = 
+  | 'skippable_instream'       // Skippable in-stream (video na kitufe cha kuruka)
+  | 'non_skippable_instream'   // Non-skippable in-stream (video ya lazima kutazama)
+  | 'bumper'                   // Bumper (video fupi sekunde 6)
+  | 'shorts'                   // YouTube Shorts (tangazo la video ya wima kwenye shorts)
+  | 'masthead'                 // YouTube Masthead Video Ad (tangazo kubwa la video ukurasa mkuu)
+  | 'image_ad'                 // Image Ad (tangazo la picha)
+  | 'in_feed'                  // In-feed / In-feed Ad (tangazo kwenye orodha ya video)
+  | 'preroll'                  // Pre-roll Ad (kabla ya video kuanza)
+  | 'midroll'                  // Mid-roll Ad (katikati ya video)
+  | 'sponsored_placement';     // Sponsored Placement (nafasi maalumu ya matangazo)
+
+export type AdCTA = 'Tembelea Tovuti' | 'Nunua Sasa' | 'Wasiliana Nasi';
+
+export type AdStatus = 
+  | 'pending_payment'   // Inasubiri malipo
+  | 'pending_approval'  // Inasubiri idhini ya admin
+  | 'active'            // Imeidhinishwa na inaonyeshwa
+  | 'paused'            // Imesimamishwa kwa muda
+  | 'rejected'          // Imekataliwa na admin
+  | 'completed';        // Muda wa kampeni umekwisha
+
 export interface AdCampaign {
   id: string;
-  title: string;
-  advertiserName: string;
-  adType: 'pre-roll' | 'banner' | 'sponsored-card';
-  targetCategory: string;
-  status: 'active' | 'paused' | 'completed';
+  creatorId: string;
+  creatorName: string;
+  creatorRole: 'viewer' | 'creator' | 'admin';
+  campaignName: string;         // Jina la kampeni (Mfano: Tangazo la Simu Mpya)
+  adFormat: AdFormat;           // Aina ya tangazo
+  mediaType: 'video' | 'image'; // Video au picha
+  mediaUrl: string;             // Faili ya tangazo (Video au Picha URL)
+  headline: string;             // Kichwa cha tangazo (Mfano: Nunua Simu Yako Leo)
+  description: string;          // Maelezo (Ujumbe mfupi wa tangazo)
+  ctaText: AdCTA;               // Kitufe cha hatua
+  destinationUrl: string;       // Kiungo (Tovuti au ukurasa wa bidhaa)
+  startDate: string;            // Tarehe ya kuanza
+  endDate: string;              // Tarehe ya kuisha
+  
+  // Malipo & Bajeti
+  budgetTZS: number;            // Jumla ya fedha zilizolipwa
+  dailyBudgetTZS?: number;
+  spendTZS: number;             // Kiasi kilichotumika
+  paymentProvider?: 'M-Pesa' | 'Tigo Pesa' | 'Airtel Money' | 'Halopesa' | 'Salio la Tazama';
+  paymentReference?: string;
+  paidAt?: string;
+
+  // Idhini ya Admin
+  status: AdStatus;
+  rejectionReason?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+
+  // Metriki za Matangazo
   impressions: number;
   clicks: number;
-  budgetTZS: number;
-  spendTZS: number;
+  createdAt: string;
+
+  // Legacy compatibility fields
+  title?: string;
+  advertiserName?: string;
+  adType?: string;
+  targetCategory?: string;
 }
 
 export type PlanTarget = 'viewer' | 'creator';
