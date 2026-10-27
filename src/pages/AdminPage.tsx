@@ -478,10 +478,19 @@ export const AdminPage: React.FC = () => {
       return;
     }
     addAdCampaign({
-      title: newAdForm.title.trim(),
-      advertiserName: newAdForm.advertiserName.trim(),
-      adType: newAdForm.adType,
-      targetCategory: newAdForm.targetCategory,
+      creatorId: profile?.uid || 'user-admin-root',
+      creatorName: newAdForm.advertiserName.trim() || 'Admin Root',
+      creatorRole: 'admin',
+      campaignName: newAdForm.title.trim(),
+      adFormat: 'skippable_instream',
+      mediaType: 'video',
+      mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      headline: newAdForm.title.trim(),
+      description: 'Tangazo rasmi lililoidhinishwa na Msimamizi Mkuu wa Tazama.',
+      ctaText: 'Tembelea Tovuti',
+      destinationUrl: 'https://tazama.co.tz',
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
       budgetTZS: Number(newAdForm.budgetTZS),
       status: 'active'
     });

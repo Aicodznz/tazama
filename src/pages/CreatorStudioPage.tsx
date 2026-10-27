@@ -2795,12 +2795,102 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             
             <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#262E3E]">
               <div>
-                <h2 className="text-xl font-black text-white">Kutangaza Video &amp; Kampeni (Promotions Studio)</h2>
-                <p className="text-xs text-[#A7B0C0]">Tangaza video zako kwenye ukurasa mkuu wa Tazama na matokeo ya utafutaji.</p>
+                <h2 className="text-xl font-black text-white">Kutangaza Video &amp; Kampeni za Matangazo (Promotions &amp; Ads Studio)</h2>
+                <p className="text-xs text-[#A7B0C0]">Weka matangazo ya biashara (Skippable, Masthead, In-feed, Bumper) au tangaza video za kituo chako.</p>
+              </div>
+
+              <button
+                onClick={() => setShowCreateAdModal(true)}
+                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-400 hover:brightness-110 text-black font-black text-xs flex items-center gap-2 shadow-lg shadow-amber-500/25 transition-all cursor-pointer"
+              >
+                <Megaphone className="w-4 h-4 text-black" />
+                <span>+ Unda Tangazo Jipya la Biashara</span>
+              </button>
+            </div>
+
+            {/* Section 1: Tazama Ad Campaigns (Created by user or channel) */}
+            <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black text-white flex items-center gap-2">
+                    <Megaphone className="w-4 h-4 text-amber-400" />
+                    Kampeni Zako za Tazama Ads (Matangazo Yaliyolipwa &amp; Idhini ya Admin)
+                  </h3>
+                  <p className="text-[11px] text-[#A7B0C0]">Matangazo yote yanalipiwa kupitia Mobile Money kisha kukaguliwa na Admin kabla ya kwenda hewani.</p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs min-w-[700px]">
+                  <thead>
+                    <tr className="border-b border-[#262E3E] text-[#A7B0C0]">
+                      <th className="pb-2.5">Jina la Kampeni</th>
+                      <th className="pb-2.5">Aina ya Tangazo</th>
+                      <th className="pb-2.5">Bajeti / Malipo</th>
+                      <th className="pb-2.5">Tarehe</th>
+                      <th className="pb-2.5">Impressions / Clicks</th>
+                      <th className="pb-2.5">Hali ya Idhini</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#262E3E]/50">
+                    {adCampaigns.map((ad) => {
+                      const isPending = ad.status === 'pending_approval';
+                      const isActive = ad.status === 'active';
+                      const isRejected = ad.status === 'rejected';
+
+                      return (
+                        <tr key={ad.id} className="hover:bg-[#191E29]/50 transition-colors">
+                          <td className="py-3 font-semibold text-white max-w-xs">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-white truncate block">{ad.campaignName}</span>
+                            </div>
+                            <span className="text-[10px] text-amber-300 block truncate font-normal">"{ad.headline}"</span>
+                          </td>
+                          <td className="py-3">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#191E29] text-cyan-300 border border-cyan-500/30 uppercase">
+                              {ad.adFormat.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="py-3">
+                            <span className="font-mono text-white font-bold block">{formatTZS(ad.budgetTZS)}</span>
+                            <span className="text-[10px] text-emerald-400 font-mono">Iliyolipwa: {ad.paymentProvider || 'M-Pesa'}</span>
+                          </td>
+                          <td className="py-3 font-mono text-[#A7B0C0] text-[11px]">
+                            {ad.startDate} - {ad.endDate}
+                          </td>
+                          <td className="py-3 font-mono text-white">
+                            <span>{(ad.impressions || 0).toLocaleString()}</span>
+                            <span className="text-[#A7B0C0]"> / </span>
+                            <span className="text-amber-400">{(ad.clicks || 0).toLocaleString()}</span>
+                          </td>
+                          <td className="py-3">
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
+                              isActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                              isPending ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse' :
+                              isRejected ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                              'bg-gray-500/20 text-gray-400'
+                            }`}>
+                              {isActive ? '● Liko Hewani' :
+                               isPending ? '⏳ Inasubiri Idhini ya Admin' :
+                               isRejected ? '✕ Imekataliwa' : 'Imesitishwa'}
+                            </span>
+                            {isRejected && ad.rejectionReason && (
+                              <span className="text-[10px] text-red-400 block italic mt-0.5">
+                                Sababu: {ad.rejectionReason}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
 
+            {/* Section 2: Creator Organic Promotions */}
             <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
+              <h3 className="text-sm font-black text-white">Ukuzaji wa Maudhui ya Video za Kituo (Video Boosts)</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs min-w-[700px]">
                   <thead>
@@ -3274,6 +3364,12 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
           <span>Video yako imechapishwa kikamilifu kwenye Tazama na sasa ipo hewani!</span>
         </div>
       )}
+
+      {/* Tazama Create Ad Modal for Creator */}
+      <CreateAdModal
+        isOpen={showCreateAdModal}
+        onClose={() => setShowCreateAdModal(false)}
+      />
 
     </div>
   );
