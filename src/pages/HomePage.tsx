@@ -12,6 +12,7 @@ import { VideoCard } from '../components/video/VideoCard';
 import { StoriesBar } from '../components/home/StoriesBar';
 import { MastheadAdBanner } from '../components/ads/MastheadAdBanner';
 import { InFeedAdCard } from '../components/ads/InFeedAdCard';
+import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
 import { formatViews, translations } from '../lib/i18n';
 import { VideoItem } from '../types';
 
@@ -121,8 +122,11 @@ export const HomePage: React.FC<HomePageProps> = ({
             >
               <img
                 src={short.thumbnailUrl}
-                alt={short.title}
-                className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                alt=""
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = createThumbnailSvgDataUri(short.title, 'Shorts');
+                }}
+                className="w-full h-full object-cover group-hover:opacity-90 transition-opacity bg-[#141824]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-3">
                 <h4 className="text-xs font-bold text-white line-clamp-2 drop-shadow-md">
@@ -199,8 +203,11 @@ export const HomePage: React.FC<HomePageProps> = ({
                 >
                   <img
                     src={ch.avatarUrl}
-                    alt={ch.name}
-                    className="w-12 h-12 rounded-full object-cover ring-2 ring-[#262E3E]"
+                    alt=""
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = createAvatarSvgDataUri(ch.name);
+                    }}
+                    className="w-12 h-12 rounded-full object-cover ring-2 ring-[#262E3E] bg-[#141824]"
                   />
                   <div className="min-w-0">
                     <h4 className="text-xs sm:text-sm font-bold text-white truncate flex items-center gap-1">

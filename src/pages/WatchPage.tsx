@@ -25,6 +25,7 @@ import { VideoDownloadModal } from '../components/modals/VideoDownloadModal';
 import { useVideo } from '../context/VideoContext';
 import { useAuth } from '../context/AuthContext';
 import { formatViews, formatRelativeTime, translations } from '../lib/i18n';
+import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
 
 interface WatchPageProps {
   video: VideoItem;
@@ -175,8 +176,11 @@ export const WatchPage: React.FC<WatchPageProps> = ({
           >
             <img
               src={video.channelAvatar}
-              alt={video.channelName}
-              className="w-10 h-10 rounded-full object-cover ring-2 ring-[#262E3E] shrink-0"
+              alt=""
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = createAvatarSvgDataUri(video.channelName);
+              }}
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-[#262E3E] shrink-0 bg-[#141824]"
             />
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
@@ -335,9 +339,12 @@ export const WatchPage: React.FC<WatchPageProps> = ({
           {/* Comment Input */}
           <form onSubmit={handleCommentSubmit} className="flex gap-2.5 mb-5">
             <img
-              src={profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}
-              alt={profile?.displayName || 'User'}
-              className="w-8 h-8 rounded-full object-cover shrink-0"
+              src={profile?.photoURL || createAvatarSvgDataUri(profile?.displayName || 'User')}
+              alt=""
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = createAvatarSvgDataUri(profile?.displayName || 'User');
+              }}
+              className="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-[#262E3E] bg-[#141824]"
             />
             <div className="flex-1">
               <input
@@ -373,8 +380,11 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               <div key={c.id} className="flex gap-2.5 text-xs">
                 <img
                   src={c.userAvatar}
-                  alt={c.userName}
-                  className="w-7 h-7 rounded-full object-cover shrink-0"
+                  alt=""
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = createAvatarSvgDataUri(c.userName);
+                  }}
+                  className="w-7 h-7 rounded-full object-cover shrink-0 ring-1 ring-[#262E3E] bg-[#141824]"
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -409,9 +419,12 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               <div className="relative w-36 aspect-video rounded-2xl overflow-hidden bg-[#181C26] shrink-0 border border-[#262E3E]">
                 <img
                   src={item.thumbnailUrl}
-                  alt={item.title}
+                  alt=""
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = createThumbnailSvgDataUri(item.title, item.category);
+                  }}
                   loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform bg-[#141824]"
                 />
                 <div className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-[#FF3040] text-white flex items-center justify-center shadow-md">
                   <Play className="w-2.5 h-2.5 fill-white ml-0.5" />
@@ -427,8 +440,11 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   <div className="flex items-center gap-1.5 mt-1 text-[11px] text-[#A7B0C0]">
                     <img 
                       src={item.channelAvatar} 
-                      alt={item.channelName} 
-                      className="w-4 h-4 rounded-full object-cover shrink-0" 
+                      alt="" 
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = createAvatarSvgDataUri(item.channelName);
+                      }}
+                      className="w-4 h-4 rounded-full object-cover shrink-0 ring-1 ring-[#262E3E] bg-[#141824]" 
                     />
                     <span className="truncate">{item.channelName}</span>
                   </div>

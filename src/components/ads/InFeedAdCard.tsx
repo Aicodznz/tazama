@@ -2,6 +2,7 @@ import React from 'react';
 import { ExternalLink, Megaphone, Sparkles } from 'lucide-react';
 import { AdCampaign } from '../../types';
 import { useVideo } from '../../context/VideoContext';
+import { createThumbnailSvgDataUri } from '../../lib/mediaPlaceholders';
 
 interface InFeedAdCardProps {
   ad: AdCampaign;
@@ -41,7 +42,10 @@ export const InFeedAdCard: React.FC<InFeedAdCardProps> = ({ ad }) => {
         ) : (
           <img 
             src={ad.mediaUrl} 
-            alt={ad.headline} 
+            alt="" 
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = createThumbnailSvgDataUri(ad.headline, 'Tangazo');
+            }}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         )}

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Plus, Film } from 'lucide-react';
 import { useVideo } from '../../context/VideoContext';
-import { useAuth } from '../../context/AuthContext';
+import { createAvatarSvgDataUri } from '../../lib/mediaPlaceholders';
+import { Channel } from '../../types';
 
 interface StoriesBarProps {
   onSelectChannel: (channelId: string) => void;
@@ -9,13 +10,49 @@ interface StoriesBarProps {
   onNavigateShorts: () => void;
 }
 
+const StoryItem: React.FC<{
+  channel: Channel;
+  index: number;
+  onSelect: () => void;
+}> = ({ channel, index, onSelect }) => {
+  const [imgError, setImgError] = useState(false);
+  const avatarSrc = imgError 
+    ? createAvatarSvgDataUri(channel.name) 
+    : (channel.avatarUrl || createAvatarSvgDataUri(channel.name));
+
+  return (
+    <div
+      onClick={onSelect}
+      className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group"
+    >
+      <div className="relative w-15 h-15 sm:w-16 sm:h-16 rounded-full p-[2px] bg-gradient-to-tr from-[#FF3040] via-amber-400 to-[#16C784] group-hover:scale-105 transition-transform shadow-md">
+        <div className="w-full h-full rounded-full bg-[#10131B] p-[2px] overflow-hidden">
+          <img
+            src={avatarSrc}
+            alt=""
+            onError={() => setImgError(true)}
+            className="w-full h-full rounded-full object-cover bg-[#1A1F2E]"
+          />
+        </div>
+
+        {/* Online Green Indicator Dot */}
+        {index < 4 && (
+          <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-[#16C784] border-2 border-[#10131B]" />
+        )}
+      </div>
+      <span className="text-[11px] font-medium text-white/90 truncate max-w-[64px] text-center">
+        {channel.handle ? channel.handle.replace('@', '') : channel.name.split(' ')[0]}
+      </span>
+    </div>
+  );
+};
+
 export const StoriesBar: React.FC<StoriesBarProps> = ({
   onSelectChannel,
   onOpenUpload,
   onNavigateShorts,
 }) => {
   const { channels } = useVideo();
-  const { profile } = useAuth();
 
   return (
     <div className="flex items-center gap-3.5 overflow-x-auto no-scrollbar py-2 px-1 select-none">
@@ -48,29 +85,12 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({
 
       {/* 2. Popular Tanzanian Creators with Active Status Dot */}
       {channels.map((ch, idx) => (
-        <div
+        <StoryItem
           key={ch.id}
-          onClick={() => onSelectChannel(ch.id)}
-          className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group"
-        >
-          <div className="relative w-15 h-15 sm:w-16 sm:h-16 rounded-full p-[2px] bg-gradient-to-tr from-[#FF3040] via-amber-400 to-[#16C784] group-hover:scale-105 transition-transform shadow-md">
-            <div className="w-full h-full rounded-full bg-[#10131B] p-[2px] overflow-hidden">
-              <img
-                src={ch.avatarUrl}
-                alt={ch.name}
-                className="w-full h-full rounded-full object-cover"
-              />
-            </div>
-
-            {/* Online Green Indicator Dot (Matching Screenshot 1 & 7) */}
-            {idx < 4 && (
-              <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-[#16C784] border-2 border-[#10131B]" />
-            )}
-          </div>
-          <span className="text-[11px] font-medium text-white/90 truncate max-w-[64px] text-center">
-            {ch.handle ? ch.handle.replace('@', '') : ch.name.split(' ')[0]}
-          </span>
-        </div>
+          channel={ch}
+          index={idx}
+          onSelect={() => onSelectChannel(ch.id)}
+        />
       ))}
     </div>
   );
