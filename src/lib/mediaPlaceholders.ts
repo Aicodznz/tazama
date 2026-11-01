@@ -53,55 +53,95 @@ export function createAvatarSvgDataUri(name: string): string {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+/**
+ * Creates a clean, cinematic video thumbnail poster background.
+ * DOES NOT include pseudo UI badges, ribbons, or duplicate play buttons,
+ * ensuring the React DOM badges (Live, Category, Duration, Play) sit cleanly without duplicate tails.
+ */
 export function createThumbnailSvgDataUri(title: string, category: string = 'Tazama'): string {
-  const theme = getChannelTheme(title + category);
-  const safeTitle = title.length > 55 ? title.substring(0, 52) + '...' : title;
-  
+  const theme = getChannelTheme(title + ' ' + category);
+  const lowerCat = category.toLowerCase();
+
+  // Category-specific ambient graphics
+  let categoryArt = '';
+
+  if (lowerCat.includes('muzik') || lowerCat.includes('music')) {
+    // Music: Stage spotlights, soundwave curves, equalizer aura
+    categoryArt = `
+      <ellipse cx="640" cy="720" rx="550" ry="220" fill="${theme.from}" opacity="0.25" filter="blur(60px)"/>
+      <path d="M 100 480 Q 300 320 640 460 T 1180 400" fill="none" stroke="${theme.accent}" stroke-width="4" opacity="0.4"/>
+      <path d="M 80 520 Q 380 380 640 500 T 1200 440" fill="none" stroke="${theme.from}" stroke-width="3" opacity="0.3"/>
+      <!-- Equalizer ambient pulses -->
+      <line x1="440" y1="440" x2="440" y2="280" stroke="${theme.accent}" stroke-width="6" stroke-linecap="round" opacity="0.35"/>
+      <line x1="500" y1="460" x2="500" y2="220" stroke="${theme.accent}" stroke-width="6" stroke-linecap="round" opacity="0.5"/>
+      <line x1="560" y1="480" x2="560" y2="180" stroke="${theme.from}" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+      <line x1="620" y1="490" x2="620" y2="150" stroke="#ffffff" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+      <line x1="680" y1="490" x2="680" y2="200" stroke="${theme.from}" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+      <line x1="740" y1="480" x2="740" y2="250" stroke="${theme.accent}" stroke-width="6" stroke-linecap="round" opacity="0.5"/>
+      <line x1="800" y1="450" x2="800" y2="300" stroke="${theme.accent}" stroke-width="6" stroke-linecap="round" opacity="0.35"/>
+    `;
+  } else if (lowerCat.includes('habari') || lowerCat.includes('news')) {
+    // News: High-tech studio globe arc & newsroom light bands
+    categoryArt = `
+      <ellipse cx="640" cy="360" rx="420" ry="420" fill="none" stroke="${theme.accent}" stroke-width="2" opacity="0.18"/>
+      <ellipse cx="640" cy="360" rx="320" ry="180" fill="none" stroke="${theme.from}" stroke-width="2.5" opacity="0.25"/>
+      <ellipse cx="640" cy="360" rx="520" ry="240" fill="none" stroke="${theme.accent}" stroke-width="1.5" opacity="0.15"/>
+      <line x1="120" y1="360" x2="1160" y2="360" stroke="${theme.accent}" stroke-width="1.5" opacity="0.2"/>
+    `;
+  } else if (lowerCat.includes('michezo') || lowerCat.includes('sports')) {
+    // Sports: Stadium floodlight beams, pitch arcs
+    categoryArt = `
+      <polygon points="100,0 260,720 0,720" fill="${theme.accent}" opacity="0.08"/>
+      <polygon points="1180,0 1280,720 1020,720" fill="${theme.from}" opacity="0.08"/>
+      <path d="M 200 650 Q 640 400 1080 650" fill="none" stroke="${theme.accent}" stroke-width="3" opacity="0.3"/>
+      <circle cx="640" cy="360" r="140" fill="none" stroke="${theme.accent}" stroke-width="2" opacity="0.2"/>
+    `;
+  } else if (lowerCat.includes('tech') || lowerCat.includes('teknolojia')) {
+    // Tech: Cyber grid and glowing circuit nodes
+    categoryArt = `
+      <path d="M 200 200 L 400 200 L 500 300 L 800 300 L 900 400 L 1100 400" fill="none" stroke="${theme.accent}" stroke-width="2" opacity="0.3"/>
+      <circle cx="500" cy="300" r="6" fill="${theme.accent}" opacity="0.6"/>
+      <circle cx="900" cy="400" r="6" fill="${theme.from}" opacity="0.6"/>
+      <path d="M 150 500 L 350 500 L 450 420 L 750 420" fill="none" stroke="${theme.from}" stroke-width="2" opacity="0.25"/>
+    `;
+  } else {
+    // Entertainment / Comedy / Default: Cinematic spotlight & bokeh glow
+    categoryArt = `
+      <circle cx="640" cy="320" r="260" fill="${theme.from}" opacity="0.18" filter="blur(70px)"/>
+      <circle cx="820" cy="240" r="140" fill="${theme.accent}" opacity="0.2" filter="blur(50px)"/>
+      <circle cx="460" cy="400" r="120" fill="${theme.from}" opacity="0.15" filter="blur(40px)"/>
+    `;
+  }
+
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720">
     <defs>
-      <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#141824"/>
-        <stop offset="50%" stop-color="#0E1119"/>
-        <stop offset="100%" stop-color="#080A0F"/>
+        <stop offset="50%" stop-color="#0E121A"/>
+        <stop offset="100%" stop-color="#07090E"/>
       </linearGradient>
-      <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stop-color="${theme.from}"/>
-        <stop offset="100%" stop-color="${theme.accent}"/>
-      </linearGradient>
-      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+      <radialGradient id="centerGlow" cx="50%" cy="45%" r="65%">
+        <stop offset="0%" stop-color="${theme.from}" stop-opacity="0.32"/>
+        <stop offset="50%" stop-color="${theme.accent}" stop-opacity="0.12"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+      </radialGradient>
+      <pattern id="fineGrid" width="48" height="48" patternUnits="userSpaceOnUse">
+        <path d="M 48 0 L 0 0 0 48" fill="none" stroke="rgba(255,255,255,0.025)" stroke-width="1"/>
       </pattern>
     </defs>
     
-    <!-- Background -->
-    <rect width="1280" height="720" fill="url(#bg)"/>
-    <rect width="1280" height="720" fill="url(#grid)"/>
+    <!-- Base Canvas -->
+    <rect width="1280" height="720" fill="url(#bgGrad)"/>
+    <rect width="1280" height="720" fill="url(#fineGrid)"/>
     
-    <!-- Decorative Glow Circles -->
-    <circle cx="1100" cy="180" r="280" fill="${theme.from}" opacity="0.15" filter="blur(60px)"/>
-    <circle cx="180" cy="540" r="240" fill="${theme.to}" opacity="0.2" filter="blur(50px)"/>
+    <!-- Ambient Category Atmospheric Glow -->
+    <rect width="1280" height="720" fill="url(#centerGlow)"/>
     
-    <!-- Top Category Ribbon -->
-    <rect x="60" y="55" width="220" height="46" rx="23" fill="url(#accent)"/>
-    <text x="170" y="85" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="1">${category.toUpperCase()}</text>
-
-    <!-- Tanzanian Flag Accent Dots -->
-    <circle cx="1200" cy="75" r="8" fill="#1EB53A"/>
-    <circle cx="1180" cy="75" r="8" fill="#FCD116"/>
-    <circle cx="1160" cy="75" r="8" fill="#00A3DD"/>
-
-    <!-- Central Play Glass Artwork -->
-    <circle cx="640" cy="340" r="80" fill="rgba(255, 48, 64, 0.9)" stroke="rgba(255,255,255,0.4)" stroke-width="3"/>
-    <polygon points="630,310 670,340 630,370" fill="#ffffff"/>
-
-    <!-- Bottom Dark Gradient for Title Legibility -->
-    <rect x="0" y="460" width="1280" height="260" fill="rgba(8, 10, 15, 0.85)"/>
+    <!-- Category Specific Artwork -->
+    ${categoryArt}
     
-    <!-- Video Title -->
-    <text x="60" y="560" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="38" font-weight="900" fill="#ffffff">${safeTitle}</text>
-    
-    <!-- Tazama Branding -->
-    <text x="60" y="640" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="700" fill="#FF3040">TAZAMA • HD 1080p</text>
+    <!-- Subtle Edge Vignette to keep corners deep and badges high-contrast -->
+    <rect width="1280" height="720" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="40"/>
   </svg>`;
 
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;

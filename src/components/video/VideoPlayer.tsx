@@ -374,17 +374,17 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
           </div>
 
           {/* Bottom Bar: Sponsor Banner (Left) and Skip Button (Right) */}
-          <div className="flex items-end justify-between gap-3 pointer-events-auto mb-2 sm:mb-3">
+          <div className="flex items-end justify-between gap-2 sm:gap-3 pointer-events-auto mb-2 sm:mb-3">
             
             {/* Sponsor Companion Card */}
-            <div className="flex items-center gap-2.5 p-2 sm:p-2.5 rounded-2xl bg-black/85 backdrop-blur-md border border-amber-500/30 shadow-2xl max-w-[210px] sm:max-w-md">
+            <div className="flex items-center gap-2 sm:gap-2.5 p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl bg-black/85 backdrop-blur-md border border-amber-500/35 shadow-2xl min-w-0 flex-1 max-w-[calc(100%-95px)] sm:max-w-md">
               <img
                 src={createAvatarSvgDataUri(activeAd.advertiserName || activeAd.creatorName)}
                 alt=""
                 className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover shrink-0 ring-1 ring-amber-500/40"
               />
-              <div className="min-w-0 pr-1">
-                <h4 className="text-[11px] sm:text-xs font-black text-white line-clamp-1">
+              <div className="min-w-0 flex-1 pr-1">
+                <h4 className="text-[11px] sm:text-xs font-black text-white truncate">
                   {activeAd.headline}
                 </h4>
                 <p className="text-[10px] text-amber-300 font-mono truncate hidden sm:block">
@@ -394,7 +394,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
 
               <button
                 onClick={handleAdCtaClick}
-                className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-black text-[11px] sm:text-xs font-black shrink-0 flex items-center gap-1 shadow-md active:scale-95 transition-all cursor-pointer"
+                className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:brightness-110 text-black text-[11px] sm:text-xs font-black shrink-0 flex items-center gap-1 shadow-md active:scale-95 transition-all cursor-pointer whitespace-nowrap"
               >
                 <span>{activeAd.ctaText || 'Tembelea'}</span>
                 <ExternalLink className="w-3 h-3 stroke-[2.5]" />
@@ -406,14 +406,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
               {canSkipAd ? (
                 <button
                   onClick={handleSkipAd}
-                  className="px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full bg-black/90 hover:bg-[#FF3040] text-white border border-white/30 text-xs sm:text-sm font-black shadow-2xl flex items-center gap-1.5 sm:gap-2 transition-all active:scale-95 cursor-pointer backdrop-blur-md"
+                  className="px-3 sm:px-5 py-1.5 sm:py-2.5 rounded-full bg-black/90 hover:bg-[#FF3040] text-white border border-white/30 text-xs sm:text-sm font-black shadow-2xl flex items-center gap-1.5 sm:gap-2 transition-all active:scale-95 cursor-pointer backdrop-blur-md whitespace-nowrap"
                 >
                   <span>Ruka Tangazo</span>
                   <span className="text-amber-300 font-bold">&rarr;</span>
                 </button>
               ) : (
-                <div className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black/85 border border-white/20 text-white font-mono text-[11px] sm:text-xs flex items-center gap-1.5 backdrop-blur-md shadow-xl">
-                  <span className="text-[#A7B0C0] hidden sm:inline">Unaweza kuruka baada ya:</span>
+                <div className="px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-black/85 border border-white/20 text-white font-mono text-[11px] sm:text-xs flex items-center gap-1.5 backdrop-blur-md shadow-xl whitespace-nowrap">
+                  <span className="text-[#A7B0C0] text-[10px] sm:text-xs">Ruka:</span>
                   <strong className="text-amber-400 font-bold">{adSkipCountdown}s</strong>
                 </div>
               )}
