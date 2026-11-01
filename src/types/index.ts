@@ -501,3 +501,32 @@ export interface CreatorPromotion {
   startDate: string;
 }
 
+export type TazamaNotificationType =
+  | 'new_video'
+  | 'new_subscriber'
+  | 'new_comment'
+  | 'new_like'
+  | 'new_gift'
+  | 'payment_received'
+  | 'live_stream'
+  | 'copyright_alert'
+  | 'campaign_update'
+  | 'premium_update'
+  | 'system_announcement';
+
+export interface TazamaNotification {
+  id: string;
+  userId: string;
+  type: TazamaNotificationType;
+  title: string;
+  message: string;
+  avatarUrl?: string;
+  targetUrl?: string;
+  targetId?: string;
+  targetType?: 'video' | 'channel' | 'wallet' | 'campaign' | 'copyright';
+  isRead: boolean;
+  createdAt: string;
+  actionLabel?: string;
+}
+
+

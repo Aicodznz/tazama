@@ -19,11 +19,12 @@ import {
   Zap,
   Radio,
   Download,
-  Megaphone
+  Megaphone,
+  CheckCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useVideo } from '../../context/VideoContext';
-import { translations, formatTZS } from '../../lib/i18n';
+import { translations, formatTZS, formatRelativeTime } from '../../lib/i18n';
 import { UserRole } from '../../types';
 import { PWAInstallModal } from '../modals/PWAInstallModal';
 
@@ -59,7 +60,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     toggleTheme 
   } = useAuth();
   
-  const { searchQuery, setSearchQuery, isDataSaver, toggleDataSaver } = useVideo();
+  const { 
+    searchQuery, 
+    setSearchQuery, 
+    isDataSaver, 
+    toggleDataSaver,
+    notifications,
+    unreadNotificationCount,
+    markNotificationAsRead,
+    markAllNotificationsAsRead
+  } = useVideo();
   const t = translations[language];
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -296,24 +306,102 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-1.5 sm:p-2 rounded-full text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors"
+                className="relative p-1.5 sm:p-2 rounded-full text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors focus:outline-none cursor-pointer"
                 title="Taarifa (Notifications)"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 w-2 h-2 rounded-full bg-[#FF3040]" />
+                {unreadNotificationCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF3040] text-white text-[10px] font-extrabold flex items-center justify-center shadow-md shadow-[#FF3040]/40">
+                    {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+                  </span>
+                )}
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-[#191E29] border border-[#262E3E] rounded-2xl shadow-2xl p-3 z-50">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#262E3E]">
-                    <h4 className="text-sm font-bold text-white">Taarifa Mpya</h4>
-                    <span className="text-[10px] text-[#16C784] font-semibold">Zote zimesomwa</span>
-                  </div>
-                  <div className="divide-y divide-[#262E3E]/60 text-xs">
-                    <div className="py-2.5">
-                      <p className="font-semibold text-white">Karibu Tazama!</p>
-                      <p className="text-[11px] text-[#A7B0C0]">Akaunti yako ipo tayari. Anza kutazama na kushiriki maudhui.</p>
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[#141824] border border-[#262E3E] rounded-3xl shadow-2xl p-3 sm:p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-bold text-white">Taarifa Mpya</h4>
+                      {unreadNotificationCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-[#FF3040]/20 text-[#FF3040] font-mono text-[10px] font-extrabold">
+                          {unreadNotificationCount} mpya
+                        </span>
+                      )}
                     </div>
+                    {unreadNotificationCount > 0 && (
+                      <button
+                        onClick={() => markAllNotificationsAsRead()}
+                        className="flex items-center gap-1 text-[11px] text-[#16C784] hover:underline font-semibold cursor-pointer"
+                        title="Weka zote zimesomwa"
+                      >
+                        <CheckCheck className="w-3.5 h-3.5" />
+                        <span>Weka zote zimesomwa</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="divide-y divide-[#262E3E]/60 max-h-[360px] overflow-y-auto no-scrollbar py-1">
+                    {notifications.length === 0 ? (
+                      <div className="py-8 text-center text-[#A7B0C0] space-y-2">
+                        <Bell className="w-8 h-8 mx-auto text-[#262E3E]" />
+                        <p className="text-xs">Hakuna taarifa mpya kwa sasa.</p>
+                      </div>
+                    ) : (
+                      notifications.slice(0, 10).map((n) => {
+                        return (
+                          <div
+                            key={n.id}
+                            onClick={() => {
+                              markNotificationAsRead(n.id);
+                              if (n.targetType === 'wallet') {
+                                onOpenWallet();
+                              } else if (n.targetType === 'campaign') {
+                                onNavigate('studio');
+                              } else if (n.targetType === 'channel' && n.targetId) {
+                                onNavigate('channel');
+                              }
+                              setShowNotifications(false);
+                            }}
+                            className={`py-2.5 px-2 rounded-xl transition-colors cursor-pointer flex items-start gap-2.5 ${
+                              !n.isRead ? 'bg-[#191E29] hover:bg-[#202736]' : 'hover:bg-white/5 opacity-80 hover:opacity-100'
+                            }`}
+                          >
+                            <div className="w-2 h-2 rounded-full mt-2 shrink-0 bg-[#FF3040]" style={{ visibility: n.isRead ? 'hidden' : 'visible' }} />
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1">
+                                <h5 className={`text-xs truncate ${!n.isRead ? 'font-bold text-white' : 'font-medium text-[#CBD5E1]'}`}>
+                                  {n.title}
+                                </h5>
+                                <span className="text-[10px] text-[#A7B0C0] font-mono shrink-0">
+                                  {formatRelativeTime(n.createdAt, language)}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-[#A7B0C0] line-clamp-2 mt-0.5 leading-snug">
+                                {n.message}
+                              </p>
+                              {n.actionLabel && (
+                                <span className="inline-block mt-1.5 text-[10px] font-bold text-[#16C784] hover:underline">
+                                  {n.actionLabel} &rarr;
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-[#262E3E] text-center">
+                    <button
+                      onClick={() => {
+                        setShowNotifications(false);
+                        onNavigate('settings');
+                      }}
+                      className="text-[11px] text-[#A7B0C0] hover:text-white transition-colors"
+                    >
+                      Mipangilio ya Taarifa
+                    </button>
                   </div>
                 </div>
               )}

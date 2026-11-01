@@ -208,74 +208,77 @@ export const WatchPage: React.FC<WatchPageProps> = ({
         </div>
 
         {/* Modern Action Pill Buttons (Responsive & smooth horizontal scroll) */}
-        <div className="-mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1">
-          
-          {/* Like & Dislike Pill */}
-          <div className="flex items-center rounded-full bg-[#191E29] border border-[#262E3E] shrink-0 overflow-hidden">
+        <div className="relative">
+          <div className="-mx-3 px-3 sm:mx-0 sm:px-0 flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1 scroll-smooth touch-pan-x">
+            
+            {/* Like & Dislike Pill */}
+            <div className="flex items-center rounded-full bg-[#191E29] border border-[#262E3E] shrink-0 overflow-hidden">
+              <button
+                onClick={() => toggleLike(video.id)}
+                className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold hover:bg-[#232A39] transition-colors ${
+                  isLiked ? 'text-[#FF3040]' : 'text-white'
+                }`}
+              >
+                <ThumbsUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiked ? 'fill-[#FF3040]' : ''}`} />
+                <span>{formatViews(video.likesCount, language)}</span>
+              </button>
+              <div className="w-[1px] h-3.5 bg-[#262E3E]" />
+              <button
+                className="px-2 sm:px-2.5 py-1.5 text-xs font-bold hover:bg-[#232A39] text-[#A7B0C0] hover:text-white transition-colors"
+                title="Sipendi (Dislike)"
+              >
+                <ThumbsDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </button>
+            </div>
+
+            {/* Share Pill */}
             <button
-              onClick={() => toggleLike(video.id)}
-              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold hover:bg-[#232A39] transition-colors ${
-                isLiked ? 'text-[#FF3040]' : 'text-white'
+              onClick={handleShare}
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-xs font-bold text-white transition-colors shrink-0 active:scale-95 whitespace-nowrap"
+            >
+              {isCopied ? <Check className="w-3.5 h-3.5 text-[#16C784]" /> : <Share2 className="w-3.5 h-3.5 text-[#FF3040]" />}
+              <span>{isCopied ? 'Imenakiliwa' : 'Shiriki'}</span>
+            </button>
+
+            {/* Offline Download Pill */}
+            <button
+              onClick={handleToggleDownload}
+              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all shrink-0 active:scale-95 whitespace-nowrap ${
+                isDownloadedAlready 
+                  ? 'bg-[#16C784]/20 border-[#16C784]/50 text-[#16C784]' 
+                  : 'bg-[#191E29] hover:bg-[#232A39] border-[#262E3E] text-white hover:border-[#16C784]'
               }`}
+              title="Pakua Video Kwenye Simu"
             >
-              <ThumbsUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiked ? 'fill-[#FF3040]' : ''}`} />
-              <span>{formatViews(video.likesCount, language)}</span>
+              {isDownloadedAlready ? (
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#16C784]" />
+              ) : (
+                <Download className="w-3.5 h-3.5 text-[#16C784]" />
+              )}
+              <span>{isDownloadedAlready ? 'Imepakuliwa' : 'Pakua'}</span>
             </button>
-            <div className="w-[1px] h-3.5 bg-[#262E3E]" />
+
+            {/* Gift Pill (High Visibility) */}
             <button
-              className="px-2 sm:px-2.5 py-1.5 text-xs font-bold hover:bg-[#232A39] text-[#A7B0C0] hover:text-white transition-colors"
-              title="Sipendi (Dislike)"
+              onClick={() => setShowGiftModal(true)}
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#16C784]/15 hover:bg-[#16C784]/25 border border-[#16C784]/50 text-xs font-bold text-[#16C784] transition-colors shrink-0 active:scale-95 whitespace-nowrap shadow-sm shadow-[#16C784]/20"
             >
-              <ThumbsDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Gift className="w-3.5 h-3.5" />
+              <span>Zawadi</span>
             </button>
+
+            {/* Save to Playlist Pill */}
+            <button
+              onClick={() => setShowAddToPlaylistModal(true)}
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-xs font-bold text-white transition-colors shrink-0 active:scale-95 whitespace-nowrap"
+            >
+              <Bookmark className="w-3.5 h-3.5 text-purple-400" />
+              <span>Orodha</span>
+            </button>
+
+            {/* Trailing space for comfortable thumb scroll on small screens */}
+            <div className="w-6 shrink-0 sm:hidden" />
           </div>
-
-          {/* Share Pill */}
-          <button
-            onClick={handleShare}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-xs font-bold text-white transition-colors shrink-0 active:scale-95 whitespace-nowrap"
-          >
-            {isCopied ? <Check className="w-3.5 h-3.5 text-[#16C784]" /> : <Share2 className="w-3.5 h-3.5" />}
-            <span>{isCopied ? 'Imenakiliwa' : 'Shiriki'}</span>
-          </button>
-
-          {/* Offline Download Pill */}
-          <button
-            onClick={handleToggleDownload}
-            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full border text-xs font-bold transition-all shrink-0 active:scale-95 whitespace-nowrap ${
-              isDownloadedAlready 
-                ? 'bg-[#16C784]/20 border-[#16C784]/50 text-[#16C784]' 
-                : 'bg-[#191E29] hover:bg-[#232A39] border-[#262E3E] text-white hover:border-[#16C784]'
-            }`}
-            title="Pakua Video Kwenye Simu"
-          >
-            {isDownloadedAlready ? (
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#16C784]" />
-            ) : (
-              <Download className="w-3.5 h-3.5 text-[#16C784]" />
-            )}
-            <span>{isDownloadedAlready ? 'Imepakuliwa' : 'Pakua'}</span>
-          </button>
-
-          {/* Gift Pill */}
-          <button
-            onClick={() => setShowGiftModal(true)}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#16C784]/15 hover:bg-[#16C784]/25 border border-[#16C784]/40 text-xs font-bold text-[#16C784] transition-colors shrink-0 active:scale-95 whitespace-nowrap"
-          >
-            <Gift className="w-3.5 h-3.5" />
-            <span>Zawadi</span>
-          </button>
-
-          {/* Save to Playlist Pill */}
-          <button
-            onClick={() => setShowAddToPlaylistModal(true)}
-            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-xs font-bold text-white transition-colors shrink-0 active:scale-95 whitespace-nowrap"
-          >
-            <Bookmark className="w-3.5 h-3.5 text-purple-400" />
-            <span>Orodha</span>
-          </button>
-
-          <div className="w-3 shrink-0 sm:hidden" />
         </div>
 
         {/* Subscribe & Bell Row (Matching Screenshot 2: Bell icon + Big Red Subscribe button) */}

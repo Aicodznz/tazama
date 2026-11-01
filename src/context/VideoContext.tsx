@@ -30,7 +30,8 @@ import {
   CommunityPost,
   CreatorMembershipTier,
   VideoSubtitleTrack,
-  CreatorPromotion
+  CreatorPromotion,
+  TazamaNotification
 } from '../types';
 import { 
   INITIAL_VIDEOS, 
@@ -53,7 +54,8 @@ import {
   INITIAL_COMMUNITY_POSTS,
   INITIAL_CREATOR_MEMBERSHIP_TIERS,
   INITIAL_VIDEO_SUBTITLES,
-  INITIAL_CREATOR_PROMOTIONS
+  INITIAL_CREATOR_PROMOTIONS,
+  INITIAL_NOTIFICATIONS
 } from '../data/mockData';
 import { useAuth } from './AuthContext';
 
@@ -193,6 +195,12 @@ interface VideoContextType {
   applyForMonetization: (channelId: string) => boolean;
   submitCopyrightAppeal: (claimId: string, explanation: string) => void;
   updateChannelInfo: (channelId: string, updates: Partial<Channel>) => void;
+  // Notifications
+  notifications: TazamaNotification[];
+  unreadNotificationCount: number;
+  markNotificationAsRead: (notificationId: string) => void;
+  markAllNotificationsAsRead: () => void;
+  addNotification: (notif: Omit<TazamaNotification, 'id' | 'createdAt'>) => void;
 }
 
 const VideoContext = createContext<VideoContextType | undefined>(undefined);
@@ -286,6 +294,28 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Mini Player State
   const [miniPlayerVideo, setMiniPlayerVideo] = useState<VideoItem | null>(null);
   const [isMiniPlayerPlaying, setIsMiniPlayerPlaying] = useState<boolean>(true);
+
+  // In-App Notifications State
+  const [notifications, setNotifications] = useState<TazamaNotification[]>(INITIAL_NOTIFICATIONS);
+
+  const unreadNotificationCount = notifications.filter(n => !n.isRead).length;
+
+  const markNotificationAsRead = (notificationId: string) => {
+    setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n));
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  };
+
+  const addNotification = (notif: Omit<TazamaNotification, 'id' | 'createdAt'>) => {
+    const newNotif: TazamaNotification = {
+      ...notif,
+      id: `notif-${Date.now()}`,
+      createdAt: new Date().toISOString()
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
 
   const toggleMiniPlayerPlay = () => {
     setIsMiniPlayerPlaying(prev => !prev);
@@ -1549,7 +1579,13 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         applyForVerification,
         applyForMonetization,
         submitCopyrightAppeal,
-        updateChannelInfo
+        updateChannelInfo,
+        // Notifications
+        notifications,
+        unreadNotificationCount,
+        markNotificationAsRead,
+        markAllNotificationsAsRead,
+        addNotification
       }}
     >
       {children}

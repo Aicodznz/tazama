@@ -17,6 +17,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { LivePage } from './pages/LivePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { SearchResultsPage } from './pages/SearchResultsPage';
 import { MiniPlayer } from './components/common/MiniPlayer';
 import { UploadModal } from './components/upload/UploadModal';
 import { WalletModal } from './components/wallet/WalletModal';
@@ -352,13 +353,12 @@ const AppContent: React.FC = () => {
             />
           )}
 
-          {/* Search results route fallback */}
+          {/* Search results dedicated route */}
           {activePage === 'search' && (
-            <HomePage
+            <SearchResultsPage
               onSelectVideo={handleSelectVideo}
               onSelectChannel={handleSelectChannel}
-              onNavigate={handleNavigate}
-              onOpenUpload={() => setIsUploadOpen(true)}
+              onNavigateHome={() => handleNavigate('home')}
             />
           )}
         </main>

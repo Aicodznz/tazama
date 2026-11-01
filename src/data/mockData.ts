@@ -20,7 +20,8 @@ import {
   CommunityPost,
   CreatorMembershipTier,
   VideoSubtitleTrack,
-  CreatorPromotion
+  CreatorPromotion,
+  TazamaNotification
 } from '../types';
 
 export const INITIAL_CHANNELS: Channel[] = [
@@ -1301,4 +1302,65 @@ export const INITIAL_CREATOR_PROMOTIONS: CreatorPromotion[] = [
     startDate: new Date(Date.now() - 3600000 * 40).toISOString()
   }
 ];
+
+export const INITIAL_NOTIFICATIONS: TazamaNotification[] = [
+  {
+    id: 'notif-001',
+    userId: 'current-user',
+    type: 'new_video',
+    title: 'Wasafi Media imepakia video mpya',
+    message: 'WASAFIBURN LIVE MWANZA: Diamond Platnumz Akiamsha Umati CCM Kirumba imechapishwa sasa.',
+    avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
+    targetType: 'video',
+    targetId: 'vid-wasafi-fest',
+    isRead: false,
+    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    actionLabel: 'Tazama Sasa'
+  },
+  {
+    id: 'notif-002',
+    userId: 'current-user',
+    type: 'payment_received',
+    title: 'Malipo ya M-Pesa yamethibitishwa',
+    message: 'Salio lako la Tazama Wallet limeongezwa Tsh 50,000 kupitia M-Pesa (Ref: MP-892410-TZ).',
+    targetType: 'wallet',
+    isRead: false,
+    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+    actionLabel: 'Fungua Wallet'
+  },
+  {
+    id: 'notif-003',
+    userId: 'current-user',
+    type: 'campaign_update',
+    title: 'Tangazo lako la Ads limeidhinishwa!',
+    message: 'Kampeni yako ya "Galaxy S25 Ultra" imeidhinishwa na Admin na inafanya kazi hadharani.',
+    targetType: 'campaign',
+    targetId: 'ad-samsung-s25',
+    isRead: true,
+    createdAt: new Date(Date.now() - 3600000 * 18).toISOString(),
+    actionLabel: 'Kagua Takwimu'
+  },
+  {
+    id: 'notif-004',
+    userId: 'current-user',
+    type: 'new_gift',
+    title: 'Umepokea Zawadi ya Simba wa Dhahabu!',
+    message: 'Mfuasi Baraka Mrema amekutumia zawadi ya Tsh 5,000 kwenye video yako.',
+    targetType: 'wallet',
+    isRead: true,
+    createdAt: new Date(Date.now() - 3600000 * 30).toISOString(),
+    actionLabel: 'Angalia Mapato'
+  },
+  {
+    id: 'notif-005',
+    userId: 'current-user',
+    type: 'system_announcement',
+    title: 'Taarifa ya Mfumo wa Tazama',
+    message: 'Hali ya Kubana Bando (Data Saver) imeboreshwa ili kukuwezesha kuokoa hadi 45% ya MB zako za mtandao.',
+    targetType: 'channel',
+    isRead: true,
+    createdAt: new Date(Date.now() - 3600000 * 72).toISOString()
+  }
+];
+
 
