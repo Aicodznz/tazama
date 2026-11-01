@@ -61,58 +61,75 @@ export const ChannelsPage: React.FC<ChannelsPageProps> = ({
         </div>
       </div>
 
-      {/* Channel Rows (Matching Screenshot 4) */}
-      <div className="space-y-2">
-        {sortedChannels.map((channel) => {
-          const isSubscribed = userSubscriptions.includes(channel.id);
-          return (
-            <div
-              key={channel.id}
-              onClick={() => onSelectChannel(channel.id)}
-              className="flex items-center justify-between p-3 rounded-2xl hover:bg-[#181C26] transition-colors cursor-pointer group"
+      {/* Channel Rows */}
+      {sortedChannels.length === 0 ? (
+        <div className="py-16 px-4 text-center bg-[#141824] border border-[#262E3E] rounded-3xl space-y-3">
+          <p className="text-base font-bold text-white">Hakuna Chaneli Zilizosajiliwa Bado</p>
+          <p className="text-xs text-[#A7B0C0] max-w-sm mx-auto">
+            Bado hakuna waundaji waliofungua chaneli. Kuwa wa kwanza kuanzisha chaneli yako ya Tazama leo!
+          </p>
+          <div className="pt-2">
+            <button
+              onClick={onNavigateHome}
+              className="px-5 py-2.5 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-white text-xs font-semibold border border-[#262E3E] transition-all"
             >
-              {/* Avatar + Info */}
-              <div className="flex items-center gap-3.5 min-w-0">
-                <img
-                  src={channel.avatarUrl}
-                  alt={channel.name}
-                  className="w-12 h-12 rounded-full object-cover ring-2 ring-[#262E3E] group-hover:ring-[#FF3040] transition-all shrink-0"
-                />
+              Rudi Mwanzo
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {sortedChannels.map((channel) => {
+            const isSubscribed = userSubscriptions.includes(channel.id);
+            return (
+              <div
+                key={channel.id}
+                onClick={() => onSelectChannel(channel.id)}
+                className="flex items-center justify-between p-3 rounded-2xl hover:bg-[#181C26] transition-colors cursor-pointer group"
+              >
+                {/* Avatar + Info */}
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <img
+                    src={channel.avatarUrl}
+                    alt={channel.name}
+                    className="w-12 h-12 rounded-full object-cover ring-2 ring-[#262E3E] group-hover:ring-[#FF3040] transition-all shrink-0"
+                  />
 
-                <div className="min-w-0">
-                  <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 truncate group-hover:text-[#FF3040] transition-colors">
-                    <span className="truncate">{channel.name}</span>
-                    {channel.isVerified && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#16C784] shrink-0" />
-                    )}
-                  </h3>
-                  <p className="text-[11px] text-[#A7B0C0] font-mono mt-0.5 truncate">
-                    {formatViews(channel.subscriberCount, language)} subscribers • {channel.videoCount} video
-                  </p>
+                  <div className="min-w-0">
+                    <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 truncate group-hover:text-[#FF3040] transition-colors">
+                      <span className="truncate">{channel.name}</span>
+                      {channel.isVerified && (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#16C784] shrink-0" />
+                      )}
+                    </h3>
+                    <p className="text-[11px] text-[#A7B0C0] font-mono mt-0.5 truncate">
+                      {formatViews(channel.subscriberCount, language)} subscribers • {channel.videoCount} video
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Subscribe Action Button (Matching Screenshot 4: Red "Subscribe" vs Dark "Subscribed") */}
-              <div className="flex items-center gap-2 shrink-0 ml-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleSubscribe(channel.id);
-                  }}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all shadow-md active:scale-95 ${
-                    isSubscribed
-                      ? 'bg-[#232A39] border border-[#262E3E] text-[#A7B0C0] hover:text-white'
-                      : 'bg-[#FF3040] hover:bg-[#E02635] text-white shadow-[#FF3040]/30'
-                  }`}
-                >
-                  {isSubscribed ? 'Subscribed' : 'Subscribe'}
-                </button>
-              </div>
+                {/* Subscribe Action Button (Matching Screenshot 4: Red "Subscribe" vs Dark "Subscribed") */}
+                <div className="flex items-center gap-2 shrink-0 ml-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSubscribe(channel.id);
+                    }}
+                    className={`px-4 py-2 rounded-full text-xs font-bold transition-all shadow-md active:scale-95 ${
+                      isSubscribed
+                        ? 'bg-[#232A39] border border-[#262E3E] text-[#A7B0C0] hover:text-white'
+                        : 'bg-[#FF3040] hover:bg-[#E02635] text-white shadow-[#FF3040]/30'
+                    }`}
+                  >
+                    {isSubscribed ? 'Subscribed' : 'Subscribe'}
+                  </button>
+                </div>
 
-            </div>
-          );
-        })}
-      </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
     </div>
   );

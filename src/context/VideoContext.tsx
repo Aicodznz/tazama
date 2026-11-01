@@ -208,88 +208,91 @@ const VideoContext = createContext<VideoContextType | undefined>(undefined);
 export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { profile, deductBalance } = useAuth();
 
-  const [videos, setVideos] = useState<VideoItem[]>(INITIAL_VIDEOS);
-  const [shorts, setShorts] = useState<VideoItem[]>(INITIAL_SHORTS);
-  const [channels, setChannels] = useState<Channel[]>(INITIAL_CHANNELS);
+  // PRODUCTION STATE: Start with clean empty data unless real users have registered and uploaded
+  const [videos, setVideos] = useState<VideoItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_custom_videos');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  const [shorts, setShorts] = useState<VideoItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_custom_shorts');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  const [channels, setChannels] = useState<Channel[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_custom_channels');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
   const [currentVideo, setCurrentVideo] = useState<VideoItem | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Zote');
-  const [userSubscriptions, setUserSubscriptions] = useState<string[]>(['ch-wasafi']);
-  const [likedVideoIds, setLikedVideoIds] = useState<string[]>(['vid-wasafi-fest']);
-  const [watchHistory, setWatchHistory] = useState<VideoItem[]>(INITIAL_VIDEOS.slice(0, 3));
-  const [comments, setComments] = useState<Record<string, CommentItem[]>>({
-    'vid-wasafi-fest': [
-      {
-        id: 'c-1',
-        videoId: 'vid-wasafi-fest',
-        userId: 'u-1',
-        userName: 'Amina Salum',
-        userAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-        text: 'Mwanza mlikinukisha sana! Diamond Platnumz anabaki kuwa nambari moja Afrika Mashariki 🔥🇹🇿',
-        likesCount: 342,
-        createdAt: new Date(Date.now() - 3600000 * 5).toISOString()
-      },
-      {
-        id: 'c-2',
-        videoId: 'vid-wasafi-fest',
-        userId: 'u-2',
-        userName: 'Baraka Mrema',
-        userAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-        text: 'Ubora wa picha na sauti ya Tazama ni level nyingine kabisa. Hakuna kubana mtandao!',
-        likesCount: 128,
-        createdAt: new Date(Date.now() - 3600000 * 8).toISOString()
-      }
-    ],
-    'vid-sgr-dar': [
-      {
-        id: 'c-3',
-        videoId: 'vid-sgr-dar',
-        userId: 'u-3',
-        userName: 'Neema Mwamba',
-        userAvatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80',
-        text: 'Nilisafiri na SGR wiki iliyopita, huduma ni za kimataifa kabisa. Hongera sana Serikali ya Tanzania!',
-        likesCount: 512,
-        createdAt: new Date(Date.now() - 3600000 * 12).toISOString()
-      }
-    ]
+
+  const [userSubscriptions, setUserSubscriptions] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_subscriptions');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  const [likedVideoIds, setLikedVideoIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_liked_videos');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  const [watchHistory, setWatchHistory] = useState<VideoItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_watch_history');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  const [comments, setComments] = useState<Record<string, CommentItem[]>>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_comments');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {};
   });
 
   const [giftTransactions, setGiftTransactions] = useState<GiftTransaction[]>([]);
   const [memberships, setMemberships] = useState<UserMembership[]>([]);
-  const [reports, setReports] = useState<ContentReport[]>([
-    {
-      id: 'rep-1',
-      reporterId: 'u-reporter-01',
-      targetType: 'video',
-      targetId: 'vid-wasafi-fest',
-      targetTitle: 'WASAFIBURN LIVE MWANZA',
-      reason: 'Hakimiliki (COSOTA Review)',
-      details: 'Dai la ulinganifu wa sauti ya bendi ya nyuma.',
-      status: 'pending',
-      createdAt: new Date(Date.now() - 3600000 * 20).toISOString()
-    }
-  ]);
+  const [reports, setReports] = useState<ContentReport[]>([]);
 
-  const [users, setUsers] = useState<UserProfile[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<UserProfile[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_registered_users');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
   const [premiumPlans, setPremiumPlans] = useState<PremiumPlan[]>(INITIAL_PREMIUM_PLANS);
   const [platformSettings, setPlatformSettings] = useState<PlatformSettings>(INITIAL_PLATFORM_SETTINGS);
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
 
-  const [payoutRequests, setPayoutRequests] = useState<PayoutRequest[]>([
-    {
-      id: 'pay-001',
-      creatorId: 'user-diamond',
-      channelName: 'Wasafi Media',
-      amountTZS: 5000000,
-      provider: 'M-Pesa',
-      accountNumber: '0754 123 456',
-      accountHolderName: 'Naseeb Abdul Juma',
-      status: 'approved',
-      requestedAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-      processedAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-      notes: 'Imeidhinishwa na Msimamizi wa Fedha wa Tazama'
-    }
-  ]);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_audit_logs');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+
+  const [payoutRequests, setPayoutRequests] = useState<PayoutRequest[]>([]);
 
   // Mini Player State
   const [miniPlayerVideo, setMiniPlayerVideo] = useState<VideoItem | null>(null);
@@ -326,14 +329,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // Offline Downloads State
-  const [offlineDownloads, setOfflineDownloads] = useState<OfflineDownload[]>([
-    {
-      videoId: INITIAL_VIDEOS[0].id,
-      video: INITIAL_VIDEOS[0],
-      downloadedAt: new Date(Date.now() - 86400000).toISOString(),
-      fileSizeBytes: 42800000 // ~42.8 MB
-    }
-  ]);
+  const [offlineDownloads, setOfflineDownloads] = useState<OfflineDownload[]>([]);
 
   const downloadVideo = (video: VideoItem) => {
     setOfflineDownloads(prev => {
@@ -374,7 +370,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       id: newId,
       title,
       description,
-      coverUrl: INITIAL_VIDEOS[0].thumbnailUrl,
+      coverUrl: '',
       videoIds: [],
       createdAt: new Date().toISOString()
     };
@@ -713,7 +709,11 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       title: campaign.campaignName,
       advertiserName: campaign.creatorName
     };
-    setAdCampaigns(prev => [newCamp, ...prev]);
+    setAdCampaigns(prev => {
+      const next = [newCamp, ...prev];
+      try { localStorage.setItem('tazama_custom_ads', JSON.stringify(next)); } catch {}
+      return next;
+    });
     addAuditLog(
       'AD_CAMPAIGN_CREATED', 
       `Kampeni: ${campaign.campaignName}`, 
@@ -724,18 +724,26 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateAdCampaignStatus = (campaignId: string, status: AdCampaign['status']) => {
-    setAdCampaigns(prev => prev.map(c => c.id === campaignId ? { ...c, status } : c));
+    setAdCampaigns(prev => {
+      const next = prev.map(c => c.id === campaignId ? { ...c, status } : c);
+      try { localStorage.setItem('tazama_custom_ads', JSON.stringify(next)); } catch {}
+      return next;
+    });
     addAuditLog('AD_CAMPAIGN_STATUS', `Campaign ID: ${campaignId}`, `Hali mpya: ${status}`, 'SUCCESS');
   };
 
   const approveAdCampaign = (campaignId: string, adminEmail: string = 'amytzee@gmail.com') => {
     const target = adCampaigns.find(c => c.id === campaignId);
-    setAdCampaigns(prev => prev.map(c => c.id === campaignId ? {
-      ...c,
-      status: 'active',
-      reviewedBy: adminEmail,
-      reviewedAt: new Date().toISOString()
-    } : c));
+    setAdCampaigns(prev => {
+      const next = prev.map(c => c.id === campaignId ? {
+        ...c,
+        status: 'active' as AdStatus,
+        reviewedBy: adminEmail,
+        reviewedAt: new Date().toISOString()
+      } : c);
+      try { localStorage.setItem('tazama_custom_ads', JSON.stringify(next)); } catch {}
+      return next;
+    });
     addAuditLog(
       'AD_CAMPAIGN_APPROVED',
       `Campaign: ${target?.campaignName || campaignId}`,
@@ -989,6 +997,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUserSubscriptions(prev => {
       const isSubbed = prev.includes(channelId);
       const updated = isSubbed ? prev.filter(id => id !== channelId) : [...prev, channelId];
+      try { localStorage.setItem('tazama_subscriptions', JSON.stringify(updated)); } catch {}
       
       // Update channel subscriber count
       setChannels(chList => chList.map(ch => {
@@ -1009,6 +1018,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setLikedVideoIds(prev => {
       const isLiked = prev.includes(videoId);
       const updated = isLiked ? prev.filter(id => id !== videoId) : [...prev, videoId];
+      try { localStorage.setItem('tazama_liked_videos', JSON.stringify(updated)); } catch {}
 
       setVideos(vids => vids.map(v => {
         if (v.id === videoId) {
@@ -1047,10 +1057,14 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       createdAt: new Date().toISOString()
     };
 
-    setComments(prev => ({
-      ...prev,
-      [videoId]: [newComment, ...(prev[videoId] || [])]
-    }));
+    setComments(prev => {
+      const next = {
+        ...prev,
+        [videoId]: [newComment, ...(prev[videoId] || [])]
+      };
+      try { localStorage.setItem('tazama_comments', JSON.stringify(next)); } catch {}
+      return next;
+    });
 
     setVideos(vids => vids.map(v => v.id === videoId ? { ...v, commentsCount: v.commentsCount + 1 } : v));
   };
@@ -1186,9 +1200,17 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     if (newVid.isShort) {
-      setShorts(prev => [newVid, ...prev]);
+      setShorts(prev => {
+        const next = [newVid, ...prev];
+        try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(next)); } catch {}
+        return next;
+      });
     } else {
-      setVideos(prev => [newVid, ...prev]);
+      setVideos(prev => {
+        const next = [newVid, ...prev];
+        try { localStorage.setItem('tazama_custom_videos', JSON.stringify(next)); } catch {}
+        return next;
+      });
     }
 
     return newVid;

@@ -116,8 +116,26 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({ onSelectChannel, onOpenW
     return () => document.removeEventListener('fullscreenchange', handleNativeFullscreen);
   }, [isFullscreen]);
 
-  const isLiked = likedVideoIds.includes(currentShort?.id);
-  const isSubscribed = userSubscriptions.includes(currentShort?.channelId);
+  const isLiked = currentShort ? likedVideoIds.includes(currentShort.id) : false;
+  const isSubscribed = currentShort ? userSubscriptions.includes(currentShort.channelId) : false;
+
+  if (!currentShort) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-[#141824] border border-[#262E3E] rounded-3xl p-8 text-center space-y-4 shadow-2xl">
+          <div className="w-16 h-16 rounded-3xl bg-[#FF3040]/10 border border-[#FF3040]/30 flex items-center justify-center mx-auto text-[#FF3040]">
+            <Film className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold text-white">Hakuna Shorts kwa Sasa</h2>
+            <p className="text-xs text-[#A7B0C0] leading-relaxed">
+              Bado hakuna video fupi za wima (9:16) zilizopakiwa. Kuwa mtayarishaji wa kwanza kupakia Short kwenye Tazama!
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 

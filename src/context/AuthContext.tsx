@@ -276,17 +276,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cleanEmail = email.trim().toLowerCase();
     const isAdmin = cleanEmail === 'amytzee@gmail.com' || cleanEmail.includes('admin@tazama');
 
-    // Check known initial users first
-    const knownUser = INITIAL_USERS.find(u => u.email.toLowerCase() === cleanEmail);
-    if (knownUser) {
-      const resolvedRole: UserRole = isAdmin ? 'admin' : (knownUser.channelId ? 'creator' : knownUser.role);
-      const activeUser = { ...knownUser, role: resolvedRole };
-      setProfile(activeUser);
-      setRole(resolvedRole);
-      setDemoMode(false);
-      localStorage.setItem('tazama_session_profile', JSON.stringify(activeUser));
-      return resolvedRole;
-    }
+    // Check real registered users from storage
+    try {
+      const storedUsersRaw = localStorage.getItem('tazama_registered_users');
+      const storedUsers: UserProfile[] = storedUsersRaw ? JSON.parse(storedUsersRaw) : [];
+      const matchedUser = storedUsers.find(u => u.email.toLowerCase() === cleanEmail);
+      if (matchedUser) {
+        setProfile(matchedUser);
+        setRole(matchedUser.role);
+        setDemoMode(false);
+        localStorage.setItem('tazama_session_profile', JSON.stringify(matchedUser));
+        return matchedUser.role;
+      }
+    } catch {}
 
     try {
       await signInWithEmailAndPassword(auth, email, pass);
@@ -328,6 +330,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRole(resolvedRole);
     setDemoMode(false);
     localStorage.setItem('tazama_session_profile', JSON.stringify(newProfile));
+    
+    // Add to real registered users
+    try {
+      const existingRaw = localStorage.getItem('tazama_registered_users');
+      const list: UserProfile[] = existingRaw ? JSON.parse(existingRaw) : [];
+      if (!list.some(u => u.email.toLowerCase() === cleanEmail)) {
+        list.push(newProfile);
+        localStorage.setItem('tazama_registered_users', JSON.stringify(list));
+      }
+    } catch {}
+
     return resolvedRole;
   };
 
@@ -371,6 +384,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRole(assignedRole);
     setDemoMode(false);
     localStorage.setItem('tazama_session_profile', JSON.stringify(newProfile));
+
+    // Persist real registered user
+    try {
+      const existingRaw = localStorage.getItem('tazama_registered_users');
+      const list: UserProfile[] = existingRaw ? JSON.parse(existingRaw) : [];
+      if (!list.some(u => u.email.toLowerCase() === cleanEmail)) {
+        list.push(newProfile);
+        localStorage.setItem('tazama_registered_users', JSON.stringify(list));
+      }
+    } catch {}
+
     return assignedRole;
   };
 

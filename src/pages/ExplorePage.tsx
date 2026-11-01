@@ -175,55 +175,62 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
 
       {/* 5. Video Feed Cards (Matching Screenshot 5 & 6) */}
       <div className="space-y-4 pt-2">
-        {filtered.map((video) => (
-          <div
-            key={video.id}
-            onClick={() => onSelectVideo(video)}
-            className="flex gap-3 group cursor-pointer p-2 rounded-2xl hover:bg-[#191E29]/50 transition-colors"
-          >
-            {/* Thumbnail with Corner Play Badge */}
-            <div className="relative w-40 sm:w-48 aspect-video rounded-2xl overflow-hidden bg-[#181C26] border border-[#262E3E] shrink-0">
-              <img
-                src={video.thumbnailUrl}
-                alt={video.title}
-                loading="lazy"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-
-              {/* Corner Play Badge (Matching Screenshot 5 & 6) */}
-              <div className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full bg-[#FF3040] text-white flex items-center justify-center shadow-lg shadow-[#FF3040]/40">
-                <Play className="w-3 h-3 fill-white ml-0.5" />
-              </div>
-            </div>
-
-            {/* Video Details */}
-            <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-              <div>
-                <h3 className="text-xs sm:text-sm font-bold text-white line-clamp-2 leading-tight group-hover:text-[#FF3040] transition-colors">
-                  {video.title}
-                </h3>
-                <p className="text-[11px] text-[#A7B0C0] mt-1 truncate">
-                  {video.channelName}
-                </p>
-                <p className="text-[10px] text-[#A7B0C0] mt-0.5">
-                  {formatViews(video.viewsCount, language)} • {formatRelativeTime(video.createdAt, language)}
-                </p>
-              </div>
-
-              <div className="flex justify-end">
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                  className="p-1 text-[#A7B0C0] hover:text-white"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
+        {filtered.length === 0 ? (
+          <div className="py-16 text-center text-[#A7B0C0] bg-[#141824] border border-[#262E3E] rounded-3xl p-6 space-y-2">
+            <p className="text-sm font-bold text-white">Hakuna video zilizopatikana kwenye Explore</p>
+            <p className="text-xs">Bado hakuna video zilizochapishwa. Video zitakazopakiwa na watumiaji zitaonekana hapa.</p>
           </div>
-        ))}
+        ) : (
+          filtered.map((video) => (
+            <div
+              key={video.id}
+              onClick={() => onSelectVideo(video)}
+              className="flex gap-3 group cursor-pointer p-2 rounded-2xl hover:bg-[#191E29]/50 transition-colors"
+            >
+              {/* Thumbnail with Corner Play Badge */}
+              <div className="relative w-40 sm:w-48 aspect-video rounded-2xl overflow-hidden bg-[#181C26] border border-[#262E3E] shrink-0">
+                <img
+                  src={video.thumbnailUrl}
+                  alt={video.title}
+                  loading="lazy"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+
+                {/* Corner Play Badge (Matching Screenshot 5 & 6) */}
+                <div className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full bg-[#FF3040] text-white flex items-center justify-center shadow-lg shadow-[#FF3040]/40">
+                  <Play className="w-3 h-3 fill-white ml-0.5" />
+                </div>
+              </div>
+
+              {/* Video Details */}
+              <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold text-white line-clamp-2 leading-tight group-hover:text-[#FF3040] transition-colors">
+                    {video.title}
+                  </h3>
+                  <p className="text-[11px] text-[#A7B0C0] mt-1 truncate">
+                    {video.channelName}
+                  </p>
+                  <p className="text-[10px] text-[#A7B0C0] mt-0.5">
+                    {formatViews(video.viewsCount, language)} • {formatRelativeTime(video.createdAt, language)}
+                  </p>
+                </div>
+
+                <div className="flex justify-end">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                    className="p-1 text-[#A7B0C0] hover:text-white"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          ))
+        )}
       </div>
 
     </div>

@@ -35,8 +35,8 @@ export const LivePage: React.FC<LivePageProps> = ({ onSelectChannel, onOpenWalle
   } = useVideo();
   const { profile } = useAuth();
 
-  const currentStream: LiveStream = activeLiveStream || liveStreams[0];
-  const streamMessages: LiveChatMessage[] = liveChatMessages[currentStream.id] || [];
+  const currentStream: LiveStream | undefined = activeLiveStream || liveStreams[0];
+  const streamMessages: LiveChatMessage[] = currentStream ? (liveChatMessages[currentStream.id] || []) : [];
 
   const [inputText, setInputText] = useState<string>('');
   const [showTipModal, setShowTipModal] = useState<boolean>(false);
@@ -46,7 +46,7 @@ export const LivePage: React.FC<LivePageProps> = ({ onSelectChannel, onOpenWalle
   const [tipStatus, setTipStatus] = useState<string>('');
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
-  const isSubbed = userSubscriptions.includes(currentStream.channelId);
+  const isSubbed = currentStream ? userSubscriptions.includes(currentStream.channelId) : false;
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -54,6 +54,24 @@ export const LivePage: React.FC<LivePageProps> = ({ onSelectChannel, onOpenWalle
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
   }, [streamMessages]);
+
+  if (!currentStream) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center p-4 select-none">
+        <div className="max-w-md w-full bg-[#141824] border border-[#262E3E] rounded-3xl p-8 text-center space-y-4 shadow-2xl">
+          <div className="w-16 h-16 rounded-3xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-red-500">
+            <Radio className="w-8 h-8 animate-pulse" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold text-white">Hakuna Mubashara kwa Sasa</h2>
+            <p className="text-xs text-[#A7B0C0] leading-relaxed">
+              Bado hakuna mtayarishaji anayerusha matangazo ya moja kwa moja kwa wakati huu. Watayarishaji waliosajiliwa wakianza mubashara, wataonekana hapa.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Periodic random fan comment simulation to keep chat alive
   useEffect(() => {

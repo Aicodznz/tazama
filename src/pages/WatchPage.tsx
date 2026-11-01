@@ -277,7 +277,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
             </button>
 
             {/* Trailing space for comfortable thumb scroll on small screens */}
-            <div className="w-6 shrink-0 sm:hidden" />
+            <div className="w-8 shrink-0 sm:hidden" />
           </div>
         </div>
 
@@ -303,7 +303,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 : 'bg-[#FF3040] hover:bg-[#E02635] text-white shadow-[#FF3040]/40'
             }`}
           >
-            {isSubscribed ? 'Subscribed' : 'Subscribe'}
+            {isSubscribed ? t.subscribed : t.subscribe}
           </button>
         </div>
 

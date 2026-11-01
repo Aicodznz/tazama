@@ -22,14 +22,13 @@ export const InFeedAdCard: React.FC<InFeedAdCardProps> = ({ ad }) => {
       onClick={handleClick}
       className="flex flex-col rounded-2xl sm:rounded-3xl bg-[#141824] border border-amber-500/40 hover:border-amber-400 p-3 sm:p-4 group cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 hover:-translate-y-1 relative overflow-hidden"
     >
-      {/* Sponsored Pill Badge */}
-      <div className="absolute top-5 left-5 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500 text-black font-extrabold text-[10px] uppercase shadow-lg shadow-amber-500/30">
-        <Megaphone className="w-3 h-3" />
-        <span>Tangazo &bull; Sponsored</span>
-      </div>
-
       {/* Media Container */}
       <div className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black mb-3">
+        {/* Sponsored Pill Badge */}
+        <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500 text-black font-extrabold text-[10px] uppercase shadow-md shadow-amber-500/30">
+          <Megaphone className="w-3 h-3" />
+          <span>Tangazo • Sponsored</span>
+        </div>
         {ad.mediaType === 'video' ? (
           <video 
             src={ad.mediaUrl} 

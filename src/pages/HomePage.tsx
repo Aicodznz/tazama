@@ -95,52 +95,54 @@ export const HomePage: React.FC<HomePageProps> = ({
         <MastheadAdBanner ad={mastheadAd} />
       )}
 
-      {/* Shorts Vertical Reels Section */}
-      <div className="pt-2">
-        <div className="flex items-center justify-between mb-3.5">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FF3040] to-orange-500 flex items-center justify-center text-white shadow-md">
-              <Film className="w-4 h-4" />
+      {/* Shorts Vertical Reels Section (Only if real shorts exist) */}
+      {shorts.length > 0 && (
+        <div className="pt-2">
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FF3040] to-orange-500 flex items-center justify-center text-white shadow-md">
+                <Film className="w-4 h-4" />
+              </div>
+              <h2 className="text-base sm:text-lg font-bold text-white">Tazama Shorts</h2>
             </div>
-            <h2 className="text-base sm:text-lg font-bold text-white">Tazama Shorts</h2>
-          </div>
-          <button 
-            onClick={() => onNavigate('shorts')}
-            className="flex items-center gap-1 text-xs font-semibold text-[#FF3040] hover:underline"
-          >
-            <span>{t.viewAll}</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          {shorts.slice(0, 4).map((short) => (
-            <div
-              key={short.id}
-              onClick={() => onSelectVideo(short)}
-              className="relative aspect-shorts rounded-2xl overflow-hidden bg-[#191E29] border border-[#262E3E] group cursor-pointer shadow-md hover:shadow-xl transition-transform hover:scale-102"
+            <button 
+              onClick={() => onNavigate('shorts')}
+              className="flex items-center gap-1 text-xs font-semibold text-[#FF3040] hover:underline"
             >
-              <img
-                src={short.thumbnailUrl}
-                alt=""
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = createThumbnailSvgDataUri(short.title, 'Shorts');
-                }}
-                className="w-full h-full object-cover group-hover:opacity-90 transition-opacity bg-[#141824]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-3">
-                <h4 className="text-xs font-bold text-white line-clamp-2 drop-shadow-md">
-                  {short.title}
-                </h4>
-                <div className="mt-1 flex items-center justify-between text-[11px] text-[#A7B0C0]">
-                  <span>{formatViews(short.viewsCount, language)} {language === 'sw' ? 'matazamio' : 'views'}</span>
-                  <span className="text-[10px] bg-red-600/80 text-white px-1.5 py-0.2 rounded font-semibold">Short</span>
+              <span>{t.viewAll}</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            {shorts.slice(0, 4).map((short) => (
+              <div
+                key={short.id}
+                onClick={() => onSelectVideo(short)}
+                className="relative aspect-shorts rounded-2xl overflow-hidden bg-[#191E29] border border-[#262E3E] group cursor-pointer shadow-md hover:shadow-xl transition-transform hover:scale-102"
+              >
+                <img
+                  src={short.thumbnailUrl}
+                  alt=""
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = createThumbnailSvgDataUri(short.title, 'Shorts');
+                  }}
+                  className="w-full h-full object-cover group-hover:opacity-90 transition-opacity bg-[#141824]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-3">
+                  <h4 className="text-xs font-bold text-white line-clamp-2 drop-shadow-md">
+                    {short.title}
+                  </h4>
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-[#A7B0C0]">
+                    <span>{formatViews(short.viewsCount, language)} {language === 'sw' ? 'matazamio' : 'views'}</span>
+                    <span className="text-[10px] bg-red-600/80 text-white px-1.5 py-0.2 rounded font-semibold">Short</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main Recommended Videos Grid */}
       <div className="pt-4">
@@ -153,8 +155,34 @@ export const HomePage: React.FC<HomePageProps> = ({
         </div>
 
         {filteredVideos.length === 0 ? (
-          <div className="py-16 text-center text-[#A7B0C0] bg-[#191E29] rounded-2xl border border-[#262E3E]">
-            <p className="text-sm">{t.noVideosFound}</p>
+          <div className="py-16 sm:py-20 px-4 text-center bg-[#141824] rounded-3xl border border-[#262E3E] space-y-4 max-w-xl mx-auto shadow-2xl">
+            <div className="w-16 h-16 rounded-3xl bg-[#FF3040]/10 border border-[#FF3040]/30 flex items-center justify-center mx-auto text-[#FF3040]">
+              <Film className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-black text-white">
+                Hakuna Video Zilizopakiwa Bado
+              </h3>
+              <p className="text-xs text-[#A7B0C0] leading-relaxed max-w-md mx-auto">
+                Jukwaa la Tazama lipo tayari na salama. Kuwa mtayarishaji wa kwanza kupakia video au jisajili kwenye mfumo kuanza safari yako.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
+              <button
+                onClick={onOpenUpload || (() => onNavigate('studio'))}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF3040] to-[#E02635] text-white text-xs font-bold shadow-lg shadow-[#FF3040]/25 hover:brightness-110 active:scale-95 transition-all"
+              >
+                Pakia Video Sasa
+              </button>
+              <button
+                onClick={() => onNavigate('register')}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-white text-xs font-semibold transition-colors"
+              >
+                Jisajili Kama Mtayarishaji
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -180,61 +208,63 @@ export const HomePage: React.FC<HomePageProps> = ({
         )}
       </div>
 
-      {/* Top Tanzanian Creators Showcase */}
-      <div className="pt-6">
-        <div className="flex items-center justify-between mb-3.5">
-          <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-[#16C784]" />
-            <span>{t.newCreators}</span>
-          </h2>
-        </div>
+      {/* Top Tanzanian Creators Showcase (Only if channels exist) */}
+      {channels.length > 0 && (
+        <div className="pt-6">
+          <div className="flex items-center justify-between mb-3.5">
+            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-[#16C784]" />
+              <span>{t.newCreators}</span>
+            </h2>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {channels.slice(0, 3).map((ch) => {
-            const isSubbed = userSubscriptions.includes(ch.id);
-            return (
-              <div
-                key={ch.id}
-                className="flex items-center justify-between p-3.5 rounded-2xl bg-[#191E29] border border-[#262E3E] hover:border-[#2E3748] transition-colors"
-              >
-                <div 
-                  onClick={() => onSelectChannel(ch.id)}
-                  className="flex items-center gap-3 cursor-pointer min-w-0"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {channels.slice(0, 3).map((ch) => {
+              const isSubbed = userSubscriptions.includes(ch.id);
+              return (
+                <div
+                  key={ch.id}
+                  className="flex items-center justify-between p-3.5 rounded-2xl bg-[#191E29] border border-[#262E3E] hover:border-[#2E3748] transition-colors"
                 >
-                  <img
-                    src={ch.avatarUrl}
-                    alt=""
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = createAvatarSvgDataUri(ch.name);
-                    }}
-                    className="w-12 h-12 rounded-full object-cover ring-2 ring-[#262E3E] bg-[#141824]"
-                  />
-                  <div className="min-w-0">
-                    <h4 className="text-xs sm:text-sm font-bold text-white truncate flex items-center gap-1">
-                      {ch.name}
-                      {ch.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-[#16C784]" />}
-                    </h4>
-                    <p className="text-[11px] text-[#A7B0C0] font-mono">
-                      {formatViews(ch.subscriberCount, language)} {t.subscribers}
-                    </p>
+                  <div 
+                    onClick={() => onSelectChannel(ch.id)}
+                    className="flex items-center gap-3 cursor-pointer min-w-0"
+                  >
+                    <img
+                      src={ch.avatarUrl}
+                      alt=""
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = createAvatarSvgDataUri(ch.name);
+                      }}
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-[#262E3E] bg-[#141824]"
+                    />
+                    <div className="min-w-0">
+                      <h4 className="text-xs sm:text-sm font-bold text-white truncate flex items-center gap-1">
+                        {ch.name}
+                        {ch.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-[#16C784]" />}
+                      </h4>
+                      <p className="text-[11px] text-[#A7B0C0] font-mono">
+                        {formatViews(ch.subscriberCount, language)} {t.subscribers}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                <button
-                  onClick={() => toggleSubscribe(ch.id)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ml-2 ${
-                    isSubbed
-                      ? 'bg-[#232A39] text-[#A7B0C0] hover:text-white'
-                      : 'bg-[#FF3040] hover:bg-[#E02635] text-white shadow-md shadow-[#FF3040]/20'
-                  }`}
-                >
-                  {isSubbed ? t.subscribed : t.subscribe}
-                </button>
-              </div>
-            );
-          })}
+                  <button
+                    onClick={() => toggleSubscribe(ch.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ml-2 ${
+                      isSubbed
+                        ? 'bg-[#232A39] text-[#A7B0C0] hover:text-white'
+                        : 'bg-[#FF3040] hover:bg-[#E02635] text-white shadow-md shadow-[#FF3040]/20'
+                    }`}
+                  >
+                    {isSubbed ? t.subscribed : t.subscribe}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
     </div>
   );
