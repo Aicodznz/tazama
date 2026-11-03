@@ -12,12 +12,19 @@ import {
   Cloud,
   ExternalLink,
   HelpCircle,
-  RefreshCw
+  RefreshCw,
+  User,
+  LogIn,
+  UserPlus
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { translations } from '../lib/i18n';
 
-export const SettingsPage: React.FC = () => {
+interface SettingsPageProps {
+  onNavigate?: (page: string) => void;
+}
+
+export const SettingsPage: React.FC<SettingsPageProps> = ({ onNavigate }) => {
   const { profile, role, language, setLanguage, theme, toggleTheme, logout } = useAuth();
   const isAdmin = role === 'admin' || profile?.role === 'admin' || profile?.email === 'amytzee@gmail.com';
   const t = translations[language];
@@ -145,41 +152,83 @@ export const SettingsPage: React.FC = () => {
         <div className="p-5 rounded-3xl bg-[#191E29] border border-[#262E3E] space-y-4">
           <h2 className="text-sm font-bold text-white">Taarifa za Wasifu (Profile)</h2>
           
-          <div className="flex items-center gap-4">
-            <img
-              src={profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80'}
-              alt={profile?.displayName}
-              className="w-16 h-16 rounded-full object-cover ring-2 ring-[#262E3E]"
-            />
-            <div className="text-xs">
-              <span className="font-bold text-white text-sm">{profile?.displayName}</span>
-              <p className="text-[#A7B0C0] font-mono">{profile?.email}</p>
-              <span className="text-[10px] text-[#16C784] font-semibold uppercase mt-0.5 block">
-                Nafasi: {profile?.role}
-              </span>
-            </div>
-          </div>
+          {profile && profile.uid ? (
+            <>
+              <div className="flex items-center gap-4">
+                {profile.photoURL ? (
+                  <img
+                    src={profile.photoURL}
+                    alt={profile.displayName || 'Wasifu'}
+                    className="w-16 h-16 rounded-full object-cover ring-2 ring-[#FF3040]/40 shadow-md"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#FF3040] to-purple-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+                    {(profile.displayName || 'U')[0].toUpperCase()}
+                  </div>
+                )}
+                <div className="text-xs">
+                  <span className="font-bold text-white text-sm block">{profile.displayName || 'Mtumiaji wa Tazama'}</span>
+                  <p className="text-[#A7B0C0] font-mono mt-0.5">{profile.email}</p>
+                  <span className="text-[10px] text-[#16C784] font-semibold uppercase mt-1 inline-block bg-[#16C784]/15 px-2 py-0.5 rounded-full border border-[#16C784]/30">
+                    Nafasi: {profile.role}
+                  </span>
+                </div>
+              </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
-            <div>
-              <label className="block font-semibold text-[#A7B0C0] mb-1">Nchi:</label>
-              <input
-                type="text"
-                disabled
-                value="Tanzania 🇹🇿"
-                className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-white opacity-80"
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
+                <div>
+                  <label className="block font-semibold text-[#A7B0C0] mb-1">Nchi:</label>
+                  <input
+                    type="text"
+                    disabled
+                    value="Tanzania 🇹🇿"
+                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-white opacity-80"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-[#A7B0C0] mb-1">Sarafu ya Malipo:</label>
+                  <input
+                    type="text"
+                    disabled
+                    value="Shilingi ya Tanzania (TZS)"
+                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-white opacity-80"
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-[#262E3E] flex items-center justify-center text-[#A7B0C0]">
+                  <User className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-bold text-white text-sm">Haujaingia kwenye akaunti</p>
+                  <p className="text-xs text-[#A7B0C0] mt-0.5">Ingia au jisajili ili kusimamia wasifu wako na taarifa za akaunti.</p>
+                </div>
+              </div>
+              {onNavigate && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('login')}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#FF3040] hover:bg-[#E02635] text-white text-xs font-bold transition-all shadow-md"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    <span>Kuingia</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('register')}
+                    className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#232A39] hover:bg-[#2E3748] border border-[#262E3E] text-white text-xs font-semibold transition-all"
+                  >
+                    <UserPlus className="w-3.5 h-3.5 text-[#16C784]" />
+                    <span>Kujisajili</span>
+                  </button>
+                </div>
+              )}
             </div>
-            <div>
-              <label className="block font-semibold text-[#A7B0C0] mb-1">Sarafu ya Malipo:</label>
-              <input
-                type="text"
-                disabled
-                value="Shilingi ya Tanzania (TZS)"
-                className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-white opacity-80"
-              />
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Preferences Card */}
@@ -419,23 +468,25 @@ export const SettingsPage: React.FC = () => {
           </div>
         )}
 
-        {/* Delete Account Workflow */}
-        <div className="p-5 rounded-3xl bg-red-950/20 border border-red-500/30 space-y-3 text-xs">
-          <div className="flex items-center gap-2 text-red-400 font-bold text-sm">
-            <Trash2 className="w-4 h-4" />
-            <span>Kufuta Akaunti (Account Deletion)</span>
+        {/* Delete Account Workflow (Only when authenticated) */}
+        {profile && profile.uid && (
+          <div className="p-5 rounded-3xl bg-red-950/20 border border-red-500/30 space-y-3 text-xs">
+            <div className="flex items-center gap-2 text-red-400 font-bold text-sm">
+              <Trash2 className="w-4 h-4" />
+              <span>Kufuta Akaunti (Account Deletion)</span>
+            </div>
+            <p className="text-[#A7B0C0]">
+              Kufuta akaunti kutaondoa vituo vyako vyote, video ulizopakia, na historia ya utazamaji kabisa kutoka kwenye hifadhidata ya Firebase.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors shadow-md"
+            >
+              Futa Akaunti Yangu
+            </button>
           </div>
-          <p className="text-[#A7B0C0]">
-            Kufuta akaunti kutaondoa vituo vyako vyote, video ulizopakia, na historia ya utazamaji kabisa kutoka kwenye hifadhidata ya Firebase.
-          </p>
-          <button
-            type="button"
-            onClick={() => setShowDeleteModal(true)}
-            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition-colors shadow-md"
-          >
-            Futa Akaunti Yangu
-          </button>
-        </div>
+        )}
 
       </form>
 

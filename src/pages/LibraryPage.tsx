@@ -22,7 +22,10 @@ import {
   ChevronRight,
   Flame,
   UserCheck,
-  Radio
+  Radio,
+  LogIn,
+  UserPlus,
+  User
 } from 'lucide-react';
 import { useVideo } from '../context/VideoContext';
 import { useAuth } from '../context/AuthContext';
@@ -35,13 +38,15 @@ interface LibraryPageProps {
   onSelectChannel: (channelId: string) => void;
   onOpenWallet?: () => void;
   onOpenPremium?: () => void;
+  onNavigate?: (page: string) => void;
 }
 
 export const LibraryPage: React.FC<LibraryPageProps> = ({ 
   onSelectVideo, 
   onSelectChannel,
   onOpenWallet,
-  onOpenPremium
+  onOpenPremium,
+  onNavigate
 }) => {
   const { 
     watchHistory, 
@@ -74,7 +79,8 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
   const totalOfflineBytes = offlineDownloads.reduce((acc, curr) => acc + curr.fileSizeBytes, 0);
   const totalOfflineMB = (totalOfflineBytes / (1024 * 1024)).toFixed(1);
 
-  const isVIP = profile?.premiumPlanId && profile.premiumPlanId !== 'plan-viewer-free';
+  const isLoggedIn = Boolean(profile && profile.uid);
+  const isVIP = Boolean(isLoggedIn && profile?.premiumPlanId && profile.premiumPlanId !== 'plan-viewer-free');
 
   const handleCreatePlaylist = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,91 +94,153 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
   return (
     <div className="space-y-6 pb-20 select-none max-w-6xl mx-auto">
       
-      {/* 1. Viewer Hub Header & Profile Snapshot Card */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#191E29] via-[#1E2638] to-[#121622] border border-[#262E3E] flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-xl">
-        
-        {/* User Identity Info */}
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <img 
-              src={profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'} 
-              alt={profile?.displayName || 'User'} 
-              className="w-14 h-14 rounded-2xl object-cover ring-2 ring-[#FF3040]/40 shadow-md"
-            />
-            {isVIP && (
-              <Crown className="w-5 h-5 text-amber-400 fill-amber-400 absolute -top-1.5 -right-1.5 drop-shadow" />
-            )}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-black text-white">{profile?.displayName || 'Mtazamaji wa Tazama'}</h1>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                isVIP 
-                  ? 'bg-gradient-to-r from-amber-400 to-[#FF3040] text-black shadow-sm' 
-                  : 'bg-[#10131B] text-[#A7B0C0] border border-[#262E3E]'
-              }`}>
-                {isVIP ? 'Tazama VIP Mwezi' : 'Mtumiaji wa Kawaida'}
-              </span>
-            </div>
-            <p className="text-xs text-[#A7B0C0] mt-0.5">
-              {profile?.email || 'mtazamaji@tazama.co.tz'} &bull; {subbedChannels.length} vituo unavyofuatilia
-            </p>
-          </div>
-        </div>
-
-        {/* Quick Viewer Action Badges & Wallet Balance */}
-        <div className="flex flex-wrap items-center gap-3">
-          
-          {/* Wallet Balance Pill */}
-          <div className="p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#16C784]/20 text-[#16C784] flex items-center justify-center">
-              <Wallet className="w-4 h-4" />
+      {/* 1. Viewer Hub Header: Profile Card (Logged-in) OR Clean Guest Banner (Not Logged-in) */}
+      {isLoggedIn ? (
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#191E29] via-[#1E2638] to-[#121622] border border-[#262E3E] flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-xl">
+          {/* User Identity Info */}
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              {profile?.photoURL ? (
+                <img 
+                  src={profile.photoURL} 
+                  alt={profile.displayName || 'User'} 
+                  className="w-14 h-14 rounded-2xl object-cover ring-2 ring-[#FF3040]/40 shadow-md"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FF3040] to-purple-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md">
+                  {(profile?.displayName || 'U')[0].toUpperCase()}
+                </div>
+              )}
+              {isVIP && (
+                <Crown className="w-5 h-5 text-amber-400 fill-amber-400 absolute -top-1.5 -right-1.5 drop-shadow" />
+              )}
             </div>
             <div>
-              <span className="text-[10px] text-[#A7B0C0] block font-semibold">Salio Lako la Tazama</span>
-              <span className="text-sm font-black font-mono text-[#16C784]">{formatTZS(profile?.balanceTZS || 0)}</span>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-black text-white">{profile?.displayName || 'Mwanachama wa Tazama'}</h1>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                  isVIP 
+                    ? 'bg-gradient-to-r from-amber-400 to-[#FF3040] text-black shadow-sm' 
+                    : 'bg-[#10131B] text-[#A7B0C0] border border-[#262E3E]'
+                }`}>
+                  {isVIP ? 'Tazama VIP Mwezi' : (profile?.role === 'creator' ? 'Muundaji (Creator)' : profile?.role === 'admin' ? 'Msimamizi Mkuu' : 'Mtumiaji')}
+                </span>
+              </div>
+              <p className="text-xs text-[#A7B0C0] mt-0.5 font-mono">
+                {profile?.email} &bull; <span className="font-sans text-[#CBD5E1]">{subbedChannels.length} vituo unavyofuatilia</span>
+              </p>
             </div>
-            {onOpenWallet && (
+          </div>
+
+          {/* Quick Viewer Action Badges & Wallet Balance */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Wallet Balance Pill */}
+            <div className="p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-[#16C784]/20 text-[#16C784] flex items-center justify-center">
+                <Wallet className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[10px] text-[#A7B0C0] block font-semibold">Salio Lako la Tazama</span>
+                <span className="text-sm font-black font-mono text-[#16C784]">{formatTZS(profile?.balanceTZS || 0)}</span>
+              </div>
+              {onOpenWallet && (
+                <button
+                  onClick={onOpenWallet}
+                  className="ml-2 px-3 py-1.5 rounded-xl bg-[#16C784] hover:bg-[#13A76E] text-black font-extrabold text-[10px] shadow-sm transition-all"
+                >
+                  + Weka Pesa
+                </button>
+              )}
+            </div>
+
+            {/* Data Saver Mode Pill */}
+            <button
+              onClick={toggleDataSaver}
+              className={`p-3 rounded-2xl border text-left flex items-center gap-2.5 transition-all active:scale-95 ${
+                isDataSaver 
+                  ? 'bg-[#16C784]/15 border-[#16C784]/40 text-[#16C784]' 
+                  : 'bg-[#10131B] border-[#262E3E] text-[#A7B0C0] hover:text-white'
+              }`}
+              title="Washa au zima ubora wa kubana MBs kwenye video"
+            >
+              <Smartphone className="w-4 h-4" />
+              <div>
+                <span className="text-[10px] block font-semibold">Kubana Bando</span>
+                <span className="text-xs font-bold">{isDataSaver ? 'Imewashwa (360p)' : 'Imezimwa (HD)'}</span>
+              </div>
+            </button>
+
+            {/* Premium VIP Upgrade / Status Button */}
+            {onOpenPremium && !isVIP && (
               <button
-                onClick={onOpenWallet}
-                className="ml-2 px-3 py-1.5 rounded-xl bg-[#16C784] hover:bg-[#13A76E] text-black font-extrabold text-[10px] shadow-sm transition-all"
+                onClick={onOpenPremium}
+                className="px-4 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-[#FF3040] hover:brightness-110 text-black font-black text-xs shadow-lg shadow-amber-400/20 flex items-center gap-1.5 transition-all active:scale-95"
               >
-                + Weka Pesa
+                <Crown className="w-4 h-4" />
+                <span>Ondoa Matangazo (VIP)</span>
               </button>
             )}
           </div>
-
-          {/* Data Saver Mode Pill */}
-          <button
-            onClick={toggleDataSaver}
-            className={`p-3 rounded-2xl border text-left flex items-center gap-2.5 transition-all active:scale-95 ${
-              isDataSaver 
-                ? 'bg-[#16C784]/15 border-[#16C784]/40 text-[#16C784]' 
-                : 'bg-[#10131B] border-[#262E3E] text-[#A7B0C0] hover:text-white'
-            }`}
-            title="Washa au zima ubora wa kubana MBs kwenye video"
-          >
-            <Smartphone className="w-4 h-4" />
-            <div>
-              <span className="text-[10px] block font-semibold">Kubana Bando</span>
-              <span className="text-xs font-bold">{isDataSaver ? 'Imewashwa (360p)' : 'Imezimwa (HD)'}</span>
-            </div>
-          </button>
-
-          {/* Premium VIP Upgrade / Status Button */}
-          {onOpenPremium && !isVIP && (
-            <button
-              onClick={onOpenPremium}
-              className="px-4 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-[#FF3040] hover:brightness-110 text-black font-black text-xs shadow-lg shadow-amber-400/20 flex items-center gap-1.5 transition-all active:scale-95"
-            >
-              <Crown className="w-4 h-4" />
-              <span>Ondoa Matangazo (VIP)</span>
-            </button>
-          )}
-
         </div>
+      ) : (
+        /* Guest Banner: Clean State When Not Logged In (No Fake Profile / No Fake Salio) */
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#191E29] via-[#161B26] to-[#121622] border border-[#262E3E] flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-xl">
+          <div className="flex items-start sm:items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-[#FF3040]/10 border border-[#FF3040]/30 flex items-center justify-center text-[#FF3040] shrink-0 shadow-lg shadow-[#FF3040]/10">
+              <Library className="w-7 h-7" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg sm:text-xl font-black text-white">Maktaba Yako ya Tazama</h1>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#232A39] text-[#A7B0C0] border border-[#262E3E]">
+                  Hujaingia (Mgeni)
+                </span>
+              </div>
+              <p className="text-xs text-[#A7B0C0] max-w-xl leading-relaxed">
+                Ingia kwenye akaunti yako au jisajili ili uweze kuhifadhi video unazozipenda, kuunda orodha zako (playlists), kufuata chaneli unazopenda, na kusawazisha historia yako.
+              </p>
+            </div>
+          </div>
 
-      </div>
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            {onNavigate && (
+              <>
+                <button
+                  onClick={() => onNavigate('login')}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#FF3040] hover:bg-[#E02635] text-white text-xs font-bold transition-all shadow-lg shadow-[#FF3040]/25 active:scale-95"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Kuingia Kwenye Akaunti</span>
+                </button>
+                <button
+                  onClick={() => onNavigate('register')}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#232A39] hover:bg-[#2E3748] border border-[#262E3E] text-[#CBD5E1] hover:text-white text-xs font-semibold transition-all active:scale-95"
+                >
+                  <UserPlus className="w-4 h-4 text-[#16C784]" />
+                  <span>Kujisajili Bure</span>
+                </button>
+              </>
+            )}
+
+            {/* Data Saver Mode Pill (Always usable) */}
+            <button
+              onClick={toggleDataSaver}
+              className={`p-2.5 px-3 rounded-xl border text-left flex items-center gap-2 transition-all active:scale-95 ${
+                isDataSaver 
+                  ? 'bg-[#16C784]/15 border-[#16C784]/40 text-[#16C784]' 
+                  : 'bg-[#10131B] border-[#262E3E] text-[#A7B0C0] hover:text-white'
+              }`}
+              title="Washa au zima ubora wa kubana MBs kwenye video"
+            >
+              <Smartphone className="w-4 h-4" />
+              <div>
+                <span className="text-[10px] block font-semibold">Kubana Bando</span>
+                <span className="text-[11px] font-bold">{isDataSaver ? 'Imewashwa (360p)' : 'Imezimwa (HD)'}</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 2. Subscribed Channels Carousel (Vituo Unavyofuatilia) */}
       {subbedChannels.length > 0 && (
@@ -343,58 +411,69 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
             <span className="text-xs text-[#A7B0C0]">{playlists.length} orodha</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {playlists.map((pl) => {
-              const count = pl.videoIds.length;
-              return (
-                <div
-                  key={pl.id}
-                  className="p-3.5 rounded-2xl bg-[#191E29] border border-[#262E3E] hover:border-purple-500/40 transition-all space-y-3 shadow-lg"
-                >
-                  <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/60 flex items-center justify-center">
-                    <img
-                      src={pl.coverUrl}
-                      alt={pl.title}
-                      className="w-full h-full object-cover opacity-80"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3">
-                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-bold text-white border border-white/10">
-                        <ListMusic className="w-3 h-3 text-purple-400" />
-                        <span>{count} video</span>
+          {playlists.length === 0 ? (
+            <div className="p-6 text-center bg-[#191E29]/40 rounded-2xl border border-[#262E3E]/60 space-y-2">
+              <ListMusic className="w-6 h-6 text-[#A7B0C0] mx-auto opacity-60" />
+              <p className="text-xs text-[#A7B0C0]">
+                {isLoggedIn 
+                  ? 'Hauna orodha ya video bado. Bonyeza kitufe cha "+ Orodha Mpya" hapo juu kuanza kutengeneza.'
+                  : 'Hujaunda orodha ya video bado. Ingia kwenye akaunti yako ili kuunda na kuhifadhi orodha zako.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {playlists.map((pl) => {
+                const count = pl.videoIds.length;
+                return (
+                  <div
+                    key={pl.id}
+                    className="p-3.5 rounded-2xl bg-[#191E29] border border-[#262E3E] hover:border-purple-500/40 transition-all space-y-3 shadow-lg"
+                  >
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/60 flex items-center justify-center">
+                      <img
+                        src={pl.coverUrl}
+                        alt={pl.title}
+                        className="w-full h-full object-cover opacity-80"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-3">
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-bold text-white border border-white/10">
+                          <ListMusic className="w-3 h-3 text-purple-400" />
+                          <span>{count} video</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <h3 className="text-sm font-bold text-white truncate">{pl.title}</h3>
-                    <p className="text-xs text-[#A7B0C0] line-clamp-1 mt-0.5">
-                      {pl.description || 'Hakuna maelezo'}
-                    </p>
-                  </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white truncate">{pl.title}</h3>
+                      <p className="text-xs text-[#A7B0C0] line-clamp-1 mt-0.5">
+                        {pl.description || 'Hakuna maelezo'}
+                      </p>
+                    </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-[#262E3E]/60 text-xs">
-                    <button
-                      onClick={() => {
-                        const firstVid = videos.find(v => pl.videoIds.includes(v.id)) || videos[0];
-                        if (firstVid) onSelectVideo(firstVid);
-                      }}
-                      className="flex items-center gap-1.5 text-purple-400 hover:text-purple-300 font-bold"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-purple-400" />
-                      <span>Cheza Orodha Hii</span>
-                    </button>
-                    <button
-                      onClick={() => deletePlaylist(pl.id)}
-                      className="p-1 rounded-lg text-[#A7B0C0] hover:text-red-400 transition-colors"
-                      title="Futa orodha hii"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-between pt-2 border-t border-[#262E3E]/60 text-xs">
+                      <button
+                        onClick={() => {
+                          const firstVid = videos.find(v => pl.videoIds.includes(v.id)) || videos[0];
+                          if (firstVid) onSelectVideo(firstVid);
+                        }}
+                        className="flex items-center gap-1.5 text-purple-400 hover:text-purple-300 font-bold"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-purple-400" />
+                        <span>Cheza Orodha Hii</span>
+                      </button>
+                      <button
+                        onClick={() => deletePlaylist(pl.id)}
+                        className="p-1 rounded-lg text-[#A7B0C0] hover:text-red-400 transition-colors"
+                        title="Futa orodha hii"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -431,7 +510,14 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
           )}
 
           {watchHistory.length === 0 ? (
-            <p className="text-xs text-[#A7B0C0]">Bado haujatazama video yoyote kwenye kipindi hiki.</p>
+            <div className="p-6 text-center bg-[#191E29]/40 rounded-2xl border border-[#262E3E]/60 space-y-2">
+              <Clock className="w-6 h-6 text-[#A7B0C0] mx-auto opacity-60" />
+              <p className="text-xs text-[#A7B0C0]">
+                {isLoggedIn 
+                  ? 'Bado haujatazama video yoyote kwenye kipindi hiki.' 
+                  : 'Bado haujatazama video yoyote. Ingia ili uweze kusawazisha na kuhifadhi historia yako ya kutazama.'}
+              </p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {watchHistory.slice(0, 6).map((vid) => (
@@ -461,7 +547,14 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
           </div>
 
           {likedVideos.length === 0 ? (
-            <p className="text-xs text-[#A7B0C0]">Hauna video uliyoweka Like bado.</p>
+            <div className="p-6 text-center bg-[#191E29]/40 rounded-2xl border border-[#262E3E]/60 space-y-2">
+              <ThumbsUp className="w-6 h-6 text-[#A7B0C0] mx-auto opacity-60" />
+              <p className="text-xs text-[#A7B0C0]">
+                {isLoggedIn 
+                  ? 'Hauna video uliyoweka Like bado.' 
+                  : 'Hauna video uliyoweka Like bado. Ingia ili video uzipendazo zihifadhiwe hapa.'}
+              </p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {likedVideos.map((vid) => (
@@ -491,7 +584,14 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
           </div>
 
           {subbedVideos.length === 0 ? (
-            <p className="text-xs text-[#A7B0C0]">Jiunge na vituo (Subscribe) ili kuona video zao mpya hapa kwanza.</p>
+            <div className="p-6 text-center bg-[#191E29]/40 rounded-2xl border border-[#262E3E]/60 space-y-2">
+              <Tv className="w-6 h-6 text-[#A7B0C0] mx-auto opacity-60" />
+              <p className="text-xs text-[#A7B0C0]">
+                {isLoggedIn 
+                  ? 'Jiunge na vituo (Subscribe) ili kuona video zao mpya hapa kwanza.' 
+                  : 'Jiunge na vituo unavyovipenda ili kuona video mpya za waumbaji wako hapa.'}
+              </p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {subbedVideos.map((vid) => (

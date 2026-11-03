@@ -58,7 +58,7 @@ import {
   INITIAL_NOTIFICATIONS
 } from '../data/mockData';
 import { useAuth } from './AuthContext';
-import { db, doc, setDoc } from '../lib/firebase';
+import { db, doc, setDoc, collection, onSnapshot, getDocs, query, where } from '../lib/firebase';
 
 interface VideoContextType {
   videos: VideoItem[];
@@ -243,13 +243,13 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return [];
   });
 
-  // Global Sync: Fetch shared persistent videos & channels from server on startup
+  // Global Sync: Listen in real-time to Firestore videos & channels + sync with server API
   useEffect(() => {
-    // 1. Fetch persistent shared videos from server
+    // 1. Initial fetch from server API
     fetch('/api/videos')
       .then(res => res.json())
       .then(data => {
-        if (data.success && Array.isArray(data.videos)) {
+        if (data.success && Array.isArray(data.videos) && data.videos.length > 0) {
           const serverVideos: VideoItem[] = data.videos.filter((v: any) => Boolean(v && v.id));
           const serverLongVideos = serverVideos.filter(v => !v.isShort);
           const serverShorts = serverVideos.filter(v => Boolean(v.isShort));
@@ -271,25 +271,11 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(merged)); } catch {}
             return merged;
           });
-
-          // Sync any locally uploaded video that might not yet be on server
-          try {
-            const localVids = JSON.parse(localStorage.getItem('tazama_custom_videos') || '[]');
-            const localShorts = JSON.parse(localStorage.getItem('tazama_custom_shorts') || '[]');
-            const allLocal = [...localVids, ...localShorts].filter((v: any) => Boolean(v && v.id));
-            if (allLocal.length > 0) {
-              fetch('/api/videos/sync', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ videos: allLocal })
-              }).catch(() => {});
-            }
-          } catch {}
         }
       })
       .catch(err => console.warn('Could not fetch server videos:', err));
 
-    // 2. Fetch persistent channels from server
+    // 2. Initial fetch from server channels
     fetch('/api/channels')
       .then(res => res.json())
       .then(data => {
@@ -305,6 +291,94 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       })
       .catch(() => {});
+
+    // 3. Real-Time Firestore Listener for all uploaded Videos
+    let unsubscribeVideos: (() => void) | undefined;
+    try {
+      unsubscribeVideos = onSnapshot(collection(db, 'videos'), (snapshot) => {
+        const firestoreList: VideoItem[] = [];
+        snapshot.forEach((docSnap) => {
+          const vData = docSnap.data() as VideoItem;
+          if (vData && (vData.id || docSnap.id)) {
+            firestoreList.push({
+              ...vData,
+              id: vData.id || docSnap.id
+            });
+          }
+        });
+
+        if (firestoreList.length > 0) {
+          const longVids = firestoreList.filter(v => !v.isShort);
+          const shortVids = firestoreList.filter(v => Boolean(v.isShort));
+
+          setVideos(prev => {
+            const map = new Map<string, VideoItem>();
+            longVids.forEach(v => map.set(v.id, v));
+            prev.forEach(v => { if (v && v.id && !map.has(v.id)) map.set(v.id, v); });
+            const merged = Array.from(map.values());
+            try { localStorage.setItem('tazama_custom_videos', JSON.stringify(merged)); } catch {}
+            return merged;
+          });
+
+          setShorts(prev => {
+            const map = new Map<string, VideoItem>();
+            shortVids.forEach(s => map.set(s.id, s));
+            prev.forEach(s => { if (s && s.id && !map.has(s.id)) map.set(s.id, s); });
+            const merged = Array.from(map.values());
+            try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(merged)); } catch {}
+            return merged;
+          });
+
+          // Sync to server disk cache so all clients have fast fallback
+          fetch('/api/videos/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videos: firestoreList })
+          }).catch(() => {});
+        }
+      }, (err) => {
+        console.warn('Firestore onSnapshot videos notice:', err.message);
+      });
+    } catch (err) {
+      console.warn('Error setting up Firestore videos listener:', err);
+    }
+
+    // 4. Real-Time Firestore Listener for Channels
+    let unsubscribeChannels: (() => void) | undefined;
+    try {
+      unsubscribeChannels = onSnapshot(collection(db, 'channels'), (snapshot) => {
+        const firestoreChannels: Channel[] = [];
+        snapshot.forEach((docSnap) => {
+          const cData = docSnap.data() as Channel;
+          if (cData && (cData.id || docSnap.id)) {
+            firestoreChannels.push({
+              ...cData,
+              id: cData.id || docSnap.id
+            });
+          }
+        });
+
+        if (firestoreChannels.length > 0) {
+          setChannels(prev => {
+            const map = new Map<string, Channel>();
+            firestoreChannels.forEach(c => map.set(c.id, c));
+            prev.forEach(c => { if (c && c.id && !map.has(c.id)) map.set(c.id, c); });
+            const merged = Array.from(map.values());
+            try { localStorage.setItem('tazama_custom_channels', JSON.stringify(merged)); } catch {}
+            return merged;
+          });
+        }
+      }, (err) => {
+        console.warn('Firestore onSnapshot channels notice:', err.message);
+      });
+    } catch (err) {
+      console.warn('Error setting up Firestore channels listener:', err);
+    }
+
+    return () => {
+      if (unsubscribeVideos) unsubscribeVideos();
+      if (unsubscribeChannels) unsubscribeChannels();
+    };
   }, []);
 
   const [currentVideo, setCurrentVideo] = useState<VideoItem | null>(null);

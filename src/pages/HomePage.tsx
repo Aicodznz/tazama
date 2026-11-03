@@ -57,9 +57,34 @@ export const HomePage: React.FC<HomePageProps> = ({
     return adCampaigns ? adCampaigns.filter(a => Boolean(a && a.status === 'active' && ['in_feed', 'sponsored_placement', 'image_ad'].includes(a.adFormat))) : [];
   }, [adCampaigns]);
 
-  const filteredVideos = selectedCategory === 'Zote'
-    ? (videos ? videos.filter(Boolean) : [])
-    : (videos ? videos.filter(v => Boolean(v && v.category === selectedCategory)) : []);
+  // Combine all uploaded videos and shorts
+  const allContent = React.useMemo(() => {
+    const list: VideoItem[] = [];
+    const seen = new Set<string>();
+    (videos || []).forEach(v => {
+      if (v && v.id && !seen.has(v.id)) {
+        seen.add(v.id);
+        list.push(v);
+      }
+    });
+    (shorts || []).forEach(s => {
+      if (s && s.id && !seen.has(s.id)) {
+        seen.add(s.id);
+        list.push(s);
+      }
+    });
+    return list;
+  }, [videos, shorts]);
+
+  const filteredVideos = React.useMemo(() => {
+    if (selectedCategory === 'Zote') {
+      if (videos && videos.length > 0) {
+        return videos.filter(Boolean);
+      }
+      return allContent;
+    }
+    return allContent.filter(v => Boolean(v && v.category === selectedCategory));
+  }, [selectedCategory, videos, allContent]);
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-20 select-none">

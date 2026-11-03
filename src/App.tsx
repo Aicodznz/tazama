@@ -287,6 +287,7 @@ const AppContent: React.FC = () => {
                 setPremiumTarget('viewer');
                 setIsPremiumOpen(true);
               }}
+              onNavigate={handleNavigate}
             />
           )}
 
@@ -329,7 +330,7 @@ const AppContent: React.FC = () => {
           )}
 
           {activePage === 'settings' && (
-            <SettingsPage />
+            <SettingsPage onNavigate={handleNavigate} />
           )}
 
           {activePage === 'live' && (
