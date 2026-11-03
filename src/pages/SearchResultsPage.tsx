@@ -50,39 +50,48 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
 
   // Filter Videos
   const matchingVideos = React.useMemo(() => {
-    if (!queryClean) return videos;
+    if (!videos) return [];
+    if (!queryClean) return videos.filter(Boolean);
     return videos.filter(v => 
-      v.title.toLowerCase().includes(queryClean) ||
-      v.channelName.toLowerCase().includes(queryClean) ||
-      v.category.toLowerCase().includes(queryClean) ||
-      v.tags.some(tag => tag.toLowerCase().includes(queryClean)) ||
-      v.description.toLowerCase().includes(queryClean)
+      v && (
+        v.title?.toLowerCase().includes(queryClean) ||
+        v.channelName?.toLowerCase().includes(queryClean) ||
+        v.category?.toLowerCase().includes(queryClean) ||
+        (Array.isArray(v.tags) && v.tags.some(tag => tag?.toLowerCase().includes(queryClean))) ||
+        v.description?.toLowerCase().includes(queryClean)
+      )
     );
   }, [videos, queryClean]);
 
   // Filter Shorts
   const matchingShorts = React.useMemo(() => {
-    if (!queryClean) return shorts;
+    if (!shorts) return [];
+    if (!queryClean) return shorts.filter(Boolean);
     return shorts.filter(s => 
-      s.title.toLowerCase().includes(queryClean) ||
-      s.channelName.toLowerCase().includes(queryClean) ||
-      s.tags.some(tag => tag.toLowerCase().includes(queryClean))
+      s && (
+        s.title?.toLowerCase().includes(queryClean) ||
+        s.channelName?.toLowerCase().includes(queryClean) ||
+        (Array.isArray(s.tags) && s.tags.some(tag => tag?.toLowerCase().includes(queryClean)))
+      )
     );
   }, [shorts, queryClean]);
 
   // Filter Channels
   const matchingChannels = React.useMemo(() => {
-    if (!queryClean) return channels;
+    if (!channels) return [];
+    if (!queryClean) return channels.filter(Boolean);
     return channels.filter(ch => 
-      ch.name.toLowerCase().includes(queryClean) ||
-      ch.handle.toLowerCase().includes(queryClean) ||
-      ch.bio.toLowerCase().includes(queryClean)
+      ch && (
+        ch.name?.toLowerCase().includes(queryClean) ||
+        ch.handle?.toLowerCase().includes(queryClean) ||
+        ch.bio?.toLowerCase().includes(queryClean)
+      )
     );
   }, [channels, queryClean]);
 
   // Live Videos
   const matchingLive = React.useMemo(() => {
-    return matchingVideos.filter(v => v.viewsCount > 500000);
+    return matchingVideos ? matchingVideos.filter(v => Boolean(v && v.viewsCount > 500000)) : [];
   }, [matchingVideos]);
 
   const totalResultsCount = matchingVideos.length + matchingShorts.length + matchingChannels.length;

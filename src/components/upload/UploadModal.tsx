@@ -37,7 +37,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   onClose,
   onUploadSuccess 
 }) => {
-  const { profile, language } = useAuth();
+  const { profile, role, language } = useAuth();
+  const isAdmin = role === 'admin' || profile?.role === 'admin' || profile?.email === 'amytzee@gmail.com';
   const { uploadNewVideo } = useVideo();
   const t = translations[language];
 
@@ -436,10 +437,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-white">Studio ya Upakiaji wa Video</h3>
-              <div className="flex items-center gap-2 text-[11px] text-[#A7B0C0]">
-                <span>Huduma ya Video:</span>
-                <span className="text-[#16C784] font-bold capitalize">{selectedProvider}</span>
-              </div>
+              {isAdmin && (
+                <div className="flex items-center gap-2 text-[11px] text-[#A7B0C0]">
+                  <span>Huduma ya Video:</span>
+                  <span className="text-[#16C784] font-bold capitalize">{selectedProvider}</span>
+                </div>
+              )}
             </div>
           </div>
           <button 
@@ -450,57 +453,59 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           </button>
         </div>
 
-        {/* Video Provider Selector Pills */}
-        <div className="mt-3 p-2 rounded-2xl bg-[#10131B] border border-[#262E3E] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-            <button
-              type="button"
-              onClick={() => setSelectedProvider('cloudinary')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                selectedProvider === 'cloudinary'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-[#A7B0C0] hover:text-white'
-              }`}
-            >
-              <Cloud className="w-3.5 h-3.5" />
-              <span>Cloudinary</span>
-              {cloudinaryConfigured && <CheckCircle2 className="w-3 h-3 text-[#16C784]" />}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedProvider('cloudflare')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                selectedProvider === 'cloudflare'
-                  ? 'bg-orange-600 text-white shadow-md'
-                  : 'text-[#A7B0C0] hover:text-white'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Cloudflare</span>
-            </button>
-          </div>
-
-          {selectedProvider === 'cloudinary' && (
-            <div className="flex items-center justify-between sm:justify-end gap-1.5 pt-1 sm:pt-0 border-t sm:border-t-0 border-[#262E3E]">
-              <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-[#16C784] font-semibold bg-[#16C784]/10 border border-[#16C784]/30 px-2 py-1 rounded-xl truncate">
-                <CheckCircle2 className="w-3 h-3 shrink-0" />
-                <span className="truncate">{cloudName} ({uploadPreset || 'preset'})</span>
-              </div>
+        {/* Video Provider Selector Pills - Admin Only */}
+        {isAdmin && (
+          <div className="mt-3 p-2 rounded-2xl bg-[#10131B] border border-[#262E3E] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
               <button
                 type="button"
-                onClick={() => setShowCloudinarySetup(!showCloudinarySetup)}
-                className="p-1.5 rounded-lg bg-[#232A39] text-[#A7B0C0] hover:text-white hover:border-[#FF3040] border border-[#262E3E] transition-colors shrink-0"
-                title="Badilisha au sanidi Cloudinary"
+                onClick={() => setSelectedProvider('cloudinary')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  selectedProvider === 'cloudinary'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-[#A7B0C0] hover:text-white'
+                }`}
               >
-                <Settings className="w-3.5 h-3.5" />
+                <Cloud className="w-3.5 h-3.5" />
+                <span>Cloudinary</span>
+                {cloudinaryConfigured && <CheckCircle2 className="w-3 h-3 text-[#16C784]" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedProvider('cloudflare')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  selectedProvider === 'cloudflare'
+                    ? 'bg-orange-600 text-white shadow-md'
+                    : 'text-[#A7B0C0] hover:text-white'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Cloudflare</span>
               </button>
             </div>
-          )}
-        </div>
 
-        {/* Cloudinary Quick Setup Drawer */}
-        {showCloudinarySetup && (
+            {selectedProvider === 'cloudinary' && (
+              <div className="flex items-center justify-between sm:justify-end gap-1.5 pt-1 sm:pt-0 border-t sm:border-t-0 border-[#262E3E]">
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-[#16C784] font-semibold bg-[#16C784]/10 border border-[#16C784]/30 px-2 py-1 rounded-xl truncate">
+                  <CheckCircle2 className="w-3 h-3 shrink-0" />
+                  <span className="truncate">{cloudName} ({uploadPreset || 'preset'})</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCloudinarySetup(!showCloudinarySetup)}
+                  className="p-1.5 rounded-lg bg-[#232A39] text-[#A7B0C0] hover:text-white hover:border-[#FF3040] border border-[#262E3E] transition-colors shrink-0"
+                  title="Badilisha au sanidi Cloudinary"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Cloudinary Quick Setup Drawer - Admin Only */}
+        {isAdmin && showCloudinarySetup && (
           <form onSubmit={handleSaveCloudinary} className="mt-3 p-3.5 rounded-2xl bg-[#232A39]/90 border border-blue-500/40 text-xs space-y-2.5 animate-in fade-in duration-150">
             <div className="flex items-center justify-between font-bold text-white">
               <span className="flex items-center gap-1.5 text-blue-400">

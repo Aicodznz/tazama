@@ -20,7 +20,8 @@ import { useVideo } from '../context/VideoContext';
 import { useAuth } from '../context/AuthContext';
 import { VideoCard } from '../components/video/VideoCard';
 import { formatViews, translations } from '../lib/i18n';
-import { VideoItem } from '../types';
+import { Channel, VideoItem } from '../types';
+import { createAvatarSvgDataUri } from '../lib/mediaPlaceholders';
 
 interface ChannelPageProps {
   channelId?: string;
@@ -43,11 +44,27 @@ export const ChannelPage: React.FC<ChannelPageProps> = ({
   const [showBio, setShowBio] = useState<boolean>(false);
   const [hasBell, setHasBell] = useState<boolean>(true);
 
-  const channel = channels.find(c => c.id === channelId) || channels[0];
-  const channelVideos = videos.filter(v => v.channelId === channel.id);
-  const channelShorts = shorts.filter(s => s.channelId === channel.id);
-  const isSubscribed = userSubscriptions.includes(channel.id);
-  const isOwner = profile?.uid === channel.ownerId;
+  const fallbackChannel: Channel = {
+    id: channelId || 'ch-wasafi',
+    ownerId: profile?.uid || 'creator',
+    handle: '@tazama',
+    name: 'Tazama Channel',
+    bio: 'Jukwaa rasmi la video na wabunifu Tanzania.',
+    avatarUrl: createAvatarSvgDataUri('Tazama Channel'),
+    bannerUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80',
+    subscriberCount: 0,
+    videoCount: 0,
+    isVerified: false,
+    isMonetized: false,
+    totalViews: 0,
+    joinedDate: '2026-01-01'
+  };
+
+  const channel = (channels && channels.length > 0 ? (channels.find(c => c && c.id === channelId) || channels[0]) : null) || fallbackChannel;
+  const channelVideos = videos ? videos.filter(v => Boolean(v && channel && v.channelId === channel.id)) : [];
+  const channelShorts = shorts ? shorts.filter(s => Boolean(s && channel && s.channelId === channel.id)) : [];
+  const isSubscribed = Boolean(channel?.id && userSubscriptions.includes(channel.id));
+  const isOwner = Boolean(profile?.uid && channel && profile.uid === channel.ownerId);
 
   const tabs = [
     { id: 'home', label: 'Home' },

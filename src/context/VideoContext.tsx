@@ -256,7 +256,10 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [watchHistory, setWatchHistory] = useState<VideoItem[]>(() => {
     try {
       const saved = localStorage.getItem('tazama_watch_history');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+      }
     } catch {}
     return [];
   });
@@ -987,9 +990,10 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }));
 
     // Add to history
-    const target = videos.find(v => v.id === videoId) || shorts.find(s => s.id === videoId);
+    const target = (videos && videos.find(v => Boolean(v && v.id === videoId))) || 
+                   (shorts && shorts.find(s => Boolean(s && s.id === videoId)));
     if (target) {
-      setWatchHistory(prev => [target, ...prev.filter(item => item.id !== videoId)].slice(0, 50));
+      setWatchHistory(prev => [target, ...(Array.isArray(prev) ? prev.filter(item => Boolean(item && item.id && item.id !== videoId)) : [])].slice(0, 50));
     }
   };
 

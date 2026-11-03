@@ -94,7 +94,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({
       </div>
 
       {/* 2. Popular Tanzanian Creators with Active Status Dot */}
-      {channels.map((ch, idx) => (
+      {channels.filter(ch => Boolean(ch && ch.id)).map((ch, idx) => (
         <StoryItem
           key={ch.id}
           channel={ch}

@@ -18,7 +18,8 @@ import { useAuth } from '../context/AuthContext';
 import { translations } from '../lib/i18n';
 
 export const SettingsPage: React.FC = () => {
-  const { profile, language, setLanguage, theme, toggleTheme, logout } = useAuth();
+  const { profile, role, language, setLanguage, theme, toggleTheme, logout } = useAuth();
+  const isAdmin = role === 'admin' || profile?.role === 'admin' || profile?.email === 'amytzee@gmail.com';
   const t = translations[language];
 
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
@@ -237,184 +238,186 @@ export const SettingsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Cloudinary Integration Card */}
-        <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-blue-500/30 space-y-5 text-xs shadow-xl">
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#262E3E]">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
-                <Cloud className="w-5 h-5" />
+        {/* Cloudinary Integration Card - Visible ONLY to Administrator */}
+        {isAdmin && (
+          <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-blue-500/30 space-y-5 text-xs shadow-xl">
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#262E3E]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center text-blue-400">
+                  <Cloud className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                    <span>Muunganisho wa Cloudinary Video & Media</span>
+                    <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono text-[10px] border border-blue-500/30">
+                      console.cloudinary.com
+                    </span>
+                  </h2>
+                  <p className="text-[11px] text-[#A7B0C0]">
+                    Hifadhi video na picha za ubora wa juu kwenye akaunti yako ya Cloudinary (Usimamizi wa Admin)
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                  <span>Muunganisho wa Cloudinary Video & Media</span>
-                  <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono text-[10px] border border-blue-500/30">
-                    console.cloudinary.com
-                  </span>
-                </h2>
+
+              <a 
+                href="https://console.cloudinary.com/" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 hover:text-white font-bold text-xs transition-colors"
+              >
+                <span>Fungua Console ya Cloudinary</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+
+            {/* Active Status Badge */}
+            <div className="p-3.5 rounded-2xl bg-[#16C784]/10 border border-[#16C784]/30 flex flex-wrap items-center justify-between gap-2">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-white">
+                  <CheckCircle className="w-4 h-4 text-[#16C784]" />
+                  <span>Cloud Name Inayotumika: <span className="font-mono text-[#16C784]">{cloudinaryCloudName}</span></span>
+                </div>
                 <p className="text-[11px] text-[#A7B0C0]">
-                  Hifadhi video na picha za ubora wa juu kwenye akaunti yako ya Cloudinary
+                  Upload Preset: <span className="font-mono text-white">{cloudinaryPreset || 'Haijawekwa'}</span> (Inatumika kupakia video moja kwa moja bila kuonyesha siri)
                 </p>
               </div>
+              <span className="px-3 py-1 rounded-full bg-[#16C784] text-black font-extrabold text-[10px] tracking-wide shadow-sm">
+                IMEUNGANISHWA
+              </span>
             </div>
 
-            <a 
-              href="https://console.cloudinary.com/" 
-              target="_blank" 
-              rel="noreferrer" 
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-400 hover:text-white font-bold text-xs transition-colors"
-            >
-              <span>Fungua Console ya Cloudinary</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          </div>
-
-          {/* Active Status Badge */}
-          <div className="p-3.5 rounded-2xl bg-[#16C784]/10 border border-[#16C784]/30 flex flex-wrap items-center justify-between gap-2">
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-                <CheckCircle className="w-4 h-4 text-[#16C784]" />
-                <span>Cloud Name Inayotumika: <span className="font-mono text-[#16C784]">{cloudinaryCloudName}</span></span>
+            {/* Guide Dropdown / Accordion */}
+            <div className="p-3.5 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-2">
+              <div className="flex items-center gap-2 text-white font-bold text-xs">
+                <HelpCircle className="w-4 h-4 text-blue-400" />
+                <span>Jinsi ya kupata taarifa kutoka console.cloudinary.com:</span>
               </div>
-              <p className="text-[11px] text-[#A7B0C0]">
-                Upload Preset: <span className="font-mono text-white">{cloudinaryPreset || 'Haijawekwa'}</span> (Inatumika kupakia video moja kwa moja bila kuonyesha siri)
-              </p>
-            </div>
-            <span className="px-3 py-1 rounded-full bg-[#16C784] text-black font-extrabold text-[10px] tracking-wide shadow-sm">
-              IMEUNGANISHWA
-            </span>
-          </div>
-
-          {/* Guide Dropdown / Accordion */}
-          <div className="p-3.5 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-2">
-            <div className="flex items-center gap-2 text-white font-bold text-xs">
-              <HelpCircle className="w-4 h-4 text-blue-400" />
-              <span>Jinsi ya kupata taarifa kutoka console.cloudinary.com:</span>
-            </div>
-            <ol className="list-decimal list-inside space-y-1 text-[11px] text-[#A7B0C0] leading-relaxed pl-1">
-              <li>Ingia kwenye akaunti yako kupitia <a href="https://console.cloudinary.com/" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">console.cloudinary.com</a>.</li>
-              <li>Kwenye ukurasa wa mwanzo (<strong>Dashboard</strong>), angalia sehemu ya <strong>Product Environment Credentials</strong> kupata <strong>Cloud name</strong>, <strong>API Key</strong> na <strong>API Secret</strong>.</li>
-              <li>Ili kupata <strong>Upload Preset</strong>: Bonyeza alama ya Settings ⚙️ (chini kushoto) &rarr; Chagua <strong>Upload</strong> &rarr; Nenda chini sehemu ya <strong>Upload presets</strong> &rarr; Bonyeza <em>&quot;Add upload preset&quot;</em> &rarr; Weka <strong>Signing Mode: Unsigned</strong> &rarr; Hifadhi na unakili jina lake (kwa mfano: <code className="text-blue-300">malimai12</code>).</li>
-            </ol>
-          </div>
-
-          {/* Credentials Form */}
-          <div className="space-y-3.5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-semibold text-[#A7B0C0] mb-1">
-                  Cloud Name (Jina la Wingu) *
-                </label>
-                <input
-                  type="text"
-                  value={cloudinaryCloudName}
-                  onChange={(e) => setCloudinaryCloudName(e.target.value)}
-                  placeholder="mfano: ecsswynm"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-blue-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-[#A7B0C0] mb-1">
-                  Upload Preset (Unsigned Preset) *
-                </label>
-                <input
-                  type="text"
-                  value={cloudinaryPreset}
-                  onChange={(e) => setCloudinaryPreset(e.target.value)}
-                  placeholder="mfano: malimai12"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-blue-500 outline-none"
-                />
-              </div>
+              <ol className="list-decimal list-inside space-y-1 text-[11px] text-[#A7B0C0] leading-relaxed pl-1">
+                <li>Ingia kwenye akaunti yako kupitia <a href="https://console.cloudinary.com/" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">console.cloudinary.com</a>.</li>
+                <li>Kwenye ukurasa wa mwanzo (<strong>Dashboard</strong>), angalia sehemu ya <strong>Product Environment Credentials</strong> kupata <strong>Cloud name</strong>, <strong>API Key</strong> na <strong>API Secret</strong>.</li>
+                <li>Ili kupata <strong>Upload Preset</strong>: Bonyeza alama ya Settings ⚙️ (chini kushoto) &rarr; Chagua <strong>Upload</strong> &rarr; Nenda chini sehemu ya <strong>Upload presets</strong> &rarr; Bonyeza <em>&quot;Add upload preset&quot;</em> &rarr; Weka <strong>Signing Mode: Unsigned</strong> &rarr; Hifadhi na unakili jina lake (kwa mfano: <code className="text-blue-300">malimai12</code>).</li>
+              </ol>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-semibold text-[#A7B0C0] mb-1">
-                  API Key (Hiari - Kwa Usimamizi wa Server):
-                </label>
-                <input
-                  type="text"
-                  value={cloudinaryApiKey}
-                  onChange={(e) => setCloudinaryApiKey(e.target.value)}
-                  placeholder="mfano: 384729184719283"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-blue-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[11px] font-semibold text-[#A7B0C0]">
-                    API Secret (Hiari):
+            {/* Credentials Form */}
+            <div className="space-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#A7B0C0] mb-1">
+                    Cloud Name (Jina la Wingu) *
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowSecret(!showSecret)}
-                    className="text-[10px] text-blue-400 hover:text-blue-300"
-                  >
-                    {showSecret ? 'Ficha' : 'Onyesha'}
-                  </button>
+                  <input
+                    type="text"
+                    value={cloudinaryCloudName}
+                    onChange={(e) => setCloudinaryCloudName(e.target.value)}
+                    placeholder="mfano: ecsswynm"
+                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-blue-500 outline-none"
+                  />
                 </div>
-                <input
-                  type={showSecret ? 'text' : 'password'}
-                  value={cloudinaryApiSecret}
-                  onChange={(e) => setCloudinaryApiSecret(e.target.value)}
-                  placeholder="••••••••••••••••••••"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-blue-500 outline-none"
-                />
-              </div>
-            </div>
 
-            {/* Test Connection Results Notice */}
-            {testResult && (
-              <div className={`p-3 rounded-2xl text-xs border flex items-start gap-2.5 ${
-                testResult.success 
-                  ? 'bg-[#16C784]/10 border-[#16C784]/30 text-white' 
-                  : 'bg-red-500/10 border-red-500/30 text-red-300'
-              }`}>
-                {testResult.success ? (
-                  <CheckCircle className="w-4 h-4 text-[#16C784] shrink-0 mt-0.5" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                )}
-                <div className="space-y-0.5">
-                  <span className="font-bold block">
-                    {testResult.success ? 'Muunganisho Umefanikiwa!' : 'Tatizo la Muunganisho'}
-                  </span>
-                  <p className="text-[11px] text-[#A7B0C0]">{testResult.message}</p>
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#A7B0C0] mb-1">
+                    Upload Preset (Unsigned Preset) *
+                  </label>
+                  <input
+                    type="text"
+                    value={cloudinaryPreset}
+                    onChange={(e) => setCloudinaryPreset(e.target.value)}
+                    placeholder="mfano: malimai12"
+                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-blue-500 outline-none"
+                  />
                 </div>
               </div>
-            )}
 
-            {saveStatusMessage && (
-              <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-xs text-blue-300 flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-blue-400" />
-                <span>{saveStatusMessage}</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-semibold text-[#A7B0C0] mb-1">
+                    API Key (Hiari - Kwa Usimamizi wa Server):
+                  </label>
+                  <input
+                    type="text"
+                    value={cloudinaryApiKey}
+                    onChange={(e) => setCloudinaryApiKey(e.target.value)}
+                    placeholder="mfano: 384729184719283"
+                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-blue-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-semibold text-[#A7B0C0]">
+                      API Secret (Hiari):
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowSecret(!showSecret)}
+                      className="text-[10px] text-blue-400 hover:text-blue-300"
+                    >
+                      {showSecret ? 'Ficha' : 'Onyesha'}
+                    </button>
+                  </div>
+                  <input
+                    type={showSecret ? 'text' : 'password'}
+                    value={cloudinaryApiSecret}
+                    onChange={(e) => setCloudinaryApiSecret(e.target.value)}
+                    placeholder="••••••••••••••••••••"
+                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white font-mono focus:border-blue-500 outline-none"
+                  />
+                </div>
               </div>
-            )}
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2.5 pt-1">
-              <button
-                type="button"
-                disabled={isSavingCloudinary}
-                onClick={handleSaveCloudinaryConfig}
-                className="py-2.5 px-5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-98 text-white font-bold text-xs transition-all shadow-md shadow-blue-600/30 disabled:opacity-50"
-              >
-                {isSavingCloudinary ? 'Inahifadhi...' : 'Hifadhi Taarifa za Cloudinary'}
-              </button>
+              {/* Test Connection Results Notice */}
+              {testResult && (
+                <div className={`p-3 rounded-2xl text-xs border flex items-start gap-2.5 ${
+                  testResult.success 
+                    ? 'bg-[#16C784]/10 border-[#16C784]/30 text-white' 
+                    : 'bg-red-500/10 border-red-500/30 text-red-300'
+                }`}>
+                  {testResult.success ? (
+                    <CheckCircle className="w-4 h-4 text-[#16C784] shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  )}
+                  <div className="space-y-0.5">
+                    <span className="font-bold block">
+                      {testResult.success ? 'Muunganisho Umefanikiwa!' : 'Tatizo la Muunganisho'}
+                    </span>
+                    <p className="text-[11px] text-[#A7B0C0]">{testResult.message}</p>
+                  </div>
+                </div>
+              )}
 
-              <button
-                type="button"
-                disabled={isTestingCloudinary}
-                onClick={handleTestCloudinaryConnection}
-                className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#232A39] hover:bg-[#2c3547] text-white font-semibold text-xs border border-[#262E3E] transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isTestingCloudinary ? 'animate-spin' : ''}`} />
-                <span>{isTestingCloudinary ? 'Inapima...' : 'Jaribu Muunganisho (Test)'}</span>
-              </button>
+              {saveStatusMessage && (
+                <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-xs text-blue-300 flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-blue-400" />
+                  <span>{saveStatusMessage}</span>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                <button
+                  type="button"
+                  disabled={isSavingCloudinary}
+                  onClick={handleSaveCloudinaryConfig}
+                  className="py-2.5 px-5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-98 text-white font-bold text-xs transition-all shadow-md shadow-blue-600/30 disabled:opacity-50"
+                >
+                  {isSavingCloudinary ? 'Inahifadhi...' : 'Hifadhi Taarifa za Cloudinary'}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isTestingCloudinary}
+                  onClick={handleTestCloudinaryConnection}
+                  className="flex items-center gap-1.5 py-2.5 px-4 rounded-xl bg-[#232A39] hover:bg-[#2c3547] text-white font-semibold text-xs border border-[#262E3E] transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isTestingCloudinary ? 'animate-spin' : ''}`} />
+                  <span>{isTestingCloudinary ? 'Inapima...' : 'Jaribu Muunganisho (Test)'}</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Delete Account Workflow */}
         <div className="p-5 rounded-3xl bg-red-950/20 border border-red-500/30 space-y-3 text-xs">

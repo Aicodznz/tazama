@@ -54,12 +54,12 @@ export const HomePage: React.FC<HomePageProps> = ({
   }, [adCampaigns]);
 
   const inFeedAds = React.useMemo(() => {
-    return adCampaigns.filter(a => a.status === 'active' && ['in_feed', 'sponsored_placement', 'image_ad'].includes(a.adFormat));
+    return adCampaigns ? adCampaigns.filter(a => Boolean(a && a.status === 'active' && ['in_feed', 'sponsored_placement', 'image_ad'].includes(a.adFormat))) : [];
   }, [adCampaigns]);
 
   const filteredVideos = selectedCategory === 'Zote'
-    ? videos
-    : videos.filter(v => v.category === selectedCategory);
+    ? (videos ? videos.filter(Boolean) : [])
+    : (videos ? videos.filter(v => Boolean(v && v.category === selectedCategory)) : []);
 
   return (
     <div className="space-y-4 sm:space-y-6 pb-20 select-none">

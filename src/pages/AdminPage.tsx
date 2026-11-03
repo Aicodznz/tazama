@@ -1774,7 +1774,7 @@ export const AdminPage: React.FC = () => {
                 Video zilizochaguliwa na admin kuangaziwa kwenye ukurasa wa mwanzo (Homepage Curation).
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {allVideos.filter(v => featuredVideoIds.includes(v.id)).map(v => (
+                {allVideos.filter(v => Boolean(v && v.id && featuredVideoIds.includes(v.id))).map(v => (
                   <div key={v.id} className="p-3 rounded-2xl bg-[#10131B] border border-amber-500/30 space-y-2">
                     <img src={v.thumbnailUrl} className="w-full h-32 object-cover rounded-xl" />
                     <h4 className="font-bold text-white text-xs truncate">{v.title}</h4>

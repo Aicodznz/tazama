@@ -66,9 +66,9 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
   const [newPlaylistDesc, setNewPlaylistDesc] = useState<string>('');
   const [clearHistoryToast, setClearHistoryToast] = useState<boolean>(false);
 
-  const likedVideos = videos.filter(v => likedVideoIds.includes(v.id));
-  const subbedChannels = channels.filter(c => userSubscriptions.includes(c.id));
-  const subbedVideos = videos.filter(v => userSubscriptions.includes(v.channelId));
+  const likedVideos = videos ? videos.filter(v => Boolean(v && v.id && likedVideoIds.includes(v.id))) : [];
+  const subbedChannels = channels ? channels.filter(c => Boolean(c && c.id && userSubscriptions.includes(c.id))) : [];
+  const subbedVideos = videos ? videos.filter(v => Boolean(v && v.channelId && userSubscriptions.includes(v.channelId))) : [];
 
   // Calculate total offline storage used
   const totalOfflineBytes = offlineDownloads.reduce((acc, curr) => acc + curr.fileSizeBytes, 0);

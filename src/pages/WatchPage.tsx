@@ -74,21 +74,21 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   const [downloadSuccessToast, setDownloadSuccessToast] = useState<boolean>(false);
   const [showDownloadModal, setShowDownloadModal] = useState<boolean>(false);
 
-  const isDownloadedAlready = isDownloaded(video.id);
+  const isDownloadedAlready = video?.id ? isDownloaded(video.id) : false;
 
   const handleToggleDownload = () => {
     setShowDownloadModal(true);
   };
 
   const handleMinimize = () => {
-    setMiniPlayerVideo(video);
+    if (video) setMiniPlayerVideo(video);
     if (onMinimize) onMinimize();
   };
 
-  const isSubscribed = userSubscriptions.includes(video.channelId);
-  const isLiked = likedVideoIds.includes(video.id);
-  const videoComments = comments[video.id] || [];
-  const relatedVideos = videos.filter(v => v.id !== video.id);
+  const isSubscribed = Boolean(video?.channelId && userSubscriptions.includes(video.channelId));
+  const isLiked = Boolean(video?.id && likedVideoIds.includes(video.id));
+  const videoComments = (video?.id && comments[video.id]) || [];
+  const relatedVideos = videos ? videos.filter(v => Boolean(v && video && v.id && v.id !== video.id)) : [];
 
   const handleCommentSubmit = (e: React.FormEvent) => {
     e.preventDefault();

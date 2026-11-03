@@ -174,11 +174,11 @@ export const CreatorStudioPage: React.FC<CreatorStudioPageProps> = ({
 
   // Creator's videos & shorts
   const creatorVideos = useMemo(() => {
-    return videos.filter(v => v.channelId === creatorChannel.id || v.channelOwnerId === profile?.uid);
+    return videos ? videos.filter(v => Boolean(v && ((creatorChannel?.id && v.channelId === creatorChannel.id) || (profile?.uid && v.channelOwnerId === profile.uid)))) : [];
   }, [videos, creatorChannel, profile]);
 
   const creatorShorts = useMemo(() => {
-    return shorts.filter(s => s.channelId === creatorChannel.id);
+    return shorts ? shorts.filter(s => Boolean(s && creatorChannel?.id && s.channelId === creatorChannel.id)) : [];
   }, [shorts, creatorChannel]);
 
   // Metrics aggregation strictly calculated from real state
