@@ -46,9 +46,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState<boolean>(false);
-  const [showQualityMenu, setShowQualityMenu] = useState<boolean>(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState<boolean>(false);
   const [selectedQuality, setSelectedQuality] = useState<string>('Auto (1080p)');
   const [showCaptions, setShowCaptions] = useState<boolean>(false);
+  const [captionLang, setCaptionLang] = useState<'sw' | 'en'>('sw');
+  const [isDataSaverActive, setIsDataSaverActive] = useState<boolean>(false);
   const [hasRecordedView, setHasRecordedView] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(true);
   const controlsTimeoutRef = useRef<any>(null);
@@ -468,10 +470,22 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
         </div>
       )}
 
-      {/* Captions Overlay (Sample Kiswahili captions) */}
+      {/* Captions Overlay (Synchronized Kiswahili / English captions) */}
       {showCaptions && !isAdPlaying && !isEmbedVideo && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm text-yellow-300 font-semibold px-4 py-1.5 rounded-lg text-xs md:text-sm text-center pointer-events-none max-w-[85%]">
-          [Kiswahili]: Karibu sana kwenye video hii mpya ya Tazama Tanzania.
+        <div className="absolute bottom-14 sm:bottom-16 left-1/2 -translate-x-1/2 bg-black/85 backdrop-blur-md text-amber-300 font-semibold px-4 py-2 rounded-xl text-xs sm:text-sm text-center pointer-events-none max-w-[90%] shadow-2xl border border-amber-500/30 transition-all duration-300">
+          <span className="text-[10px] text-white/70 block uppercase font-mono tracking-wider mb-0.5">
+            CC &bull; {captionLang === 'sw' ? 'Kiswahili' : 'English'}
+          </span>
+          {currentTime < 4
+            ? (captionLang === 'sw' ? 'Habari za leo! Karibu kwenye Tazama Tanzania.' : 'Hello! Welcome to Tazama Tanzania.')
+            : currentTime < 9
+            ? (captionLang === 'sw' ? 'Tazama video na filamu bora zaidi za waumbaji wetu.' : 'Watch the best video and film creations from our talent.')
+            : currentTime < 15
+            ? (captionLang === 'sw' ? 'Gonga Like, Fuatilia chaneli, na acha maoni yako hapa chini.' : 'Hit Like, Subscribe to the channel, and leave your thoughts.')
+            : currentTime < 22
+            ? (captionLang === 'sw' ? 'Tuma Zawadi (Gifts) kusaidia sanaa na kazi ya muumbaji.' : 'Send Gifts to directly support the artist and their work.')
+            : (captionLang === 'sw' ? 'Asante sana kwa kutazama kupitia Tazama!' : 'Thank you for watching on Tazama!')
+          }
         </div>
       )}
 
@@ -513,13 +527,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
         </div>
 
         {/* Bottom Control Bar */}
-        <div className="flex items-center justify-between text-white text-xs px-2 sm:px-3 py-1 sm:py-1.5 max-w-full overflow-hidden">
+        <div className="flex items-center justify-between text-white text-xs px-2 sm:px-3 py-1 sm:py-1.5 max-w-full overflow-visible">
           
           {/* Left Controls */}
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <button 
               onClick={togglePlay} 
-              className="p-1 sm:p-1.5 hover:text-[#FF3040] transition-colors focus:outline-none"
+              className="p-1 sm:p-1.5 hover:text-[#FF3040] transition-colors focus:outline-none cursor-pointer"
               title={isPlaying ? 'Sitisha (Space)' : 'Cheza (Space)'}
             >
               {isPlaying ? <Pause className="w-4 h-4 sm:w-5 sm:h-5 fill-white" /> : <Play className="w-4 h-4 sm:w-5 sm:h-5 fill-white" />}
@@ -529,7 +543,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
             <div className="flex items-center gap-1 sm:gap-2 group/vol">
               <button 
                 onClick={toggleMute} 
-                className="p-1 sm:p-1.5 hover:text-[#FF3040] transition-colors"
+                className="p-1 sm:p-1.5 hover:text-[#FF3040] transition-colors cursor-pointer"
                 title={isMuted ? 'Washa Sauti' : 'Zima Sauti'}
               >
                 {isMuted || volume === 0 ? <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" /> : <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />}
@@ -553,72 +567,182 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
             </div>
           </div>
 
-          {/* Right Controls */}
+          {/* Right Controls (CC, 1x Speed, Settings ⚙️, Fullscreen) */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             
-            {/* Captions - Desktop / Tablet */}
+            {/* 1. CC (Subtitles Button) */}
             <button
-              onClick={() => setShowCaptions(!showCaptions)}
-              className={`hidden sm:block p-1.5 rounded-lg transition-colors ${showCaptions ? 'text-[#FF3040] bg-white/10' : 'text-white/80 hover:text-white'}`}
-              title="Manukuu (Captions)"
+              onClick={() => setShowCaptions(prev => !prev)}
+              className={`p-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                showCaptions 
+                  ? 'text-black bg-[#FF3040] font-black shadow-md shadow-[#FF3040]/40' 
+                  : 'text-white/80 hover:text-white hover:bg-white/10'
+              }`}
+              title="CC - Washa/Zima Manukuu (Subtitles)"
+              aria-label="Washa au zima manukuu"
             >
               <Subtitles className="w-4 h-4" />
+              <span className="text-[10px] font-bold">CC</span>
             </button>
 
-            {/* Playback Speed Menu */}
+            {/* 2. 1x Playback Speed Button & Menu */}
             <div className="relative">
               <button
-                onClick={() => { setShowSpeedMenu(!showSpeedMenu); setShowQualityMenu(false); }}
-                className="px-1.5 py-1 rounded-lg hover:bg-white/10 text-white/90 text-[11px] sm:text-xs font-semibold"
-                title="Kasi ya Video (Speed)"
+                onClick={() => { 
+                  setShowSpeedMenu(!showSpeedMenu); 
+                  setShowSettingsMenu(false); 
+                }}
+                className={`px-2 py-1 rounded-lg hover:bg-white/10 transition-colors text-[11px] sm:text-xs font-bold font-mono cursor-pointer flex items-center gap-0.5 ${
+                  playbackSpeed !== 1 ? 'text-[#FF3040] bg-white/10' : 'text-white/90'
+                }`}
+                title="1x - Kasi ya Video (Playback Speed)"
               >
-                {playbackSpeed}x
+                <span>{playbackSpeed}x</span>
               </button>
               {showSpeedMenu && (
-                <div className="absolute bottom-9 right-0 bg-[#191E29] border border-[#262E3E] rounded-xl shadow-xl py-1 w-24 text-center z-50">
-                  <div className="px-2 py-1 text-[10px] text-[#A7B0C0] font-bold border-b border-[#262E3E]">KASI</div>
+                <div className="absolute bottom-9 right-0 bg-[#191E29] border border-[#262E3E] rounded-2xl shadow-2xl py-1.5 w-32 text-center z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-3 py-1 text-[10px] text-[#A7B0C0] font-bold border-b border-[#262E3E] flex items-center justify-between">
+                    <span>KASI YA VIDEO</span>
+                    <span className="text-amber-400 font-mono">{playbackSpeed}x</span>
+                  </div>
                   {[0.5, 0.75, 1, 1.25, 1.5, 2].map((s) => (
                     <button
                       key={s}
                       onClick={() => changeSpeed(s)}
-                      className={`w-full py-1 text-xs hover:bg-[#232A39] ${playbackSpeed === s ? 'text-[#FF3040] font-bold' : 'text-white'}`}
+                      className={`w-full py-1.5 px-3 text-xs flex items-center justify-between hover:bg-[#232A39] cursor-pointer transition-colors ${
+                        playbackSpeed === s ? 'text-[#FF3040] font-extrabold bg-[#232A39]/60' : 'text-white'
+                      }`}
                     >
-                      {s === 1 ? 'Kawaida (1x)' : `${s}x`}
+                      <span>{s === 1 ? 'Kawaida (1x)' : `${s}x`}</span>
+                      {playbackSpeed === s && <span className="w-1.5 h-1.5 rounded-full bg-[#FF3040]" />}
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Quality Picker */}
+            {/* 3. Settings (⚙️) Button & Comprehensive Modal/Popover */}
             <div className="relative">
               <button
-                onClick={() => { setShowQualityMenu(!showQualityMenu); setShowSpeedMenu(false); }}
-                className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 text-white/80 hover:text-white"
-                title="Ubora wa Video (Resolution)"
+                onClick={() => { 
+                  setShowSettingsMenu(!showSettingsMenu); 
+                  setShowSpeedMenu(false); 
+                }}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  showSettingsMenu ? 'text-[#FF3040] bg-white/10' : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+                title="Settings (⚙️) - Mipangilio ya video"
               >
                 <Settings className="w-4 h-4" />
               </button>
-              {showQualityMenu && (
-                <div className="absolute bottom-9 right-0 bg-[#191E29] border border-[#262E3E] rounded-xl shadow-xl py-1 w-32 z-50">
-                  <div className="px-3 py-1 text-[10px] text-[#A7B0C0] font-bold border-b border-[#262E3E]">UBORA WA PICHA</div>
-                  {['Auto (1080p)', '1080p HD', '720p', '480p (Data Saver)', '360p'].map((q) => (
+              
+              {showSettingsMenu && (
+                <div className="absolute bottom-9 right-0 bg-[#191E29] border border-[#262E3E] rounded-2xl shadow-2xl p-3 w-56 sm:w-64 z-50 text-left animate-in fade-in zoom-in-95 duration-150 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#262E3E]">
+                    <span className="text-xs font-black text-white flex items-center gap-1.5">
+                      <Settings className="w-3.5 h-3.5 text-[#FF3040]" />
+                      Mipangilio ya Video
+                    </span>
                     <button
-                      key={q}
-                      onClick={() => { setSelectedQuality(q); setShowQualityMenu(false); }}
-                      className={`w-full text-left px-3 py-1 text-xs hover:bg-[#232A39] ${selectedQuality === q ? 'text-[#FF3040] font-bold' : 'text-white'}`}
+                      onClick={() => setShowSettingsMenu(false)}
+                      className="text-[#A7B0C0] hover:text-white text-xs px-1"
                     >
-                      {q}
+                      ✕
                     </button>
-                  ))}
+                  </div>
+
+                  {/* Quality Selection */}
+                  <div>
+                    <label className="text-[10px] font-bold text-[#A7B0C0] uppercase tracking-wider block mb-1">
+                      Ubora wa Picha (Quality)
+                    </label>
+                    <div className="grid grid-cols-2 gap-1">
+                      {['Auto (1080p)', '1080p HD', '720p', '480p', '360p'].map((q) => (
+                        <button
+                          key={q}
+                          onClick={() => {
+                            setSelectedQuality(q);
+                            if (q === '360p') setIsDataSaverActive(true);
+                          }}
+                          className={`text-left px-2 py-1 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
+                            selectedQuality === q 
+                              ? 'bg-[#FF3040] text-white font-bold' 
+                              : 'bg-[#10131B] text-[#A7B0C0] hover:text-white hover:bg-[#232A39]'
+                          }`}
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Subtitles (CC) Toggle & Language */}
+                  <div className="pt-2 border-t border-[#262E3E]/70">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[10px] font-bold text-[#A7B0C0] uppercase tracking-wider">
+                        Manukuu (CC)
+                      </label>
+                      <button
+                        onClick={() => setShowCaptions(prev => !prev)}
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full cursor-pointer transition-colors ${
+                          showCaptions ? 'bg-[#16C784] text-black' : 'bg-[#232A39] text-[#A7B0C0]'
+                        }`}
+                      >
+                        {showCaptions ? 'YAMEWASHWA' : 'YAMEZIMWA'}
+                      </button>
+                    </div>
+                    {showCaptions && (
+                      <div className="flex gap-1.5 mt-1">
+                        <button
+                          onClick={() => setCaptionLang('sw')}
+                          className={`flex-1 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-colors ${
+                            captionLang === 'sw' ? 'bg-[#FF3040] text-white' : 'bg-[#10131B] text-[#A7B0C0]'
+                          }`}
+                        >
+                          Kiswahili
+                        </button>
+                        <button
+                          onClick={() => setCaptionLang('en')}
+                          className={`flex-1 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-colors ${
+                            captionLang === 'en' ? 'bg-[#FF3040] text-white' : 'bg-[#10131B] text-[#A7B0C0]'
+                          }`}
+                        >
+                          English
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Data Saver Toggle */}
+                  <div className="pt-2 border-t border-[#262E3E]/70 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-white block">Bana Bando (Data Saver)</span>
+                      <span className="text-[10px] text-[#A7B0C0]">Inatumia ubora wa 360p kuokoa MBs</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const next = !isDataSaverActive;
+                        setIsDataSaverActive(next);
+                        if (next) setSelectedQuality('360p');
+                        else setSelectedQuality('Auto (1080p)');
+                      }}
+                      className={`w-9 h-5 rounded-full p-0.5 transition-colors cursor-pointer ${
+                        isDataSaverActive ? 'bg-[#16C784]' : 'bg-[#262E3E]'
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                        isDataSaverActive ? 'translate-x-4' : 'translate-x-0'
+                      }`} />
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Fullscreen Button */}
+            {/* 4. Fullscreen Button */}
             <button
               onClick={toggleFullscreen}
-              className={`p-1.5 rounded-lg transition-all focus:outline-none flex items-center gap-1 active:scale-95 ${
+              className={`p-1.5 rounded-lg transition-all focus:outline-none flex items-center gap-1 active:scale-95 cursor-pointer ${
                 isFullscreen ? 'text-[#FF3040] bg-white/15 font-bold' : 'hover:text-[#FF3040] hover:bg-white/10'
               }`}
               title={isFullscreen ? 'Ondoa Skrini Nzima (Toka Fulu)' : 'Weka Skrini Nzima (Fulu)'}

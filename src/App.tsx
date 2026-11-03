@@ -187,6 +187,7 @@ const AppContent: React.FC = () => {
               onSelectVideo={handleSelectVideo}
               onSelectChannel={handleSelectChannel}
               onOpenWallet={handleOpenWallet}
+              onNavigate={handleNavigate}
               onMinimize={() => {
                 setActivePage('home');
               }}
@@ -275,6 +276,7 @@ const AppContent: React.FC = () => {
               onSelectVideo={handleSelectVideo}
               onOpenUpload={handleOpenUpload}
               onNavigateHome={() => handleNavigate('home')}
+              onNavigate={handleNavigate}
             />
           )}
 
