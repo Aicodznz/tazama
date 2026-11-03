@@ -231,7 +231,7 @@ export const LivePage: React.FC<LivePageProps> = ({ onSelectChannel, onOpenWalle
                     : 'bg-[#FF3040] hover:bg-[#e02434] text-white shadow-[#FF3040]/30'
                 }`}
               >
-                {isSubbed ? 'Umejisajili' : 'Jisajili (Subscribe)'}
+                {isSubbed ? 'Unamfuatilia' : 'Fuatilia'}
               </button>
 
               <button

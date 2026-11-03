@@ -121,7 +121,7 @@ export const ChannelPage: React.FC<ChannelPageProps> = ({
                     : 'bg-[#FF3040] hover:bg-[#E02635] text-white shadow-[#FF3040]/30'
                 }`}
               >
-                {isSubscribed ? 'Subscribed' : 'Subscrib'}
+                {isSubscribed ? 'Unamfuatilia' : 'Fuatilia'}
               </button>
             )}
           </div>

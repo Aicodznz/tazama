@@ -86,11 +86,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#262E3E] bg-[#10131B]/95 backdrop-blur-md px-3 sm:px-6 py-2 transition-colors">
+    <header className="sticky top-0 z-40 w-full border-b border-[#262E3E] bg-[#10131B]/95 backdrop-blur-md px-3 sm:px-6 py-2.5 min-h-[64px] transition-colors">
       <div className="flex items-center justify-between gap-2 md:gap-4">
         
         {/* Left: Mobile hamburger & Tazama Logo */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={onToggleSidebar}
             className="hidden md:flex p-1.5 sm:p-2 rounded-lg text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors focus:outline-none"
@@ -106,16 +106,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             aria-label="Tazama Home"
           >
             {/* Custom Play Symbol */}
-            <div className="relative w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-[#FF3040] to-[#FF6B6B] flex items-center justify-center shadow-lg shadow-[#FF3040]/30 group-hover:scale-105 transition-transform">
-              <div className="w-0 h-0 border-y-[5px] sm:border-y-[6px] border-y-transparent border-l-[9px] sm:border-l-[10px] border-l-white ml-0.5" />
+            <div className="relative w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FF3040] to-[#FF6B6B] flex items-center justify-center shadow-lg shadow-[#FF3040]/30 group-hover:scale-105 transition-transform shrink-0">
+              <div className="w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-white ml-0.5" />
             </div>
             
-            <div className="flex flex-col text-left">
-              <span className="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-1">
+            <div className="flex flex-col text-left justify-center">
+              <span className="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-1 leading-tight">
                 TAZAMA
                 <span className="w-1.5 h-1.5 rounded-full bg-[#FF3040]" />
               </span>
-              <span className="hidden sm:inline text-[9px] font-medium tracking-wider text-[#A7B0C0] uppercase">
+              <span className="hidden sm:inline text-[9px] font-medium tracking-wider text-[#A7B0C0] uppercase leading-none">
                 {t.tagline}
               </span>
             </div>
@@ -152,7 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Right: Actions, Wallet, Role, Language, Auth */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           
           {/* Mobile Search Toggle Button */}
           <button
@@ -190,32 +190,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Quick Upload Button (Desktop/Tablet) */}
           <button
             onClick={onOpenUpload}
-            className="hidden md:flex items-center gap-1.5 bg-[#FF3040] hover:bg-[#E02635] text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-md shadow-[#FF3040]/20 hover:scale-102 active:scale-98 transition-all"
+            className="hidden md:flex items-center gap-1.5 bg-[#FF3040] hover:bg-[#E02635] text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-md shadow-[#FF3040]/20 hover:scale-102 active:scale-98 transition-all shrink-0"
             title={t.upload}
           >
             <Plus className="w-4 h-4" />
             <span>{t.create}</span>
-          </button>
-
-          {/* Tazama Premium Button (Desktop/Tablet) */}
-          <button
-            onClick={() => onOpenPremium && onOpenPremium(role === 'creator' ? 'creator' : 'viewer')}
-            className="hidden lg:flex items-center gap-1.5 bg-gradient-to-r from-amber-500/20 to-amber-400/10 border border-amber-500/40 hover:border-amber-400 px-3 py-1.5 rounded-full text-xs font-bold text-amber-300 transition-all hover:scale-102"
-            title="Vifurushi vya Tazama Premium"
-          >
-            <Crown className="w-3.5 h-3.5 text-amber-400" />
-            <span>Premium</span>
-          </button>
-
-          {/* Weka Tangazo Button (Tazama Ads - For Viewers & Creators) */}
-          <button
-            onClick={onOpenCreateAd}
-            className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500/20 to-amber-600/10 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-amber-500/10 hover:scale-102 active:scale-95 shrink-0"
-            title="Weka Tangazo la Biashara (Tazama Ads)"
-          >
-            <Megaphone className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Weka Tangazo</span>
-            <span className="sm:hidden text-[11px]">Tangaza</span>
           </button>
 
           {/* Install PWA Button */}
@@ -267,18 +246,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Sparkles className="w-3.5 h-3.5 text-[#16C784]" />
               <span>Studio</span>
-            </button>
-          )}
-
-          {/* 3. 'Anza Kuwa Creator' Button (For viewers who haven't opened a channel yet) */}
-          {profile && role === 'viewer' && !profile.channelId && (
-            <button
-              onClick={onStartCreator}
-              className="flex items-center gap-1.5 bg-gradient-to-r from-[#16C784] to-[#13ab71] hover:brightness-110 text-black px-3.5 py-1.5 rounded-full text-xs font-black shadow-md shadow-[#16C784]/25 transition-all active:scale-95 shrink-0"
-              title="Fungua Channel Yako ya Tazama"
-            >
-              <Sparkles className="w-3.5 h-3.5 fill-black" />
-              <span>Anza Kuwa Creator</span>
             </button>
           )}
 

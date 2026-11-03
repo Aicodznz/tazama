@@ -15,12 +15,16 @@ import {
   Settings,
   ShieldCheck,
   Wand2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Link2,
+  Play,
+  Check
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useVideo } from '../../context/VideoContext';
 import { VideoCategory, VideoItem } from '../../types';
 import { translations } from '../../lib/i18n';
+import { parseVideoSource, ParsedVideoSource } from '../../lib/videoUtils';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -51,6 +55,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   const [createdVideo, setCreatedVideo] = useState<VideoItem | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [mediaUid, setMediaUid] = useState<string | null>(null);
+
+  // Upload Method: 'file' | 'link'
+  const [uploadMode, setUploadMode] = useState<'file' | 'link'>('file');
+  const [videoLink, setVideoLink] = useState<string>('');
+  const [parsedSource, setParsedSource] = useState<ParsedVideoSource | null>(null);
+  const [showLinkTestPlayer, setShowLinkTestPlayer] = useState<boolean>(false);
 
   // Video Provider selection: 'cloudinary' | 'cloudflare'
   const [selectedProvider, setSelectedProvider] = useState<'cloudinary' | 'cloudflare'>('cloudinary');
@@ -146,6 +156,43 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     { label: 'Michezo & Soka', url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80' }
   ];
 
+  const handleVideoLinkChange = (rawUrl: string) => {
+    setVideoLink(rawUrl);
+    setErrorMsg(null);
+    if (!rawUrl.trim()) {
+      setParsedSource(null);
+      return;
+    }
+    const parsed = parseVideoSource(rawUrl);
+    setParsedSource(parsed);
+
+    // If YouTube link detected, auto-populate thumbnail and adjust title
+    if (parsed.sourceType === 'youtube' && parsed.suggestedThumbnail) {
+      setThumbnailUrl(parsed.suggestedThumbnail);
+      if (rawUrl.includes('/shorts/')) {
+        setIsShort(true);
+      }
+      if (!title) {
+        if (rawUrl.includes('/shorts/')) {
+          setTitle('Tazama Short #Shorts 🔥');
+        } else {
+          setTitle('Video Mpya ya Tazama');
+        }
+      }
+    } else if (parsed.sourceType === 'direct') {
+      if (!title) {
+        try {
+          const urlObj = new URL(rawUrl);
+          const filename = urlObj.pathname.split('/').pop() || '';
+          const cleanName = decodeURIComponent(filename.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
+          if (cleanName && cleanName.length > 2) {
+            setTitle(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
+          }
+        } catch (_) {}
+      }
+    }
+  };
+
   const handleStartUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) {
@@ -153,11 +200,84 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       return;
     }
 
+    if (uploadMode === 'file' && !selectedFile) {
+      setErrorMsg('Tafadhali chagua faili la video kutoka kwenye kifaa chako au bofya "Weka Linki ya Video" ili kuweka linki.');
+      return;
+    }
+
+    if (uploadMode === 'link') {
+      if (!videoLink.trim()) {
+        setErrorMsg('Tafadhali weka linki ya video (mfano: https://...).');
+        return;
+      }
+      try {
+        new URL(videoLink.trim());
+      } catch (_) {
+        setErrorMsg('Linki uliyoweka si sahihi. Tafadhali hakikisha inaanza na https:// au http://');
+        return;
+      }
+    }
+
     setErrorMsg(null);
     setStep('uploading');
-    setUploadProgress(15);
+    setUploadProgress(20);
 
     try {
+      // 1. LINK UPLOAD PIPELINE
+      if (uploadMode === 'link') {
+        const parsed = parseVideoSource(videoLink.trim());
+        let finalVideoUrl = parsed.streamUrl || videoLink.trim();
+        let finalThumbUrl = thumbnailUrl || parsed.suggestedThumbnail || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80';
+        let duration = isShort ? 45 : 360;
+
+        // If Cloudinary is selected and it's a direct file (e.g. mp4/webm), Cloudinary can pull remote URLs directly:
+        if (selectedProvider === 'cloudinary' && parsed.sourceType === 'direct' && (videoLink.includes('.mp4') || videoLink.includes('.webm') || videoLink.includes('.mov'))) {
+          try {
+            const targetCloud = cloudName || 'ecsswynm';
+            const targetPreset = uploadPreset || 'malimai12';
+            const uploadUrl = `https://api.cloudinary.com/v1_1/${targetCloud}/video/upload`;
+            const formData = new FormData();
+            formData.append('file', videoLink.trim());
+            formData.append('upload_preset', targetPreset);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', uploadUrl);
+            xhr.upload.onprogress = (evt) => {
+              if (evt.lengthComputable) {
+                setUploadProgress(Math.round((evt.loaded / evt.total) * 100));
+              }
+            };
+            xhr.onload = () => {
+              try {
+                const cloudRes = JSON.parse(xhr.responseText);
+                if (cloudRes.secure_url) {
+                  finalVideoUrl = cloudRes.secure_url;
+                  finalThumbUrl = cloudRes.secure_url.replace(/\.[^/.]+$/, '.jpg');
+                  if (cloudRes.duration) duration = Math.round(cloudRes.duration);
+                }
+              } catch (_) {}
+              setStep('processing');
+              setTimeout(() => {
+                completeRegistration(targetCloud, finalVideoUrl, finalThumbUrl, duration);
+              }, 800);
+            };
+            xhr.onerror = () => {
+              setStep('processing');
+              completeRegistration('link-import', finalVideoUrl, finalThumbUrl, duration);
+            };
+            xhr.send(formData);
+            return;
+          } catch (_) {}
+        }
+
+        // Smooth progress simulation for link import
+        simulateProgress(() => {
+          completeRegistration('link-import', finalVideoUrl, finalThumbUrl, duration);
+        });
+        return;
+      }
+
+      // 2. LOCAL FILE UPLOAD PIPELINE
       if (selectedProvider === 'cloudinary') {
         // Cloudinary upload pipeline
         let videoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
@@ -201,13 +321,13 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
             setStep('processing');
             setTimeout(() => {
-              completeRegistration(targetCloud, videoUrl, thumbUrl);
+              completeRegistration(targetCloud, videoUrl, thumbUrl, duration);
             }, 800);
           };
 
           xhr.onerror = () => {
             setStep('processing');
-            completeRegistration('ecsswynm', videoUrl, thumbUrl);
+            completeRegistration('ecsswynm', videoUrl, thumbUrl, 180);
           };
 
           xhr.send(formData);
@@ -215,7 +335,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         }
 
         // Fallback simulation if no local file selected
-        simulateProgress(() => completeRegistration('ecsswynm', videoUrl, thumbUrl));
+        simulateProgress(() => completeRegistration('ecsswynm', videoUrl, thumbUrl, isShort ? 45 : 180));
 
       } else {
         // Cloudflare Stream upload pipeline
@@ -234,12 +354,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         setMediaUid(streamUid);
 
         simulateProgress(() => {
-          completeRegistration(streamUid, undefined, undefined);
+          completeRegistration(streamUid, undefined, undefined, isShort ? 45 : 360);
         });
       }
     } catch (err: any) {
       simulateProgress(() => {
-        completeRegistration(`cf-${Date.now()}`);
+        completeRegistration(`cf-${Date.now()}`, undefined, undefined, isShort ? 45 : 360);
       });
     }
   };
@@ -260,10 +380,18 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     }, 250);
   };
 
-  const completeRegistration = async (uid: string, customVideoUrl?: string, customThumbUrl?: string) => {
-    const videoBlobUrl = customVideoUrl || (selectedFile 
-      ? URL.createObjectURL(selectedFile) 
-      : 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
+  const completeRegistration = async (uid: string, customVideoUrl?: string, customThumbUrl?: string, customDuration?: number) => {
+    let videoBlobUrl = customVideoUrl;
+    if (!videoBlobUrl) {
+      if (uploadMode === 'link' && videoLink.trim()) {
+        const parsed = parseVideoSource(videoLink.trim());
+        videoBlobUrl = parsed.streamUrl || videoLink.trim();
+      } else if (selectedFile) {
+        videoBlobUrl = URL.createObjectURL(selectedFile);
+      } else {
+        videoBlobUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+      }
+    }
 
     const video = await uploadNewVideo({
       title: title.trim(),
@@ -273,7 +401,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       visibility,
       isShort,
       thumbnailUrl: customThumbUrl || thumbnailUrl,
-      durationSeconds: isShort ? 45 : 360,
+      durationSeconds: customDuration || (isShort ? 45 : 360),
       videoUrl: videoBlobUrl,
       streamPlaybackId: uid
     });
@@ -288,6 +416,9 @@ export const UploadModal: React.FC<UploadModalProps> = ({
     setTitle('');
     setDescription('');
     setSelectedFile(null);
+    setVideoLink('');
+    setParsedSource(null);
+    setShowLinkTestPlayer(false);
     setUploadProgress(0);
     setCreatedVideo(null);
     onClose();
@@ -439,35 +570,148 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           {step === 'details' && (
             <form onSubmit={handleStartUpload} className="space-y-3.5">
               
-              {/* File Select Area */}
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className={`p-4 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all ${
-                  selectedFile 
-                    ? 'border-[#16C784] bg-[#16C784]/10' 
-                    : 'border-[#262E3E] bg-[#10131B] hover:border-[#FF3040]'
-                }`}
-              >
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept="video/mp4,video/webm,video/quicktime,video/mkv"
-                  className="hidden"
-                />
-                <FileVideo className={`w-8 h-8 mx-auto mb-1.5 ${selectedFile ? 'text-[#16C784]' : 'text-[#A7B0C0]'}`} />
-                {selectedFile ? (
-                  <div>
-                    <span className="text-xs font-bold text-white block">{selectedFile.name}</span>
-                    <span className="text-[11px] text-[#16C784]">{(selectedFile.size / (1024 * 1024)).toFixed(1)} MB • Bonyeza kubadili faili</span>
-                  </div>
-                ) : (
-                  <div>
-                    <span className="text-xs font-bold text-white block">Chagua au buruta faili la video hapa</span>
-                    <span className="text-[11px] text-[#A7B0C0]">MP4, WebM, MOV au MKV</span>
-                  </div>
-                )}
+              {/* Upload Mode Selector: Faili vs Linki */}
+              <div className="grid grid-cols-2 p-1 rounded-2xl bg-[#10131B] border border-[#262E3E] text-xs font-bold gap-1">
+                <button
+                  type="button"
+                  onClick={() => setUploadMode('file')}
+                  className={`flex items-center justify-center gap-2 py-2 rounded-xl transition-all ${
+                    uploadMode === 'file'
+                      ? 'bg-[#FF3040] text-white shadow-md shadow-[#FF3040]/30'
+                      : 'text-[#A7B0C0] hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <FileVideo className="w-4 h-4" />
+                  <span>Pakia Faili (Kifaa)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadMode('link')}
+                  className={`flex items-center justify-center gap-2 py-2 rounded-xl transition-all ${
+                    uploadMode === 'link'
+                      ? 'bg-[#FF3040] text-white shadow-md shadow-[#FF3040]/30'
+                      : 'text-[#A7B0C0] hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Link2 className="w-4 h-4" />
+                  <span>Weka Linki ya Video (URL)</span>
+                </button>
               </div>
+
+              {/* Mode 1: File Select Area */}
+              {uploadMode === 'file' ? (
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`p-4 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all ${
+                    selectedFile 
+                      ? 'border-[#16C784] bg-[#16C784]/10' 
+                      : 'border-[#262E3E] bg-[#10131B] hover:border-[#FF3040]'
+                  }`}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="video/mp4,video/webm,video/quicktime,video/mkv"
+                    className="hidden"
+                  />
+                  <FileVideo className={`w-8 h-8 mx-auto mb-1.5 ${selectedFile ? 'text-[#16C784]' : 'text-[#A7B0C0]'}`} />
+                  {selectedFile ? (
+                    <div>
+                      <span className="text-xs font-bold text-white block">{selectedFile.name}</span>
+                      <span className="text-[11px] text-[#16C784]">{(selectedFile.size / (1024 * 1024)).toFixed(1)} MB • Bonyeza kubadili faili</span>
+                    </div>
+                  ) : (
+                    <div>
+                      <span className="text-xs font-bold text-white block">Chagua au buruta faili la video hapa</span>
+                      <span className="text-[11px] text-[#A7B0C0]">MP4, WebM, MOV au MKV</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Mode 2: Video Link / URL Input Area */
+                <div className="p-3.5 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Link2 className="w-4 h-4 text-[#FF3040]" />
+                      <span>Weka Linki ya Video (Direct MP4, YouTube, Vimeo, n.k.)</span>
+                    </label>
+                    {videoLink && (
+                      <button
+                        type="button"
+                        onClick={() => handleVideoLinkChange('')}
+                        className="text-[11px] text-[#A7B0C0] hover:text-white"
+                      >
+                        Futa
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="relative">
+                    <input
+                      type="url"
+                      value={videoLink}
+                      onChange={(e) => handleVideoLinkChange(e.target.value)}
+                      placeholder="https://... (mfano: YouTube, MP4, HLS, Cloudinary, Vimeo)"
+                      className="w-full bg-[#191E29] border border-[#262E3E] rounded-xl px-3 py-2.5 text-xs text-white placeholder-[#A7B0C0]/60 focus:outline-none focus:border-[#FF3040] font-mono"
+                    />
+                  </div>
+
+                  {/* Supported formats helper badge row */}
+                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-[#A7B0C0]">
+                    <span className="text-white font-semibold">Inakubali:</span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-[#16C784] font-mono font-semibold">YouTube</span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">MP4</span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">WebM</span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">HLS (.m3u8)</span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">Cloudinary</span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">Google Drive</span>
+                  </div>
+
+                  {/* Detected format feedback & Preview */}
+                  {parsedSource && parsedSource.sourceType !== 'unknown' && (
+                    <div className="p-2.5 rounded-xl bg-[#16C784]/10 border border-[#16C784]/30 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5 font-bold text-[#16C784]">
+                          <Check className="w-3.5 h-3.5" />
+                          {parsedSource.sourceType === 'youtube' && 'Video ya YouTube Imetambuliwa (Picha ya jalada imewekwa)'}
+                          {parsedSource.sourceType === 'vimeo' && 'Video ya Vimeo Imetambuliwa'}
+                          {parsedSource.sourceType === 'direct' && 'Faili la Video Mtandaoni Limethibitishwa'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowLinkTestPlayer(!showLinkTestPlayer)}
+                          className="text-[11px] font-bold text-white hover:underline flex items-center gap-1"
+                        >
+                          <Play className="w-3 h-3 text-[#FF3040] fill-[#FF3040]" />
+                          <span>{showLinkTestPlayer ? 'Ficha Hakiki' : 'Hakiki Video'}</span>
+                        </button>
+                      </div>
+
+                      {/* Small Live Preview */}
+                      {showLinkTestPlayer && (
+                        <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-[#262E3E]">
+                          {parsedSource.sourceType === 'youtube' ? (
+                            <iframe
+                              src={`${parsedSource.embedUrl}?autoplay=1&enablejsapi=1`}
+                              title="Hakiki ya Video"
+                              className="w-full h-full border-0"
+                              allow="autoplay; encrypted-media"
+                            />
+                          ) : (
+                            <video
+                              src={parsedSource.streamUrl}
+                              controls
+                              autoPlay
+                              className="w-full h-full object-contain"
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Short toggle */}
               <div className="flex items-center justify-between p-3 rounded-2xl bg-[#10131B] border border-[#262E3E]">

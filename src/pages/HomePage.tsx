@@ -41,8 +41,9 @@ export const HomePage: React.FC<HomePageProps> = ({
     adCampaigns
   } = useVideo();
   
-  const { language } = useAuth();
+  const { language, profile, role } = useAuth();
   const t = translations[language];
+  const isRegistered = Boolean(profile);
 
   const categories = [
     'Zote', 'Muziki', 'Vichekesho', 'Habari', 'Elimu', 'Michezo', 'Teknolojia', 'Mtindo wa Maisha', 'Burudani'
@@ -165,7 +166,11 @@ export const HomePage: React.FC<HomePageProps> = ({
                 Hakuna Video Zilizopakiwa Bado
               </h3>
               <p className="text-xs text-[#A7B0C0] leading-relaxed max-w-md mx-auto">
-                Jukwaa la Tazama lipo tayari na salama. Kuwa mtayarishaji wa kwanza kupakia video au jisajili kwenye mfumo kuanza safari yako.
+                {isRegistered ? (
+                  `Jukwaa la Tazama lipo tayari na salama. Karibu ${profile?.displayName || ''}, kuwa wa kwanza kupakia video na kukuza jamii yako ya wafuasi.`
+                ) : (
+                  `Jukwaa la Tazama lipo tayari na salama. Kuwa mtayarishaji wa kwanza kupakia video au jisajili kwenye mfumo kuanza safari yako.`
+                )}
               </p>
             </div>
 
@@ -176,12 +181,22 @@ export const HomePage: React.FC<HomePageProps> = ({
               >
                 Pakia Video Sasa
               </button>
-              <button
-                onClick={() => onNavigate('register')}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-white text-xs font-semibold transition-colors"
-              >
-                Jisajili Kama Mtayarishaji
-              </button>
+              {!isRegistered && (
+                <button
+                  onClick={() => onNavigate('register')}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-white text-xs font-semibold transition-colors"
+                >
+                  Jisajili Kwenye Mfumo
+                </button>
+              )}
+              {isRegistered && (role === 'creator' || profile?.channelId) && (
+                <button
+                  onClick={() => onNavigate('studio')}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-white text-xs font-semibold transition-colors"
+                >
+                  Fungua Studio
+                </button>
+              )}
             </div>
           </div>
         ) : (

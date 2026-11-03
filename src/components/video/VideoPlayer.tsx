@@ -17,6 +17,7 @@ import { useVideo } from '../../context/VideoContext';
 import { useAuth } from '../../context/AuthContext';
 import { ExternalLink } from 'lucide-react';
 import { createAvatarSvgDataUri } from '../../lib/mediaPlaceholders';
+import { parseVideoSource } from '../../lib/videoUtils';
 
 interface VideoPlayerProps {
   video: VideoItem;
@@ -51,6 +52,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
   const [hasRecordedView, setHasRecordedView] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(true);
   const controlsTimeoutRef = useRef<any>(null);
+
+  const parsedSource = React.useMemo(() => parseVideoSource(video.videoUrl), [video.videoUrl]);
+  const isEmbedVideo = (parsedSource.sourceType === 'youtube' || parsedSource.sourceType === 'vimeo') && !(isAdPlaying && activeAd);
 
   // Initialize Ad check when video changes (VIP users are ad-free)
   useEffect(() => {
@@ -317,27 +321,37 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
           : 'aspect-video-player rounded-none sm:rounded-2xl overflow-hidden shadow-2xl group'
       }`}
     >
-      {/* HTML5 video element with Cloudflare Stream / CDN or Ad source */}
-      <video
-        ref={videoRef}
-        src={isAdPlaying && activeAd ? activeAd.mediaUrl : video.videoUrl}
-        poster={isAdPlaying && activeAd ? undefined : video.thumbnailUrl}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onEnded={() => {
-          if (isAdPlaying) {
-            handleCompleteAd();
-          } else {
-            setIsPlaying(false);
-          }
-        }}
-        onClick={togglePlay}
-        onDoubleClick={toggleFullscreen}
-        className={`w-full h-full cursor-pointer ${
-          isFullscreen ? 'max-h-screen object-contain' : 'object-contain'
-        }`}
-        playsInline
-      />
+      {/* HTML5 video element with Cloudflare Stream / CDN or Embedded YouTube/Vimeo player */}
+      {isEmbedVideo ? (
+        <iframe
+          src={`${parsedSource.embedUrl}?autoplay=${autoPlay ? 1 : 0}&enablejsapi=1&rel=0&modestbranding=1`}
+          title={video.title}
+          className="w-full h-full border-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      ) : (
+        <video
+          ref={videoRef}
+          src={isAdPlaying && activeAd ? activeAd.mediaUrl : (parsedSource.streamUrl || video.videoUrl)}
+          poster={isAdPlaying && activeAd ? undefined : video.thumbnailUrl}
+          onTimeUpdate={handleTimeUpdate}
+          onLoadedMetadata={handleLoadedMetadata}
+          onEnded={() => {
+            if (isAdPlaying) {
+              handleCompleteAd();
+            } else {
+              setIsPlaying(false);
+            }
+          }}
+          onClick={togglePlay}
+          onDoubleClick={toggleFullscreen}
+          className={`w-full h-full cursor-pointer ${
+            isFullscreen ? 'max-h-screen object-contain' : 'object-contain'
+          }`}
+          playsInline
+        />
+      )}
 
       {/* IN-STREAM AD OVERLAY UI (Dedicated YouTube In-Stream Ad Mode) */}
       {isAdPlaying && activeAd && (
@@ -444,35 +458,39 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
         </button>
       )}
 
-      {/* Cloudflare Stream CDN Watermark (Only during normal video playback) */}
-      {!isAdPlaying && (
+      {/* CDN / Stream Watermark (Only during normal video playback) */}
+      {!isAdPlaying && !isEmbedVideo && (
         <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] text-white/90 border border-white/10 pointer-events-none">
           <span className="w-1.5 h-1.5 rounded-full bg-[#16C784] animate-pulse" />
-          <span className="font-medium">Cloudflare Stream 1080p CDN</span>
+          <span className="font-medium">
+            {video.videoUrl.includes('cloudinary') ? 'Cloudinary HD CDN' : 'Tazama HD Stream'}
+          </span>
         </div>
       )}
 
       {/* Captions Overlay (Sample Kiswahili captions) */}
-      {showCaptions && !isAdPlaying && (
+      {showCaptions && !isAdPlaying && !isEmbedVideo && (
         <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm text-yellow-300 font-semibold px-4 py-1.5 rounded-lg text-xs md:text-sm text-center pointer-events-none max-w-[85%]">
           [Kiswahili]: Karibu sana kwenye video hii mpya ya Tazama Tanzania.
         </div>
       )}
 
       {/* Play/Pause Overlay indicator when clicking video */}
-      <div 
-        onClick={togglePlay}
-        className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${
-          !isPlaying ? 'opacity-100 bg-black/30' : 'opacity-0'
-        }`}
-      >
-        <div className="w-16 h-16 rounded-full bg-[#FF3040] text-white flex items-center justify-center shadow-xl shadow-[#FF3040]/50 transform transition hover:scale-110 pointer-events-auto cursor-pointer">
-          <Play className="w-7 h-7 ml-1 fill-white" />
+      {!isEmbedVideo && (
+        <div 
+          onClick={togglePlay}
+          className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${
+            !isPlaying ? 'opacity-100 bg-black/30' : 'opacity-0'
+          }`}
+        >
+          <div className="w-16 h-16 rounded-full bg-[#FF3040] text-white flex items-center justify-center shadow-xl shadow-[#FF3040]/50 transform transition hover:scale-110 pointer-events-auto cursor-pointer">
+            <Play className="w-7 h-7 ml-1 fill-white" />
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Main Video Controls Container (Strictly Hidden during In-Stream Ad) */}
-      {!isAdPlaying && (
+      {/* Main Video Controls Container (Strictly Hidden during In-Stream Ad or External Embed) */}
+      {!isAdPlaying && !isEmbedVideo && (
         <div 
           className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent px-3 md:px-5 py-3 transition-opacity duration-300 ${
             showControls || !isPlaying ? 'opacity-100' : 'opacity-0'

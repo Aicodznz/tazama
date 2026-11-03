@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Film } from 'lucide-react';
 import { useVideo } from '../../context/VideoContext';
 import { createAvatarSvgDataUri } from '../../lib/mediaPlaceholders';
+import { useAuth } from '../../context/AuthContext';
 import { Channel } from '../../types';
 
 interface StoriesBarProps {
@@ -53,6 +54,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({
   onNavigateShorts,
 }) => {
   const { channels } = useVideo();
+  const { profile } = useAuth();
 
   return (
     <div className="flex items-center gap-3.5 overflow-x-auto no-scrollbar py-2 px-1 select-none">
@@ -62,8 +64,16 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({
         className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group"
       >
         <div className="relative w-15 h-15 sm:w-16 sm:h-16 rounded-full bg-[#191E29] border border-[#262E3E] flex items-center justify-center p-0.5 group-hover:scale-105 transition-transform">
-          <div className="w-full h-full rounded-full bg-[#232A39] flex items-center justify-center text-white/80">
-            <Film className="w-6 h-6 text-white group-hover:text-[#FF3040] transition-colors" />
+          <div className="w-full h-full rounded-full bg-[#232A39] overflow-hidden flex items-center justify-center text-white/80">
+            {profile?.photoURL ? (
+              <img 
+                src={profile.photoURL} 
+                alt="" 
+                className="w-full h-full object-cover" 
+              />
+            ) : (
+              <Film className="w-6 h-6 text-white group-hover:text-[#FF3040] transition-colors" />
+            )}
           </div>
 
           {/* Plus Badge */}

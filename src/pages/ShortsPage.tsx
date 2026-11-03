@@ -21,6 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatViews, translations } from '../lib/i18n';
 import { GiftModal } from '../components/gifts/GiftModal';
 import { VideoItem } from '../types';
+import { parseVideoSource } from '../lib/videoUtils';
 
 interface ShortsPageProps {
   onSelectChannel: (channelId: string) => void;
@@ -158,18 +159,27 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({ onSelectChannel, onOpenW
         }`}
       >
         
-        {/* Video Element */}
-        <video
-          ref={videoRef}
-          src={currentShort.videoUrl}
-          poster={currentShort.thumbnailUrl}
-          autoPlay
-          loop
-          muted={isMuted}
-          playsInline
-          onClick={togglePlay}
-          className="w-full h-full object-cover cursor-pointer"
-        />
+        {/* Video Element or YouTube Short Embed */}
+        {parseVideoSource(currentShort.videoUrl).sourceType === 'youtube' ? (
+          <iframe
+            src={`${parseVideoSource(currentShort.videoUrl).embedUrl}?autoplay=1&loop=1&playlist=${parseVideoSource(currentShort.videoUrl).videoId}&controls=0`}
+            title={currentShort.title}
+            className="w-full h-full border-0 object-cover"
+            allow="autoplay; encrypted-media"
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            src={parseVideoSource(currentShort.videoUrl).streamUrl || currentShort.videoUrl}
+            poster={currentShort.thumbnailUrl}
+            autoPlay
+            loop
+            muted={isMuted}
+            playsInline
+            onClick={togglePlay}
+            className="w-full h-full object-cover cursor-pointer"
+          />
+        )}
 
         {/* Play State Flash Indicator */}
         {!isPlaying && (

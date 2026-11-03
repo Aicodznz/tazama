@@ -92,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* 1. Desktop & Tablet Sidebar */}
       <aside 
-        className={`fixed left-0 top-[61px] bottom-0 z-30 transition-all duration-300 bg-[#10131B] border-r border-[#262E3E] overflow-y-auto hidden md:block ${
+        className={`fixed left-0 top-[64px] bottom-0 z-30 transition-all duration-300 bg-[#10131B] border-r border-[#262E3E] overflow-y-auto hidden md:block select-none ${
           isOpen ? 'w-60 px-3 py-4' : 'w-[72px] px-2 py-4'
         }`}
       >
@@ -558,7 +558,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span className="text-[9px] bg-[#16C784] text-black px-1.5 py-0.5 rounded font-black uppercase">Fungua Channel</span>
                 </button>
               </div>
-            ) : (
+            ) : !profile ? (
               <div className="pb-3 border-b border-[#262E3E]">
                 <button
                   onClick={() => handleItemClick('register')}
@@ -571,7 +571,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span className="text-[9px] bg-[#16C784]/20 text-[#16C784] px-1.5 py-0.5 rounded font-semibold uppercase">Pata Mapato</span>
                 </button>
               </div>
-            )}
+            ) : null}
 
             {/* Admin Section (If admin/moderator) */}
             {profile && (role === 'admin' || role === 'moderator' || role === 'finance') && (
