@@ -17,6 +17,7 @@ import { useVideo } from '../context/VideoContext';
 import { useAuth } from '../context/AuthContext';
 import { formatViews, formatDuration, formatRelativeTime, translations } from '../lib/i18n';
 import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
+import { VideoThumbnailPreview } from '../components/video/VideoThumbnailPreview';
 
 interface SearchResultsPageProps {
   onSelectVideo: (video: VideoItem) => void;
@@ -368,35 +369,14 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
                   onClick={() => onSelectVideo(video)}
                   className="group flex flex-col sm:flex-row gap-3 sm:gap-4 p-2.5 sm:p-3 rounded-2xl bg-[#141824] hover:bg-[#191E29] border border-[#262E3E] hover:border-[#38445C] cursor-pointer transition-all duration-200 shadow-md"
                 >
-                  {/* Thumbnail */}
-                  <div className="relative w-full sm:w-64 sm:min-w-[256px] aspect-video rounded-xl overflow-hidden bg-black shrink-0">
-                    <img
-                      src={video.thumbnailUrl || createThumbnailSvgDataUri(video.title, video.category)}
-                      alt=""
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = createThumbnailSvgDataUri(video.title, video.category);
-                      }}
-                      className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                  {/* YouTube-Style Video Thumbnail Hover Preview */}
+                  <div className="w-full sm:w-64 sm:min-w-[256px] shrink-0">
+                    <VideoThumbnailPreview
+                      video={video}
+                      onSelectVideo={onSelectVideo}
+                      aspectRatioClass="aspect-video"
+                      className="rounded-xl overflow-hidden"
                     />
-
-                    {/* Live or Category Badge */}
-                    {isLive ? (
-                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#FF3040] text-white text-[10px] font-extrabold flex items-center gap-1 shadow-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                        <span>Live</span>
-                      </div>
-                    ) : (
-                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[9px] font-semibold text-white/90 border border-white/10">
-                        {video.category}
-                      </div>
-                    )}
-
-                    {/* Duration */}
-                    {!isLive && (
-                      <div className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/85 text-[10px] font-mono font-bold text-white border border-white/10">
-                        {formatDuration(video.durationSeconds)}
-                      </div>
-                    )}
                   </div>
 
                   {/* Video Meta Info */}

@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { VideoItem, VideoCategory } from '../types';
 import { VideoPlayer } from '../components/video/VideoPlayer';
+import { VideoThumbnailPreview } from '../components/video/VideoThumbnailPreview';
 import { GiftModal } from '../components/gifts/GiftModal';
 import { MembershipModal } from '../components/membership/MembershipModal';
 import { ReportModal } from '../components/modals/ReportModal';
@@ -823,39 +824,29 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               filteredRecommendations.map((item, idx) => (
                 <div
                   key={item.id}
-                  onClick={() => {
-                    onSelectVideo(item);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
                   className="flex gap-3 group cursor-pointer p-1 rounded-xl hover:bg-white/5 transition-colors"
                 >
-                  {/* Thumbnail (16:9) with corner duration and "New" badge */}
-                  <div className="relative w-40 sm:w-44 aspect-video rounded-xl overflow-hidden bg-[#181C26] shrink-0 border border-white/5">
-                    <img
-                      src={item.thumbnailUrl}
-                      alt={item.title}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = createThumbnailSvgDataUri(item.title, item.category);
+                  {/* YouTube-Style Video Thumbnail Hover Preview */}
+                  <div className="w-40 sm:w-44 shrink-0">
+                    <VideoThumbnailPreview
+                      video={item}
+                      aspectRatioClass="aspect-video"
+                      className="rounded-xl border border-white/5"
+                      onSelectVideo={(v) => {
+                        onSelectVideo(v);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 bg-[#141824]"
                     />
-
-                    {/* New (Mpya) badge if recent */}
-                    {idx < 2 && (
-                      <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-[#FF3040] text-white text-[9px] font-black uppercase tracking-wider shadow">
-                        Mpya
-                      </div>
-                    )}
-
-                    {/* Duration badge in bottom-right */}
-                    <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/85 text-white font-mono text-[10px] font-bold shadow">
-                      {formatDuration(item.durationSeconds || 180)}
-                    </div>
                   </div>
 
                   {/* Video Meta Info */}
-                  <div className="min-w-0 flex-1 flex flex-col justify-start py-0.5">
+                  <div 
+                    onClick={() => {
+                      onSelectVideo(item);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="min-w-0 flex-1 flex flex-col justify-start py-0.5 cursor-pointer"
+                  >
                     <h4 className="text-xs sm:text-sm font-semibold text-white line-clamp-2 leading-snug group-hover:text-[#FF3040] transition-colors">
                       {item.title}
                     </h4>

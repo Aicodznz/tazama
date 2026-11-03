@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { CheckCircle2, MoreVertical, Play } from 'lucide-react';
+import { CheckCircle2, MoreVertical } from 'lucide-react';
 import { VideoItem } from '../../types';
-import { formatDuration, formatViews, formatRelativeTime } from '../../lib/i18n';
+import { formatViews, formatRelativeTime } from '../../lib/i18n';
 import { useAuth } from '../../context/AuthContext';
-import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../../lib/mediaPlaceholders';
+import { createAvatarSvgDataUri } from '../../lib/mediaPlaceholders';
+import { VideoThumbnailPreview } from './VideoThumbnailPreview';
 
 interface VideoCardProps {
   video: VideoItem;
@@ -17,14 +18,7 @@ export const VideoCard: React.FC<VideoCardProps> = ({
   onSelectChannel 
 }) => {
   const { language } = useAuth();
-  const [thumbError, setThumbError] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
-
-  const isLive = video.viewsCount > 500000;
-
-  const thumbnailSrc = thumbError 
-    ? createThumbnailSvgDataUri(video.title, video.category)
-    : (video.thumbnailUrl || createThumbnailSvgDataUri(video.title, video.category));
 
   const avatarSrc = avatarError
     ? createAvatarSvgDataUri(video.channelName)
@@ -33,49 +27,13 @@ export const VideoCard: React.FC<VideoCardProps> = ({
   return (
     <div className="group flex flex-col gap-2.5 cursor-pointer select-none">
       
-      {/* Thumbnail Container */}
-      <div 
-        onClick={() => onSelectVideo(video)}
-        className="relative w-full aspect-video rounded-2xl sm:rounded-3xl overflow-hidden bg-[#141824] border border-[#262E3E]/70 transition-transform duration-200 group-hover:scale-[1.01] shadow-lg group-hover:shadow-2xl"
-      >
-        <img
-          src={thumbnailSrc}
-          alt="" // Avoid showing broken browser alt text over card
-          loading="lazy"
-          onError={() => setThumbError(true)}
-          className="w-full h-full object-cover group-hover:opacity-95 transition-opacity"
-        />
-
-        {/* Live Badge (Top-left) */}
-        {isLive ? (
-          <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-[#FF3040] text-white text-[11px] font-extrabold flex items-center gap-1 shadow-md shadow-[#FF3040]/30">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            <span>Live</span>
-          </div>
-        ) : (
-          <div className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-black/70 backdrop-blur-md text-[10px] font-semibold text-white/90 border border-white/10">
-            {video.category}
-          </div>
-        )}
-
-        {video.isMembersOnly && (
-          <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full bg-[#16C784] text-[10px] font-extrabold text-black shadow-md">
-            VIP Pekee
-          </div>
-        )}
-
-        {/* Red Circle Play Badge (Bottom-Right) */}
-        <div className="absolute bottom-2.5 right-2.5 w-7 h-7 rounded-full bg-[#FF3040] text-white flex items-center justify-center shadow-lg shadow-[#FF3040]/50 group-hover:scale-110 active:scale-95 transition-transform">
-          <Play className="w-3.5 h-3.5 fill-white ml-0.5" />
-        </div>
-
-        {/* Duration Badge */}
-        {!isLive && (
-          <div className="absolute bottom-2.5 right-11 px-1.5 py-0.5 rounded-md bg-black/85 backdrop-blur-sm text-[10px] font-mono font-semibold text-white border border-white/10">
-            {formatDuration(video.durationSeconds)}
-          </div>
-        )}
-      </div>
+      {/* YouTube-Style Video Thumbnail Hover Preview */}
+      <VideoThumbnailPreview
+        video={video}
+        onSelectVideo={onSelectVideo}
+        aspectRatioClass="aspect-video"
+        className="rounded-2xl sm:rounded-3xl border border-[#262E3E]/70 shadow-lg group-hover:shadow-2xl"
+      />
 
       {/* Video Details & Meta */}
       <div className="flex gap-3 px-0.5">

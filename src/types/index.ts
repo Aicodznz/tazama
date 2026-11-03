@@ -89,6 +89,13 @@ export type VideoCategory =
   | 'Burudani' 
   | 'Filamu';
 
+export interface VideoScene {
+  timeSeconds: number;
+  title: string;
+  description?: string;
+  thumbnailUrl?: string;
+}
+
 export interface VideoItem {
   id: string;
   channelId: string;
@@ -113,6 +120,7 @@ export interface VideoItem {
   processingStatus: 'ready' | 'processing' | 'error';
   createdAt: string;
   isMembersOnly?: boolean;
+  scenes?: VideoScene[];
 }
 
 export interface CommentItem {

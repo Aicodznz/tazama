@@ -18,6 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ExternalLink } from 'lucide-react';
 import { createAvatarSvgDataUri } from '../../lib/mediaPlaceholders';
 import { parseVideoSource } from '../../lib/videoUtils';
+import { getVideoScenes, getActiveSceneForTime } from '../../lib/videoScenes';
 
 interface VideoPlayerProps {
   video: VideoItem;
@@ -54,6 +55,15 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
   const [hasRecordedView, setHasRecordedView] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(true);
   const controlsTimeoutRef = useRef<any>(null);
+
+  // Smart Timeline Scrubber Hover Preview State
+  const [scrubberHoverTime, setScrubberHoverTime] = useState<number | null>(null);
+  const [scrubberHoverPercent, setScrubberHoverPercent] = useState<number | null>(null);
+  const scenes = React.useMemo(() => getVideoScenes(video), [video]);
+  const activeHoverScene = React.useMemo(() => 
+    scrubberHoverTime !== null ? getActiveSceneForTime(scenes, scrubberHoverTime) : null,
+    [scenes, scrubberHoverTime]
+  );
 
   const parsedSource = React.useMemo(() => parseVideoSource(video.videoUrl), [video.videoUrl]);
   const isEmbedVideo = (parsedSource.sourceType === 'youtube' || parsedSource.sourceType === 'vimeo') && !(isAdPlaying && activeAd);
@@ -510,8 +520,47 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
             showControls || !isPlaying ? 'opacity-100' : 'opacity-0'
           }`}
         >
-        {/* Scrubber Progress bar */}
-        <div className="relative mb-2.5 flex items-center group/scrubber cursor-pointer">
+        {/* Scrubber Progress bar with Smart Timeline Hover Preview */}
+        <div 
+          className="relative mb-2.5 flex items-center group/scrubber cursor-pointer py-1"
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const offsetX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+            const percent = (offsetX / rect.width) * 100;
+            const time = (offsetX / rect.width) * (duration || video.durationSeconds || 100);
+            setScrubberHoverPercent(percent);
+            setScrubberHoverTime(time);
+          }}
+          onMouseLeave={() => {
+            setScrubberHoverPercent(null);
+            setScrubberHoverTime(null);
+          }}
+        >
+          {/* Smart Timeline Floating Hover Preview Popup */}
+          {scrubberHoverPercent !== null && scrubberHoverTime !== null && (
+            <div 
+              className="absolute bottom-6 pointer-events-none z-50 transform -translate-x-1/2 flex flex-col items-center animate-in fade-in zoom-in-95 duration-100"
+              style={{ left: `${Math.max(14, Math.min(86, scrubberHoverPercent))}%` }}
+            >
+              <div className="w-36 aspect-video rounded-xl overflow-hidden bg-black/95 border border-white/20 shadow-2xl relative">
+                <img
+                  src={video.thumbnailUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+                {activeHoverScene && (
+                  <div className="absolute top-1 left-1 right-1 px-1.5 py-0.5 rounded bg-black/85 backdrop-blur-sm text-[9px] font-bold text-amber-300 truncate border border-amber-400/25">
+                    ✨ {activeHoverScene.title}
+                  </div>
+                )}
+                <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/85 font-mono text-[10px] font-bold text-white shadow">
+                  {formatDuration(scrubberHoverTime)}
+                </div>
+              </div>
+              <div className="w-2.5 h-2.5 bg-black/95 border-r border-b border-white/20 transform rotate-45 -mt-1 shadow" />
+            </div>
+          )}
+
           <input
             type="range"
             min={0}
@@ -519,7 +568,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
             step={0.1}
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#FF3040] focus:outline-none"
+            className="w-full h-1.5 hover:h-2.5 transition-all bg-white/20 rounded-lg appearance-none cursor-pointer accent-[#FF3040] focus:outline-none"
             style={{
               background: `linear-gradient(to right, #FF3040 0%, #FF3040 ${progressPercentage}%, rgba(255,255,255,0.2) ${progressPercentage}%, rgba(255,255,255,0.2) 100%)`
             }}

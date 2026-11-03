@@ -9,6 +9,7 @@ import {
 import { useVideo } from '../context/VideoContext';
 import { useAuth } from '../context/AuthContext';
 import { VideoCard } from '../components/video/VideoCard';
+import { VideoThumbnailPreview } from '../components/video/VideoThumbnailPreview';
 import { StoriesBar } from '../components/home/StoriesBar';
 import { MastheadAdBanner } from '../components/ads/MastheadAdBanner';
 import { InFeedAdCard } from '../components/ads/InFeedAdCard';
@@ -144,25 +145,24 @@ export const HomePage: React.FC<HomePageProps> = ({
             {shorts.slice(0, 4).map((short) => (
               <div
                 key={short.id}
-                onClick={() => onSelectVideo(short)}
-                className="relative aspect-shorts rounded-2xl overflow-hidden bg-[#191E29] border border-[#262E3E] group cursor-pointer shadow-md hover:shadow-xl transition-transform hover:scale-102"
+                className="group flex flex-col gap-1.5 cursor-pointer select-none"
               >
-                <img
-                  src={short.thumbnailUrl}
-                  alt=""
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = createThumbnailSvgDataUri(short.title, 'Shorts');
-                  }}
-                  className="w-full h-full object-cover group-hover:opacity-90 transition-opacity bg-[#141824]"
+                <VideoThumbnailPreview
+                  video={short}
+                  onSelectVideo={onSelectVideo}
+                  aspectRatioClass="aspect-shorts"
+                  className="rounded-2xl border border-[#262E3E] group-hover:scale-102 transition-transform shadow-md"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-end p-3">
-                  <h4 className="text-xs font-bold text-white line-clamp-2 drop-shadow-md">
+                <div 
+                  onClick={() => onSelectVideo(short)}
+                  className="px-1"
+                >
+                  <h4 className="text-xs font-bold text-white line-clamp-1 group-hover:text-[#FF3040] transition-colors">
                     {short.title}
                   </h4>
-                  <div className="mt-1 flex items-center justify-between text-[11px] text-[#A7B0C0]">
-                    <span>{formatViews(short.viewsCount, language)} {language === 'sw' ? 'matazamio' : 'views'}</span>
-                    <span className="text-[10px] bg-red-600/80 text-white px-1.5 py-0.2 rounded font-semibold">Short</span>
-                  </div>
+                  <p className="text-[11px] text-[#A7B0C0] mt-0.5">
+                    {formatViews(short.viewsCount, language)} views
+                  </p>
                 </div>
               </div>
             ))}
