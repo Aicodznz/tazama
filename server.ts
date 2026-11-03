@@ -60,6 +60,55 @@ function verifyWebhookSignature(signatureHeader: string | undefined, rawBody: st
   }
 }
 
+const VIDEOS_STORAGE_FILE = path.join(__dirname, 'data', 'videos.json');
+const CHANNELS_STORAGE_FILE = path.join(__dirname, 'data', 'channels.json');
+
+function getStoredVideos(): any[] {
+  try {
+    if (fs.existsSync(VIDEOS_STORAGE_FILE)) {
+      const content = fs.readFileSync(VIDEOS_STORAGE_FILE, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+    }
+  } catch (err) {
+    console.error('Error reading stored videos:', err);
+  }
+  return [];
+}
+
+function saveStoredVideos(videos: any[]) {
+  try {
+    const dir = path.dirname(VIDEOS_STORAGE_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(VIDEOS_STORAGE_FILE, JSON.stringify(videos, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing stored videos:', err);
+  }
+}
+
+function getStoredChannels(): any[] {
+  try {
+    if (fs.existsSync(CHANNELS_STORAGE_FILE)) {
+      const content = fs.readFileSync(CHANNELS_STORAGE_FILE, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+    }
+  } catch (err) {
+    console.error('Error reading stored channels:', err);
+  }
+  return [];
+}
+
+function saveStoredChannels(channels: any[]) {
+  try {
+    const dir = path.dirname(CHANNELS_STORAGE_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(CHANNELS_STORAGE_FILE, JSON.stringify(channels, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing stored channels:', err);
+  }
+}
+
 async function startServer() {
   const app = express();
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -71,6 +120,112 @@ async function startServer() {
       req.rawBody = buf.toString();
     }
   }));
+
+  // ==========================================
+  // SHARED PERSISTENT VIDEOS & CHANNELS API
+  // ==========================================
+
+  // 1. Get all globally uploaded videos & shorts
+  app.get('/api/videos', (_req, res) => {
+    try {
+      const videos = getStoredVideos();
+      res.json({ success: true, videos });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message, videos: [] });
+    }
+  });
+
+  // 2. Save or update uploaded video
+  app.post('/api/videos', (req, res) => {
+    try {
+      const newVideo = req.body;
+      if (!newVideo || !newVideo.id) {
+        return res.status(400).json({ success: false, error: 'Video data with valid ID is required' });
+      }
+
+      const current = getStoredVideos();
+      const existingIdx = current.findIndex(v => v.id === newVideo.id);
+      let updatedList;
+      if (existingIdx >= 0) {
+        updatedList = [...current];
+        updatedList[existingIdx] = { ...updatedList[existingIdx], ...newVideo };
+      } else {
+        updatedList = [newVideo, ...current];
+      }
+
+      saveStoredVideos(updatedList);
+      res.json({ success: true, video: newVideo, totalVideos: updatedList.length });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 3. Batch sync videos from client
+  app.post('/api/videos/sync', (req, res) => {
+    try {
+      const { videos } = req.body;
+      if (!Array.isArray(videos)) {
+        return res.status(400).json({ success: false, error: 'videos must be an array' });
+      }
+
+      const current = getStoredVideos();
+      const videoMap = new Map<string, any>();
+      current.forEach(v => { if (v && v.id) videoMap.set(v.id, v); });
+      videos.forEach(v => { if (v && v.id) videoMap.set(v.id, { ...(videoMap.get(v.id) || {}), ...v }); });
+
+      const merged = Array.from(videoMap.values());
+      saveStoredVideos(merged);
+      res.json({ success: true, totalVideos: merged.length, videos: merged });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 4. Delete video
+  app.delete('/api/videos/:id', (req, res) => {
+    try {
+      const { id } = req.params;
+      const current = getStoredVideos();
+      const next = current.filter(v => v.id !== id);
+      saveStoredVideos(next);
+      res.json({ success: true, deletedId: id });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 5. Channels API
+  app.get('/api/channels', (_req, res) => {
+    try {
+      const channels = getStoredChannels();
+      res.json({ success: true, channels });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message, channels: [] });
+    }
+  });
+
+  app.post('/api/channels', (req, res) => {
+    try {
+      const newChannel = req.body;
+      if (!newChannel || !newChannel.id) {
+        return res.status(400).json({ success: false, error: 'Channel data with valid ID is required' });
+      }
+
+      const current = getStoredChannels();
+      const idx = current.findIndex(c => c.id === newChannel.id);
+      let updated;
+      if (idx >= 0) {
+        updated = [...current];
+        updated[idx] = { ...updated[idx], ...newChannel };
+      } else {
+        updated = [newChannel, ...current];
+      }
+      saveStoredChannels(updated);
+      res.json({ success: true, channel: newChannel });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
 
   // ==========================================
   // CLOUDINARY API ROUTES

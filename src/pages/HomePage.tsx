@@ -163,10 +163,14 @@ export const HomePage: React.FC<HomePageProps> = ({
 
             <div className="space-y-1.5">
               <h3 className="text-lg font-black text-white">
-                Hakuna Video Zilizopakiwa Bado
+                {selectedCategory !== 'Zote' 
+                  ? `Hakuna Video kwenye Kategoria ya "${selectedCategory}"` 
+                  : 'Hakuna Video Zilizopakiwa Bado'}
               </h3>
               <p className="text-xs text-[#A7B0C0] leading-relaxed max-w-md mx-auto">
-                {isRegistered ? (
+                {selectedCategory !== 'Zote' ? (
+                  `Kwa sasa hakuna video iliyochapishwa chini ya kategoria hii. Bofya "Onyesha Zote" ili kuona video zote zilizopakiwa.`
+                ) : isRegistered ? (
                   `Jukwaa la Tazama lipo tayari na salama. Karibu ${profile?.displayName || ''}, kuwa wa kwanza kupakia video na kukuza jamii yako ya wafuasi.`
                 ) : (
                   `Jukwaa la Tazama lipo tayari na salama. Kuwa mtayarishaji wa kwanza kupakia video au jisajili kwenye mfumo kuanza safari yako.`
@@ -175,6 +179,14 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
+              {selectedCategory !== 'Zote' && (
+                <button
+                  onClick={() => setSelectedCategory('Zote')}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md transition-all"
+                >
+                  Onyesha Video Zote
+                </button>
+              )}
               <button
                 onClick={onOpenUpload || (() => onNavigate('studio'))}
                 className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF3040] to-[#E02635] text-white text-xs font-bold shadow-lg shadow-[#FF3040]/25 hover:brightness-110 active:scale-95 transition-all"

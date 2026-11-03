@@ -58,6 +58,7 @@ import {
   INITIAL_NOTIFICATIONS
 } from '../data/mockData';
 import { useAuth } from './AuthContext';
+import { db, doc, setDoc } from '../lib/firebase';
 
 interface VideoContextType {
   videos: VideoItem[];
@@ -208,11 +209,14 @@ const VideoContext = createContext<VideoContextType | undefined>(undefined);
 export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { profile, deductBalance } = useAuth();
 
-  // PRODUCTION STATE: Start with clean empty data unless real users have registered and uploaded
+  // PRODUCTION STATE: Start with clean empty data or sync from server / Firestore
   const [videos, setVideos] = useState<VideoItem[]>(() => {
     try {
       const saved = localStorage.getItem('tazama_custom_videos');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+      }
     } catch {}
     return [];
   });
@@ -220,7 +224,10 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [shorts, setShorts] = useState<VideoItem[]>(() => {
     try {
       const saved = localStorage.getItem('tazama_custom_shorts');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+      }
     } catch {}
     return [];
   });
@@ -228,10 +235,77 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [channels, setChannels] = useState<Channel[]>(() => {
     try {
       const saved = localStorage.getItem('tazama_custom_channels');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+      }
     } catch {}
     return [];
   });
+
+  // Global Sync: Fetch shared persistent videos & channels from server on startup
+  useEffect(() => {
+    // 1. Fetch persistent shared videos from server
+    fetch('/api/videos')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.videos)) {
+          const serverVideos: VideoItem[] = data.videos.filter((v: any) => Boolean(v && v.id));
+          const serverLongVideos = serverVideos.filter(v => !v.isShort);
+          const serverShorts = serverVideos.filter(v => Boolean(v.isShort));
+
+          setVideos(prev => {
+            const map = new Map<string, VideoItem>();
+            serverLongVideos.forEach(v => map.set(v.id, v));
+            prev.forEach(v => { if (v && v.id && !map.has(v.id)) map.set(v.id, v); });
+            const merged = Array.from(map.values());
+            try { localStorage.setItem('tazama_custom_videos', JSON.stringify(merged)); } catch {}
+            return merged;
+          });
+
+          setShorts(prev => {
+            const map = new Map<string, VideoItem>();
+            serverShorts.forEach(s => map.set(s.id, s));
+            prev.forEach(s => { if (s && s.id && !map.has(s.id)) map.set(s.id, s); });
+            const merged = Array.from(map.values());
+            try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(merged)); } catch {}
+            return merged;
+          });
+
+          // Sync any locally uploaded video that might not yet be on server
+          try {
+            const localVids = JSON.parse(localStorage.getItem('tazama_custom_videos') || '[]');
+            const localShorts = JSON.parse(localStorage.getItem('tazama_custom_shorts') || '[]');
+            const allLocal = [...localVids, ...localShorts].filter((v: any) => Boolean(v && v.id));
+            if (allLocal.length > 0) {
+              fetch('/api/videos/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ videos: allLocal })
+              }).catch(() => {});
+            }
+          } catch {}
+        }
+      })
+      .catch(err => console.warn('Could not fetch server videos:', err));
+
+    // 2. Fetch persistent channels from server
+    fetch('/api/channels')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.channels) && data.channels.length > 0) {
+          setChannels(prev => {
+            const map = new Map<string, Channel>();
+            data.channels.forEach((c: Channel) => { if (c && c.id) map.set(c.id, c); });
+            prev.forEach(c => { if (c && c.id && !map.has(c.id)) map.set(c.id, c); });
+            const merged = Array.from(map.values());
+            try { localStorage.setItem('tazama_custom_channels', JSON.stringify(merged)); } catch {}
+            return merged;
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const [currentVideo, setCurrentVideo] = useState<VideoItem | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -1179,23 +1253,28 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const uploadNewVideo = async (videoData: Partial<VideoItem>): Promise<VideoItem> => {
+    const creatorUid = profile?.uid || 'user-current';
+    const creatorName = profile?.displayName || 'Kituo Changu cha Tazama';
+    const creatorAvatar = profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
+    const channelId = profile?.channelId || `ch-${creatorUid}`;
+
     const newVid: VideoItem = {
-      id: 'vid-cf-' + Date.now(),
-      channelId: profile?.channelId || 'ch-wasafi',
-      channelName: profile?.displayName || 'Kituo Changu cha Tazama',
-      channelAvatar: profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-      channelOwnerId: profile?.uid,
+      id: 'vid-tz-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7),
+      channelId,
+      channelName: creatorName,
+      channelAvatar: creatorAvatar,
+      channelOwnerId: creatorUid,
       isChannelVerified: true,
       title: videoData.title || 'Video Isiyo na Jina',
       description: videoData.description || '',
       videoUrl: videoData.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      streamPlaybackId: 'cf-stream-direct-' + Math.random().toString(36).substring(7),
+      streamPlaybackId: videoData.streamPlaybackId || ('stream-' + Math.random().toString(36).substring(2, 9)),
       thumbnailUrl: videoData.thumbnailUrl || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
       durationSeconds: videoData.durationSeconds || 180,
       category: (videoData.category as VideoCategory) || 'Burudani',
       tags: videoData.tags || ['Tazama', 'Tanzania'],
       visibility: videoData.visibility || 'public',
-      isShort: videoData.isShort || false,
+      isShort: Boolean(videoData.isShort),
       viewsCount: 0,
       likesCount: 0,
       commentsCount: 0,
@@ -1203,18 +1282,69 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       createdAt: new Date().toISOString()
     };
 
+    // 1. Update React state and local storage immediately
     if (newVid.isShort) {
       setShorts(prev => {
-        const next = [newVid, ...prev];
+        const next = [newVid, ...prev.filter(s => s && s.id !== newVid.id)];
         try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(next)); } catch {}
         return next;
       });
     } else {
       setVideos(prev => {
-        const next = [newVid, ...prev];
+        const next = [newVid, ...prev.filter(v => v && v.id !== newVid.id)];
         try { localStorage.setItem('tazama_custom_videos', JSON.stringify(next)); } catch {}
         return next;
       });
+    }
+
+    // 2. Ensure creator channel exists in state and server
+    setChannels(prev => {
+      const exists = prev.some(c => c && c.id === channelId);
+      if (!exists) {
+        const newChannel: Channel = {
+          id: channelId,
+          ownerId: creatorUid,
+          handle: '@' + creatorName.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          name: creatorName,
+          bio: 'Kituo rasmi cha video na ubunifu kwenye Tazama.',
+          avatarUrl: creatorAvatar,
+          bannerUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80',
+          subscriberCount: 1,
+          videoCount: 1,
+          isVerified: true,
+          isMonetized: false,
+          totalViews: 0,
+          joinedDate: new Date().toISOString().split('T')[0]
+        };
+        const next = [newChannel, ...prev];
+        try { localStorage.setItem('tazama_custom_channels', JSON.stringify(next)); } catch {}
+        fetch('/api/channels', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newChannel)
+        }).catch(() => {});
+        return next;
+      }
+      return prev;
+    });
+
+    // 3. PERSIST TO SERVER (/api/videos) SO ALL USERS ON ANY DEVICE CAN SEE IT
+    try {
+      await fetch('/api/videos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newVid)
+      });
+    } catch (err) {
+      console.warn('Could not post video to server /api/videos:', err);
+    }
+
+    // 4. PERSIST TO FIRESTORE
+    try {
+      const videoDocRef = doc(db, 'videos', newVid.id);
+      await setDoc(videoDocRef, newVid);
+    } catch (err) {
+      console.warn('Firestore video sync notification:', err);
     }
 
     return newVid;
@@ -1372,10 +1502,19 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const deleteVideo = (videoId: string) => {
-    const target = videos.find(v => v.id === videoId) || shorts.find(s => s.id === videoId);
-    setVideos(prev => prev.filter(v => v.id !== videoId));
-    setShorts(prev => prev.filter(s => s.id !== videoId));
-    setReports(prev => prev.filter(r => r.targetId !== videoId));
+    const target = videos.find(v => Boolean(v && v.id === videoId)) || shorts.find(s => Boolean(s && s.id === videoId));
+    setVideos(prev => {
+      const next = prev.filter(v => Boolean(v && v.id !== videoId));
+      try { localStorage.setItem('tazama_custom_videos', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    setShorts(prev => {
+      const next = prev.filter(s => Boolean(s && s.id !== videoId));
+      try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    setReports(prev => prev.filter(r => Boolean(r && r.targetId !== videoId)));
+    fetch('/api/videos/' + videoId, { method: 'DELETE' }).catch(() => {});
     if (target) {
       addAuditLog('VIDEO_DELETED', target.title, `Video "${target.title}" imefutwa kabisa na msimamizi wa mfumo.`);
     }

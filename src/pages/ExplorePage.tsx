@@ -45,30 +45,32 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
   ];
 
   // Filter & sort
-  let filtered = [...videos];
+  let filtered = (videos || []).filter(Boolean);
 
   if (activeCategory === 'music') {
-    filtered = filtered.filter(v => v.category === 'Muziki');
+    filtered = filtered.filter(v => v && v.category === 'Muziki');
   } else if (activeCategory === 'gaming') {
-    filtered = filtered.filter(v => v.category === 'Teknolojia' || v.category === 'Burudani');
+    filtered = filtered.filter(v => v && (v.category === 'Teknolojia' || v.category === 'Burudani'));
   } else if (activeCategory === 'learning') {
-    filtered = filtered.filter(v => v.category === 'Elimu');
+    filtered = filtered.filter(v => v && v.category === 'Elimu');
   } else if (activeCategory === 'news') {
-    filtered = filtered.filter(v => v.category === 'Habari');
+    filtered = filtered.filter(v => v && v.category === 'Habari');
   }
 
   if (searchQuery.trim()) {
     const q = searchQuery.toLowerCase();
     filtered = filtered.filter(v => 
-      v.title.toLowerCase().includes(q) || 
-      v.channelName.toLowerCase().includes(q)
+      v && (
+        v.title?.toLowerCase().includes(q) || 
+        v.channelName?.toLowerCase().includes(q)
+      )
     );
   }
 
   if (sortBy === 'views') {
-    filtered.sort((a, b) => b.viewsCount - a.viewsCount);
+    filtered.sort((a, b) => (b?.viewsCount || 0) - (a?.viewsCount || 0));
   } else {
-    filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    filtered.sort((a, b) => new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime());
   }
 
   return (
