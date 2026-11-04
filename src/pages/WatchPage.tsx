@@ -86,6 +86,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   const [isCommentFocused, setIsCommentFocused] = useState<boolean>(false);
   const [commentSort, setCommentSort] = useState<'top' | 'newest'>('top');
   const [showSortDropdown, setShowSortDropdown] = useState<boolean>(false);
+  const [showCommentsMobile, setShowCommentsMobile] = useState<boolean>(false);
 
   // Modals state
   const [showGiftModal, setShowGiftModal] = useState<boolean>(false);
@@ -326,7 +327,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   ];
 
   return (
-    <div className="w-full max-w-[1720px] mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-4 select-none">
+    <div className="w-full max-w-[1720px] mx-auto px-0 sm:px-4 lg:px-6 py-0 sm:py-4 select-none">
       
       {/* 2-Column Responsive Layout (YouTube-Style: Left Player & Discussion, Right Suggested Feed) */}
       <div className="flex flex-col lg:flex-row gap-6 items-start">
@@ -335,7 +336,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
         <div className="flex-1 min-w-0 w-full">
           
           {/* Mobile Top Navigation Bar */}
-          <div className="flex items-center justify-between py-2 px-1 sm:hidden bg-[#10131B] border-b border-[#262E3E]/60 sticky top-0 z-30 mb-1">
+          <div className="flex items-center justify-between py-2 px-3 sm:hidden bg-[#10131B] border-b border-[#262E3E]/60 sticky top-0 z-30 mb-0">
             <button
               onClick={handleMinimize}
               className="p-1 -ml-1 rounded-full hover:bg-[#191E29] text-white active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
@@ -365,34 +366,90 @@ export const WatchPage: React.FC<WatchPageProps> = ({
             </div>
           </div>
 
-          {/* Adaptive Video Player: 16:9 container */}
+          {/* Adaptive Video Player: edge-to-edge on mobile, rounded on sm+ */}
           <div className="w-full rounded-none sm:rounded-2xl overflow-hidden bg-black shadow-2xl">
             <VideoPlayer video={video} autoPlay={true} />
           </div>
 
-          {/* Data Saver Mode Notice */}
-          {isDataSaver && (
-            <div className="mt-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center justify-between">
-              <span className="flex items-center gap-1.5 font-medium">
-                ⚡ Hali ya Kubana Bando (Data Saver) Imewashwa: Ubora wa 360p
+          {/* Content Wrapper for mobile padding */}
+          <div className="px-3 sm:px-0">
+            {/* Data Saver Mode Notice */}
+            {isDataSaver && (
+              <div className="mt-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center justify-between">
+                <span className="flex items-center gap-1.5 font-medium">
+                  ⚡ Hali ya Kubana Bando (Data Saver) Imewashwa: Ubora wa 360p
+                </span>
+                <span className="text-[10px] font-bold text-amber-400">MBs Zinaokolewa</span>
+              </div>
+            )}
+
+            {/* 1. Video Title: bold & clear */}
+            <h1 className="mt-2.5 sm:mt-4 text-base sm:text-xl font-bold text-white tracking-tight leading-snug line-clamp-2">
+              {video.title}
+            </h1>
+
+            {/* 2. Metadata Line (Matching image_9d55dc60.png: @channel · likes · views · time · #category · more) */}
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1 text-xs text-[#A7B0C0]">
+              <span 
+                onClick={() => onSelectChannel(video.channelId)}
+                className="font-medium text-white/90 hover:text-white cursor-pointer"
+              >
+                @{creatorChannel?.handle ? (creatorChannel.handle.startsWith('@') ? creatorChannel.handle.slice(1) : creatorChannel.handle) : video.channelName.toLowerCase().replace(/\s+/g, '')}
               </span>
-              <span className="text-[10px] font-bold text-amber-400">MBs Zinaokolewa</span>
+              <span>•</span>
+              <span>{formatViews(video.likesCount, language)} likes</span>
+              <span>•</span>
+              <span>{formatViews(video.viewsCount, language)} views</span>
+              <span>•</span>
+              <span>{formatRelativeTime(video.createdAt, language)}</span>
+              {video.category && (
+                <>
+                  <span>•</span>
+                  <span className="text-white/70">#{video.category}</span>
+                </>
+              )}
+              <button 
+                onClick={() => setIsDescExpanded(!isDescExpanded)} 
+                className="font-bold text-white hover:underline cursor-pointer ml-0.5"
+              >
+                {isDescExpanded ? 'less' : 'more'}
+              </button>
             </div>
-          )}
 
-          {/* Video Title: Direct underneath player, bold & clear */}
-          <h1 className="mt-3 sm:mt-4 text-base sm:text-xl font-bold text-white tracking-tight leading-snug">
-            {video.title}
-          </h1>
+            {/* Expandable Description Box (when user clicks more) */}
+            {isDescExpanded && (
+              <div className="mt-2.5 p-3.5 rounded-2xl bg-[#191E2A] border border-white/10 text-xs text-[#D1D7E0] animate-in fade-in space-y-2">
+                <div className="flex items-center justify-between pb-2 border-b border-white/10 text-[11px] font-bold text-[#A7B0C0]">
+                  <span>Maelezo ya Video (Description)</span>
+                  <button 
+                    onClick={() => setIsDescExpanded(false)} 
+                    className="text-[#FF3040] hover:underline cursor-pointer"
+                  >
+                    Onyesha kidogo
+                  </button>
+                </div>
+                <p className="whitespace-pre-line leading-relaxed text-[#E2E8F0]">
+                  {video.description || 'Hakuna maelezo ya ziada kuhusu video hii.'}
+                </p>
+                {video.tags && video.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1 border-t border-white/5">
+                    {video.tags.map((tag, i) => (
+                      <span key={i} className="text-xs text-[#FF3040] hover:underline font-medium">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
-          {/* CREATOR & ACTIONS ROW (Single unified horizontal row matching YouTube) */}
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-white/5">
-            
-            {/* Left Section: Creator Info + Subscribe + Bell + Join Club */}
-            <div className="flex items-center gap-3 min-w-0">
+            {/* 3. SINGLE-ROW ACTION & CHANNEL BAR (Exact 2024 YouTube Mobile layout from image_9d55dc60.png) */}
+            <div className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x flex-nowrap -mx-3 px-3 sm:mx-0 sm:px-0 py-1">
+              {/* Creator Avatar */}
               <div 
                 onClick={() => onSelectChannel(video.channelId)}
-                className="flex items-center gap-3 cursor-pointer group shrink-0"
+                className="shrink-0 cursor-pointer group"
+                title={video.channelName}
               >
                 <img
                   src={video.channelAvatar || creatorChannel?.avatarUrl}
@@ -400,262 +457,248 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = createAvatarSvgDataUri(video.channelName);
                   }}
-                  className="w-10 h-10 rounded-full object-cover ring-1 ring-white/10 group-hover:ring-[#FF3040] transition-all bg-[#141824]"
+                  className="w-9 h-9 rounded-full object-cover ring-1 ring-white/10 group-hover:ring-[#FF3040] transition-all bg-[#141824]"
                 />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm font-bold text-white truncate group-hover:text-[#FF3040] transition-colors">
-                      {video.channelName}
-                    </span>
-                    {(video.isChannelVerified || creatorChannel?.isVerified) && (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#A7B0C0] shrink-0" />
-                    )}
-                  </div>
-                  <p className="text-xs text-[#A7B0C0]">
-                    {formatViews(realSubscriberCount, language)} {language === 'sw' ? 'wafuasi' : 'subscribers'}
-                  </p>
-                </div>
               </div>
 
-              {/* Subscribe & Bell Button Group */}
-              <div className="flex items-center gap-2 ml-1 sm:ml-2 relative">
-                {isSubscribed ? (
-                  /* Subscribed Pill with Bell Dropdown */
-                  <div className="flex items-center rounded-full bg-white/10 hover:bg-white/15 transition-colors border border-white/10">
-                    <button
-                      onClick={handleSubscribeClick}
-                      className="px-3.5 py-2 text-xs font-bold text-white/90 hover:text-white flex items-center gap-1.5 cursor-pointer"
-                      title="Umesubscribe kwenye chaneli hii"
-                    >
-                      <Check className="w-3.5 h-3.5 text-[#16C784]" />
-                      <span>Unafuatilia</span>
-                    </button>
-                    <div className="w-[1px] h-4 bg-white/20" />
-                    <button
-                      onClick={handleBellClick}
-                      className="px-2.5 py-2 text-white/90 hover:text-white cursor-pointer relative"
-                      title="Aina ya taarifa za kengele"
-                    >
-                      {bellMode === 'all' ? (
-                        <BellRing className="w-4 h-4 text-amber-400 fill-amber-400" />
-                      ) : bellMode === 'personalized' ? (
-                        <Bell className="w-4 h-4 text-blue-400" />
-                      ) : (
-                        <BellOff className="w-4 h-4 text-[#A7B0C0]" />
-                      )}
-                    </button>
-                  </div>
-                ) : (
-                  /* Not Subscribed: Solid YouTube-style Subscribe Button */
+              {/* Channel Name (on tablet / desktop) */}
+              <div 
+                onClick={() => onSelectChannel(video.channelId)}
+                className="hidden md:flex flex-col min-w-0 pr-1 cursor-pointer group shrink-0"
+              >
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-bold text-white truncate group-hover:text-[#FF3040] transition-colors">
+                    {video.channelName}
+                  </span>
+                  {(video.isChannelVerified || creatorChannel?.isVerified) && (
+                    <CheckCircle2 className="w-3 h-3 text-[#A7B0C0] shrink-0" />
+                  )}
+                </div>
+                <span className="text-[10px] text-[#A7B0C0]">
+                  {formatViews(realSubscriberCount, language)} {language === 'sw' ? 'wafuasi' : 'subs'}
+                </span>
+              </div>
+
+              {/* Subscribe Button (Prominent white pill button on mobile just like image_9d55dc60.png) */}
+              {isSubscribed ? (
+                <div className="flex items-center rounded-full bg-white/10 border border-white/15 shrink-0">
                   <button
                     onClick={handleSubscribeClick}
-                    className="px-4 py-2 rounded-full bg-[#FF3040] hover:bg-[#E02635] text-white text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold text-white flex items-center gap-1 cursor-pointer"
+                    title="Umesubscribe kwenye chaneli hii"
                   >
-                    Fuatilia
+                    <Check className="w-3.5 h-3.5 text-[#16C784]" />
+                    <span>Unafuatilia</span>
                   </button>
-                )}
-
-                {/* 3-Tier Bell Dropdown Popover */}
-                {showBellDropdown && (
-                  <div className="absolute top-11 left-0 sm:left-auto w-64 bg-[#191E29] border border-[#262E3E] rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-1">
-                    <div className="px-3 py-1.5 text-[10px] font-black text-[#A7B0C0] border-b border-[#262E3E] uppercase tracking-wider">
-                      Aina ya Taarifa (Notifications)
-                    </div>
-
-                    <button
-                      onClick={() => handleSelectBellMode('all')}
-                      className={`w-full flex items-start gap-2.5 p-2 rounded-xl text-left cursor-pointer transition-colors ${
-                        bellMode === 'all' ? 'bg-[#232A39] text-amber-400 font-bold' : 'hover:bg-[#232A39]/60 text-white'
-                      }`}
-                    >
-                      <BellRing className="w-4 h-4 mt-0.5 shrink-0 text-amber-400" />
-                      <div>
-                        <div className="text-xs font-bold">Zote (All)</div>
-                        <div className="text-[10px] text-[#A7B0C0]">Pokea taarifa zote za video mpya na Live</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => handleSelectBellMode('personalized')}
-                      className={`w-full flex items-start gap-2.5 p-2 rounded-xl text-left cursor-pointer transition-colors ${
-                        bellMode === 'personalized' ? 'bg-[#232A39] text-blue-400 font-bold' : 'hover:bg-[#232A39]/60 text-white'
-                      }`}
-                    >
-                      <Bell className="w-4 h-4 mt-0.5 shrink-0 text-blue-400" />
-                      <div>
-                        <div className="text-xs font-bold">Zilizochaguliwa (Personalized)</div>
-                        <div className="text-[10px] text-[#A7B0C0]">Taarifa maalum kulingana na unachopenda</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => handleSelectBellMode('none')}
-                      className={`w-full flex items-start gap-2.5 p-2 rounded-xl text-left cursor-pointer transition-colors ${
-                        bellMode === 'none' ? 'bg-[#232A39] text-[#FF3040] font-bold' : 'hover:bg-[#232A39]/60 text-white'
-                      }`}
-                    >
-                      <BellOff className="w-4 h-4 mt-0.5 shrink-0 text-[#FF3040]" />
-                      <div>
-                        <div className="text-xs font-bold">Hakuna (None)</div>
-                        <div className="text-[10px] text-[#A7B0C0]">Usipokee taarifa kutoka chaneli hii</div>
-                      </div>
-                    </button>
-                  </div>
-                )}
-
-                {/* Join Club Pill Button */}
+                  <div className="w-[1px] h-3.5 bg-white/20" />
+                  <button
+                    onClick={handleBellClick}
+                    className="px-2 py-1.5 text-white/90 hover:text-white cursor-pointer relative"
+                    title="Aina ya taarifa za kengele"
+                  >
+                    {bellMode === 'all' ? (
+                      <BellRing className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                    ) : bellMode === 'personalized' ? (
+                      <Bell className="w-3.5 h-3.5 text-blue-400" />
+                    ) : (
+                      <BellOff className="w-3.5 h-3.5 text-[#A7B0C0]" />
+                    )}
+                  </button>
+                </div>
+              ) : (
                 <button
-                  onClick={handleJoinClubClick}
-                  className="hidden md:flex items-center gap-1 px-3.5 py-2 rounded-full bg-white/10 hover:bg-white/15 text-white border border-white/10 text-xs font-bold transition-all cursor-pointer"
+                  onClick={handleSubscribeClick}
+                  className="shrink-0 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white text-black hover:bg-gray-200 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm"
                 >
-                  <Award className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Jiunge</span>
+                  Subscribe
                 </button>
-              </div>
-            </div>
+              )}
 
-            {/* Right Section: Action Buttons (Like/Dislike, Shiriki, Pakua, Zawadi, Orodha, More) */}
-            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
-              
+              {/* 3-Tier Bell Dropdown Popover */}
+              {showBellDropdown && (
+                <div className="absolute top-12 left-10 sm:left-auto w-64 bg-[#191E29] border border-[#262E3E] rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-1">
+                  <div className="px-3 py-1.5 text-[10px] font-black text-[#A7B0C0] border-b border-[#262E3E] uppercase tracking-wider">
+                    Aina ya Taarifa (Notifications)
+                  </div>
+
+                  <button
+                    onClick={() => handleSelectBellMode('all')}
+                    className={`w-full flex items-start gap-2.5 p-2 rounded-xl text-left cursor-pointer transition-colors ${
+                      bellMode === 'all' ? 'bg-[#232A39] text-amber-400 font-bold' : 'hover:bg-[#232A39]/60 text-white'
+                    }`}
+                  >
+                    <BellRing className="w-4 h-4 mt-0.5 shrink-0 text-amber-400" />
+                    <div>
+                      <div className="text-xs font-bold">Zote (All)</div>
+                      <div className="text-[10px] text-[#A7B0C0]">Pokea taarifa zote za video mpya na Live</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleSelectBellMode('personalized')}
+                    className={`w-full flex items-start gap-2.5 p-2 rounded-xl text-left cursor-pointer transition-colors ${
+                      bellMode === 'personalized' ? 'bg-[#232A39] text-blue-400 font-bold' : 'hover:bg-[#232A39]/60 text-white'
+                    }`}
+                  >
+                    <Bell className="w-4 h-4 mt-0.5 shrink-0 text-blue-400" />
+                    <div>
+                      <div className="text-xs font-bold">Zilizochaguliwa (Personalized)</div>
+                      <div className="text-[10px] text-[#A7B0C0]">Taarifa maalum kulingana na unachopenda</div>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => handleSelectBellMode('none')}
+                    className={`w-full flex items-start gap-2.5 p-2 rounded-xl text-left cursor-pointer transition-colors ${
+                      bellMode === 'none' ? 'bg-[#232A39] text-[#FF3040] font-bold' : 'hover:bg-[#232A39]/60 text-white'
+                    }`}
+                  >
+                    <BellOff className="w-4 h-4 mt-0.5 shrink-0 text-[#FF3040]" />
+                    <div>
+                      <div className="text-xs font-bold">Hakuna (None)</div>
+                      <div className="text-[10px] text-[#A7B0C0]">Usipokee taarifa kutoka chaneli hii</div>
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              {/* Join Club button on desktop */}
+              <button
+                onClick={handleJoinClubClick}
+                className="hidden lg:flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#1F2533] hover:bg-[#262E3E] text-white border border-white/10 text-xs font-semibold transition-all cursor-pointer shrink-0"
+              >
+                <Award className="w-3.5 h-3.5 text-amber-400" />
+                <span>Jiunge</span>
+              </button>
+
               {/* 1. Like & Dislike Combined Pill (Exact YouTube style) */}
-              <div className="flex items-center rounded-full bg-white/10 hover:bg-white/15 border border-white/10 overflow-hidden shadow-sm">
+              <div className="flex items-center shrink-0 rounded-full bg-[#1F2533] hover:bg-[#262E3E] border border-white/10 overflow-hidden shadow-sm">
                 <button
                   onClick={handleLikeClick}
-                  className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold transition-colors cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold transition-colors cursor-pointer ${
                     isLiked ? 'text-[#FF3040]' : 'text-white'
                   }`}
                   title="Penda video hii"
                 >
-                  <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-[#FF3040]' : ''}`} />
+                  <ThumbsUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiked ? 'fill-[#FF3040]' : ''}`} />
                   <span>{formatViews(video.likesCount, language)}</span>
                 </button>
-                <div className="w-[1px] h-4 bg-white/20" />
+                <div className="w-[1px] h-3.5 bg-white/20" />
                 <button
                   onClick={handleDislikeClick}
-                  className={`px-3 py-2 text-xs font-bold transition-colors cursor-pointer ${
+                  className={`px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold transition-colors cursor-pointer ${
                     isDisliked ? 'text-amber-400' : 'text-[#A7B0C0] hover:text-white'
                   }`}
                   title="Sipendi video hii"
                 >
-                  <ThumbsDown className={`w-4 h-4 ${isDisliked ? 'fill-amber-400' : ''}`} />
+                  <ThumbsDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isDisliked ? 'fill-amber-400' : ''}`} />
                 </button>
               </div>
 
               {/* 2. Shiriki (Share) Pill */}
               <button
                 onClick={() => setShowShareModal(true)}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition-all active:scale-95 cursor-pointer"
+                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-[#1F2533] hover:bg-[#262E3E] border border-white/10 text-xs font-bold text-white transition-all active:scale-95 cursor-pointer"
                 title="Shiriki video"
               >
-                <Share2 className="w-4 h-4" />
+                <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>Shiriki</span>
               </button>
 
-              {/* 3. Pakua (Download) Pill */}
+              {/* 3. Remix / Zawadi (Gift) */}
+              <button
+                onClick={handleGiftClick}
+                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-[#1F2533] hover:bg-[#262E3E] border border-[#16C784]/30 text-xs font-bold text-[#16C784] transition-all active:scale-95 cursor-pointer shadow-sm"
+                title="Tuma zawadi ya kidijitali"
+              >
+                <Gift className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Zawadi</span>
+              </button>
+
+              {/* 4. Pakua (Download) Pill */}
               <button
                 onClick={handleDownloadClick}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-xs font-bold transition-all active:scale-95 cursor-pointer ${
+                className={`flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full border text-xs font-bold transition-all active:scale-95 cursor-pointer ${
                   isDownloadedAlready 
                     ? 'bg-[#16C784]/20 border-[#16C784]/50 text-[#16C784]' 
-                    : 'bg-white/10 hover:bg-white/15 border-white/10 text-white'
+                    : 'bg-[#1F2533] hover:bg-[#262E3E] border-white/10 text-white'
                 }`}
                 title="Pakua video"
               >
                 {isDownloadedAlready ? (
-                  <CheckCircle2 className="w-4 h-4 text-[#16C784]" />
+                  <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#16C784]" />
                 ) : (
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 )}
                 <span>{isDownloadedAlready ? 'Imepakuliwa' : 'Pakua'}</span>
-              </button>
-
-              {/* 4. Zawadi (Gift) Pill */}
-              <button
-                onClick={handleGiftClick}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#16C784]/15 hover:bg-[#16C784]/25 border border-[#16C784]/40 text-xs font-bold text-[#16C784] transition-all active:scale-95 cursor-pointer shadow-sm"
-                title="Tuma zawadi ya kidijitali"
-              >
-                <Gift className="w-4 h-4" />
-                <span>Zawadi</span>
               </button>
 
               {/* 5. Orodha (Save) Pill */}
               <button
                 onClick={handleSaveClick}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition-all active:scale-95 cursor-pointer"
+                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-[#1F2533] hover:bg-[#262E3E] border border-white/10 text-xs font-bold text-white transition-all active:scale-95 cursor-pointer"
                 title="Hifadhi kwenye playlist"
               >
-                <Bookmark className="w-4 h-4" />
-                <span className="hidden sm:inline">Orodha</span>
+                <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Orodha</span>
               </button>
 
-              {/* More Actions (⋯) */}
+              {/* 6. More Actions (⋯) */}
               <button
                 onClick={() => setShowReportModal(true)}
-                className="p-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white transition-all cursor-pointer"
-                title="Ripoti au mipangilio ya ziada"
+                className="shrink-0 p-2 sm:p-2.5 rounded-full bg-[#1F2533] hover:bg-[#262E3E] border border-white/10 text-white transition-all active:scale-95 cursor-pointer"
+                title="Mengineyo"
               >
-                <MoreVertical className="w-4 h-4" />
+                <MoreVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             </div>
 
-          </div>
-
-          {/* Bell Toast Notification */}
-          {bellToast && (
-            <div className="mt-2.5 px-4 py-2 rounded-xl bg-[#191E29] border border-[#262E3E] text-xs text-white text-center shadow-lg animate-in fade-in duration-200">
-              {bellToast}
-            </div>
-          )}
-
-          {/* DESCRIPTION CARD (Exact YouTube style: rounded container with views, date, and expandable text) */}
-          <div 
-            onClick={() => setIsDescExpanded(!isDescExpanded)}
-            className="mt-3 p-3.5 sm:p-4 rounded-2xl bg-[#1A1F2B] hover:bg-[#202636] transition-colors cursor-pointer border border-white/5"
-          >
-            {/* Top stats line */}
-            <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-white mb-1.5">
-              <span>{formatViews(video.viewsCount, language)} views</span>
-              <span className="text-[#A7B0C0] font-normal">·</span>
-              <span>{formatRelativeTime(video.createdAt, language)}</span>
-              {video.category && (
-                <>
-                  <span className="text-[#A7B0C0] font-normal">·</span>
-                  <span className="text-[#FF3040] font-semibold">#{video.category}</span>
-                </>
-              )}
-            </div>
-
-            {/* Description text */}
-            <p className={`text-xs sm:text-sm text-[#D1D7E0] leading-relaxed whitespace-pre-line ${
-              isDescExpanded ? '' : 'line-clamp-2'
-            }`}>
-              {video.description || 'Hakuna maelezo ya ziada kuhusu video hii.'}
-            </p>
-
-            {/* Expanded tags */}
-            {video.tags && video.tags.length > 0 && isDescExpanded && (
-              <div className="mt-3 pt-3 border-t border-white/10 flex flex-wrap gap-1.5">
-                {video.tags.map((tag, i) => (
-                  <span key={i} className="text-xs text-[#FF3040] hover:underline font-medium">
-                    #{tag}
-                  </span>
-                ))}
+            {/* Bell Toast Notification */}
+            {bellToast && (
+              <div className="mt-2.5 px-4 py-2 rounded-xl bg-[#191E29] border border-[#262E3E] text-xs text-white text-center shadow-lg animate-in fade-in duration-200">
+                {bellToast}
               </div>
             )}
 
-            {/* Inline More / Less toggle */}
-            <div className="mt-2 text-xs font-bold text-white hover:text-[#FF3040] transition-colors">
-              {isDescExpanded ? 'Onyesha kidogo' : '... Zaidi (more)'}
+            {/* 4. COMMENTS PREVIEW CARD (Exact image_9d55dc60.png on mobile) */}
+            <div 
+              onClick={() => setShowCommentsMobile(!showCommentsMobile)}
+              className="mt-3 p-3 sm:hidden rounded-2xl bg-[#181E29] hover:bg-[#202737] border border-white/5 cursor-pointer transition-all active:scale-[0.99]"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-white">Comments</span>
+                  <span className="text-xs text-[#A7B0C0] font-bold">{videoComments.length}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[#A7B0C0]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/20"></span>
+                  <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform duration-200 ${showCommentsMobile ? 'rotate-180' : ''}`} />
+                </div>
+              </div>
+
+              {/* Top Comment Snippet Preview */}
+              <div className="flex items-start gap-2.5">
+                <img
+                  src={videoComments[0]?.userAvatar || profile?.photoURL || createAvatarSvgDataUri(videoComments[0]?.userName || 'Mtumiaji')}
+                  alt=""
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = createAvatarSvgDataUri('Mtumiaji');
+                  }}
+                  className="w-6 h-6 rounded-full object-cover shrink-0 ring-1 ring-white/10 bg-[#141824] mt-0.5"
+                />
+                <p className="text-xs text-[#D1D7E0] line-clamp-2 leading-relaxed">
+                  {videoComments[0]?.text || 'Kuwa wa kwanza kutoa maoni... Bofya hapa kuandika maoni yako.'}
+                </p>
+              </div>
             </div>
-          </div>
 
           {/* COMMENTS SECTION (Matching YouTube: Header with count, Sort button, Add comment box, Comments list) */}
-          <div className="mt-6 pt-4 border-t border-white/10">
+          <div className={`${showCommentsMobile ? 'block' : 'hidden sm:block'} mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/10 animate-in fade-in duration-200`}>
             
             {/* Comments Header & Sort By */}
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4 sm:gap-6">
                 <h3 className="text-base sm:text-lg font-black text-white">
                   {videoComments.length} Maoni
                 </h3>
@@ -693,6 +736,14 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   )}
                 </div>
               </div>
+
+              {/* Mobile Close Comments Button */}
+              <button
+                onClick={() => setShowCommentsMobile(false)}
+                className="sm:hidden text-xs font-bold text-[#A7B0C0] hover:text-white px-2.5 py-1 rounded-lg bg-white/5 cursor-pointer"
+              >
+                Funga ✕
+              </button>
             </div>
 
             {/* Comment Input Box (Clean underline style like YouTube) */}
@@ -791,12 +842,14 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               )}
             </div>
 
+            </div>
+
           </div>
 
         </div>
 
         {/* RIGHT SECONDARY COLUMN: Filter Chips & Suggested Videos List (Matching image_23505de7.png) */}
-        <div className="w-full lg:w-[360px] xl:w-[400px] shrink-0 space-y-4">
+        <div className="w-full lg:w-[360px] xl:w-[400px] shrink-0 space-y-4 px-3 sm:px-0">
           
           {/* Horizontal Category Chips Bar */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
@@ -818,20 +871,20 @@ export const WatchPage: React.FC<WatchPageProps> = ({
             })}
           </div>
 
-          {/* List of Recommended Video Cards */}
-          <div className="space-y-3">
+          {/* List of Recommended Video Cards (Responsive: Full-width modern card on mobile, side-by-side on desktop) */}
+          <div className="space-y-4 sm:space-y-3">
             {filteredRecommendations.length > 0 ? (
-              filteredRecommendations.map((item, idx) => (
+              filteredRecommendations.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-3 group cursor-pointer p-1 rounded-xl hover:bg-white/5 transition-colors"
+                  className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 group cursor-pointer p-1.5 sm:p-1 rounded-2xl sm:rounded-xl hover:bg-white/5 transition-colors"
                 >
-                  {/* YouTube-Style Video Thumbnail Hover Preview */}
-                  <div className="w-40 sm:w-44 shrink-0">
+                  {/* YouTube-Style Video Thumbnail Preview */}
+                  <div className="w-full sm:w-40 md:w-44 shrink-0">
                     <VideoThumbnailPreview
                       video={item}
                       aspectRatioClass="aspect-video"
-                      className="rounded-xl border border-white/5"
+                      className="rounded-2xl sm:rounded-xl border border-white/5 overflow-hidden"
                       onSelectVideo={(v) => {
                         onSelectVideo(v);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -839,30 +892,66 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                     />
                   </div>
 
-                  {/* Video Meta Info */}
+                  {/* Video Meta Info (Matching image_9d55dc60.png with Avatar + Title + Stats + 3-dots) */}
                   <div 
                     onClick={() => {
                       onSelectVideo(item);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="min-w-0 flex-1 flex flex-col justify-start py-0.5 cursor-pointer"
+                    className="min-w-0 flex-1 flex items-start gap-2.5 sm:gap-0 sm:flex-col justify-start py-0.5 cursor-pointer"
                   >
-                    <h4 className="text-xs sm:text-sm font-semibold text-white line-clamp-2 leading-snug group-hover:text-[#FF3040] transition-colors">
-                      {item.title}
-                    </h4>
-                    
-                    <div className="flex items-center gap-1 mt-1 text-[11px] text-[#A7B0C0] hover:text-white transition-colors">
-                      <span className="truncate">{item.channelName}</span>
-                      {item.isChannelVerified && (
-                        <CheckCircle2 className="w-3 h-3 text-[#A7B0C0] shrink-0" />
-                      )}
+                    {/* Mobile Avatar (Visible only on mobile screen < sm, exact YouTube style from image_9d55dc60.png) */}
+                    <img
+                      src={item.channelAvatar || createAvatarSvgDataUri(item.channelName)}
+                      alt={item.channelName}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = createAvatarSvgDataUri(item.channelName);
+                      }}
+                      className="w-9 h-9 rounded-full object-cover shrink-0 sm:hidden ring-1 ring-white/10 bg-[#141824] mt-0.5"
+                    />
+
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm sm:text-xs md:text-sm font-semibold text-white line-clamp-2 leading-snug group-hover:text-[#FF3040] transition-colors">
+                        {item.title}
+                      </h4>
+                      
+                      {/* Mobile stats row */}
+                      <div className="flex sm:hidden items-center flex-wrap gap-1 mt-1 text-xs text-[#A7B0C0]">
+                        <span className="truncate text-white/80 font-medium">{item.channelName}</span>
+                        {item.isChannelVerified && (
+                          <CheckCircle2 className="w-3 h-3 text-[#A7B0C0] shrink-0" />
+                        )}
+                        <span>•</span>
+                        <span>{formatViews(item.viewsCount, language)} views</span>
+                        <span>•</span>
+                        <span>{formatRelativeTime(item.createdAt, language)}</span>
+                      </div>
+
+                      {/* Desktop stats rows */}
+                      <div className="hidden sm:flex items-center gap-1 mt-1 text-[11px] text-[#A7B0C0] hover:text-white transition-colors">
+                        <span className="truncate">{item.channelName}</span>
+                        {item.isChannelVerified && (
+                          <CheckCircle2 className="w-3 h-3 text-[#A7B0C0] shrink-0" />
+                        )}
+                      </div>
+                      <div className="hidden sm:flex items-center gap-1 text-[11px] text-[#A7B0C0] mt-0.5">
+                        <span>{formatViews(item.viewsCount, language)} views</span>
+                        <span>•</span>
+                        <span>{formatRelativeTime(item.createdAt, language)}</span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-1 text-[11px] text-[#A7B0C0] mt-0.5">
-                      <span>{formatViews(item.viewsCount, language)} views</span>
-                      <span>•</span>
-                      <span>{formatRelativeTime(item.createdAt, language)}</span>
-                    </div>
+                    {/* 3-dots button on mobile (right side, like image_9d55dc60.png) */}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowReportModal(true);
+                      }}
+                      className="sm:hidden p-1.5 rounded-full text-[#A7B0C0] hover:text-white transition-colors cursor-pointer shrink-0"
+                      title="Mengineyo"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               ))
