@@ -152,17 +152,27 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
     }
   };
 
-  // Deduplicated view increment: record after 5 seconds of active watch
+  // Deduplicated view increment: record on playback (active play or >= 2s) and embeds
   useEffect(() => {
     setHasRecordedView(false);
   }, [video.id]);
 
   useEffect(() => {
-    if (currentTime >= 5 && !hasRecordedView) {
+    if (isEmbedVideo && !hasRecordedView && video?.id) {
+      const timer = setTimeout(() => {
+        setHasRecordedView(true);
+        recordView(video.id);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isEmbedVideo, hasRecordedView, video?.id, recordView]);
+
+  useEffect(() => {
+    if ((currentTime >= 2 || (isPlaying && currentTime > 0.5)) && !hasRecordedView && video?.id) {
       setHasRecordedView(true);
       recordView(video.id);
     }
-  }, [currentTime, hasRecordedView, video.id, recordView]);
+  }, [currentTime, isPlaying, hasRecordedView, video?.id, recordView]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;

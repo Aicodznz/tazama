@@ -4,6 +4,7 @@ import {
   Flag, 
   Users, 
   DollarSign, 
+  Megaphone,
   CheckCircle, 
   XCircle, 
   AlertTriangle, 
@@ -123,8 +124,12 @@ export const AdminPage: React.FC = () => {
 
   // Primary Active Tab: 'overview' is default now as requested
   const [activeTab, setActiveTab] = useState<
-    'overview' | 'users' | 'premium' | 'videos' | 'payouts' | 'copyright' | 'system' | 'security'
+    'overview' | 'ads' | 'users' | 'premium' | 'videos' | 'payouts' | 'copyright' | 'system' | 'security'
   >('overview');
+
+  const pendingAdsCount = useMemo(() => {
+    return (adCampaigns || []).filter(a => a && a.status === 'pending_approval').length;
+  }, [adCampaigns]);
 
   // Sub-tab states for rich workflows
   const [usersSubTab, setUsersSubTab] = useState<'all' | 'creators' | 'verification' | 'suspended' | 'monetization' | 'roles' | 'appeals'>('all');
@@ -595,6 +600,12 @@ export const AdminPage: React.FC = () => {
       <div className="flex items-center gap-2 border-b border-[#262E3E] pb-2 overflow-x-auto no-scrollbar">
         {[
           { id: 'overview', label: 'Muhtasari (Live Dashboard)', icon: BarChart3 },
+          { 
+            id: 'ads', 
+            label: pendingAdsCount > 0 ? `Idhini ya Matangazo (${pendingAdsCount})` : `Matangazo (${adCampaigns.length})`, 
+            icon: Megaphone, 
+            badge: pendingAdsCount > 0 ? pendingAdsCount : undefined 
+          },
           { id: 'users', label: `Watumiaji & Waumbaji (${totalUsersCount})`, icon: Users },
           { id: 'premium', label: `Vifurushi vya Premium (${premiumPlans.length})`, icon: Crown },
           { id: 'videos', label: `Maudhui & Video (${totalVideosCount})`, icon: Tv },
@@ -602,9 +613,8 @@ export const AdminPage: React.FC = () => {
           { id: 'copyright', label: `Uhakiki wa Hakimiliki (${pendingCopyrightClaimsCount})`, icon: Flag, badge: pendingCopyrightClaimsCount > 0 ? pendingCopyrightClaimsCount : undefined },
           { 
             id: 'system', 
-            label: `Mfumo & Matangazo (${adCampaigns.length})`, 
-            icon: Sliders,
-            badge: adCampaigns.filter(a => a.status === 'pending_approval').length > 0 ? adCampaigns.filter(a => a.status === 'pending_approval').length : undefined 
+            label: 'Mipangilio ya Mfumo', 
+            icon: Sliders
           },
           { id: 'security', label: `Kumbukumbu za Usalama (${auditLogs.length})`, icon: Activity }
         ].map((tab) => {
@@ -638,6 +648,33 @@ export const AdminPage: React.FC = () => {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           
+          {/* Urgent Ad Approval Banner for Admin */}
+          {pendingAdsCount > 0 && (
+            <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-950/70 via-[#191E29] to-red-950/50 border border-amber-500/60 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-300 flex items-center justify-center shrink-0">
+                  <Megaphone className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-black text-white text-sm sm:text-base">Kuna Matangazo {pendingAdsCount} Yanayosubiri Idhini Yako!</h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white animate-pulse">ACTION REQUIRED</span>
+                  </div>
+                  <p className="text-xs text-[#A7B0C0] mt-0.5">
+                    Matangazo haya yamelipiwa lakini hayataanza kuonekana kwa watazamaji hadi uyathibitishe (Confirm & Approve).
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveTab('ads')}
+                className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-black flex items-center gap-2 shadow-lg shadow-amber-500/25 shrink-0 transition-transform active:scale-95 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4 text-black" />
+                <span>Kagua & Idhinisha Sasa</span>
+              </button>
+            </div>
+          )}
+
           {/* Real-time 12 KPI Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             
@@ -931,6 +968,35 @@ export const AdminPage: React.FC = () => {
 
           </div>
 
+        </div>
+      )}
+
+      {/* ============================================================== */}
+      {/* TAB: MATANGAZO YA BIASHARA & IDHINI (ADS APPROVAL & HUB)       */}
+      {/* ============================================================== */}
+      {activeTab === 'ads' && (
+        <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-[#262E3E] space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262E3E]">
+            <div>
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Megaphone className="w-5 h-5 text-amber-400" />
+                Usimamizi na Idhini ya Matangazo (Ads Management &amp; Approvals)
+              </h3>
+              <p className="text-xs text-[#A7B0C0] mt-0.5">
+                Kagua, idhinisha au kataa kampeni za matangazo zilizolipwa na watumiaji kabla ya kuanza kuonekana jukwaani.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowCreateAdModal(true)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-md shadow-amber-500/20 shrink-0 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-black" />
+              <span>Unda Tangazo Jipya</span>
+            </button>
+          </div>
+
+          <AdminAdsManager onOpenCreateModal={() => setShowCreateAdModal(true)} />
         </div>
       )}
 

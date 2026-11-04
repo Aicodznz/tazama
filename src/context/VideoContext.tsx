@@ -251,13 +251,44 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       .then(data => {
         if (data.success && Array.isArray(data.videos) && data.videos.length > 0) {
           const serverVideos: VideoItem[] = data.videos.filter((v: any) => Boolean(v && v.id));
+
+    // 1b. Initial fetch for ad campaigns from server API
+    fetch('/api/ads')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.ads) && data.ads.length > 0) {
+          setAdCampaigns(prev => {
+            const map = new Map<string, AdCampaign>();
+            prev.forEach(a => { if (a && a.id) map.set(a.id, a); });
+            data.ads.forEach((a: AdCampaign) => {
+              if (a && a.id) map.set(a.id, a);
+            });
+            const merged = Array.from(map.values());
+            try { localStorage.setItem('tazama_custom_ads', JSON.stringify(merged)); } catch {}
+            return merged;
+          });
+        }
+      })
+      .catch(() => {});
           const serverLongVideos = serverVideos.filter(v => !v.isShort);
           const serverShorts = serverVideos.filter(v => Boolean(v.isShort));
 
           setVideos(prev => {
             const map = new Map<string, VideoItem>();
-            serverLongVideos.forEach(v => map.set(v.id, v));
-            prev.forEach(v => { if (v && v.id && !map.has(v.id)) map.set(v.id, v); });
+            prev.forEach(v => { if (v && v.id) map.set(v.id, v); });
+            serverLongVideos.forEach(v => {
+              const existing = map.get(v.id);
+              if (existing) {
+                map.set(v.id, {
+                  ...existing,
+                  ...v,
+                  viewsCount: Math.max(v.viewsCount || 0, existing.viewsCount || 0),
+                  likesCount: Math.max(v.likesCount || 0, existing.likesCount || 0)
+                });
+              } else {
+                map.set(v.id, v);
+              }
+            });
             const merged = Array.from(map.values());
             try { localStorage.setItem('tazama_custom_videos', JSON.stringify(merged)); } catch {}
             return merged;
@@ -265,8 +296,20 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
           setShorts(prev => {
             const map = new Map<string, VideoItem>();
-            serverShorts.forEach(s => map.set(s.id, s));
-            prev.forEach(s => { if (s && s.id && !map.has(s.id)) map.set(s.id, s); });
+            prev.forEach(s => { if (s && s.id) map.set(s.id, s); });
+            serverShorts.forEach(s => {
+              const existing = map.get(s.id);
+              if (existing) {
+                map.set(s.id, {
+                  ...existing,
+                  ...s,
+                  viewsCount: Math.max(s.viewsCount || 0, existing.viewsCount || 0),
+                  likesCount: Math.max(s.likesCount || 0, existing.likesCount || 0)
+                });
+              } else {
+                map.set(s.id, s);
+              }
+            });
             const merged = Array.from(map.values());
             try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(merged)); } catch {}
             return merged;
@@ -282,8 +325,20 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (data.success && Array.isArray(data.channels) && data.channels.length > 0) {
           setChannels(prev => {
             const map = new Map<string, Channel>();
-            data.channels.forEach((c: Channel) => { if (c && c.id) map.set(c.id, c); });
-            prev.forEach(c => { if (c && c.id && !map.has(c.id)) map.set(c.id, c); });
+            prev.forEach(c => { if (c && c.id) map.set(c.id, c); });
+            data.channels.forEach((c: Channel) => {
+              const existing = map.get(c.id);
+              if (existing) {
+                map.set(c.id, {
+                  ...existing,
+                  ...c,
+                  totalViews: Math.max(c.totalViews || 0, existing.totalViews || 0),
+                  subscriberCount: Math.max(c.subscriberCount || 0, existing.subscriberCount || 0)
+                });
+              } else {
+                map.set(c.id, c);
+              }
+            });
             const merged = Array.from(map.values());
             try { localStorage.setItem('tazama_custom_channels', JSON.stringify(merged)); } catch {}
             return merged;
@@ -313,8 +368,20 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
           setVideos(prev => {
             const map = new Map<string, VideoItem>();
-            longVids.forEach(v => map.set(v.id, v));
-            prev.forEach(v => { if (v && v.id && !map.has(v.id)) map.set(v.id, v); });
+            prev.forEach(v => { if (v && v.id) map.set(v.id, v); });
+            longVids.forEach(v => {
+              const existing = map.get(v.id);
+              if (existing) {
+                map.set(v.id, {
+                  ...existing,
+                  ...v,
+                  viewsCount: Math.max(v.viewsCount || 0, existing.viewsCount || 0),
+                  likesCount: Math.max(v.likesCount || 0, existing.likesCount || 0)
+                });
+              } else {
+                map.set(v.id, v);
+              }
+            });
             const merged = Array.from(map.values());
             try { localStorage.setItem('tazama_custom_videos', JSON.stringify(merged)); } catch {}
             return merged;
@@ -322,8 +389,20 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
           setShorts(prev => {
             const map = new Map<string, VideoItem>();
-            shortVids.forEach(s => map.set(s.id, s));
-            prev.forEach(s => { if (s && s.id && !map.has(s.id)) map.set(s.id, s); });
+            prev.forEach(s => { if (s && s.id) map.set(s.id, s); });
+            shortVids.forEach(s => {
+              const existing = map.get(s.id);
+              if (existing) {
+                map.set(s.id, {
+                  ...existing,
+                  ...s,
+                  viewsCount: Math.max(s.viewsCount || 0, existing.viewsCount || 0),
+                  likesCount: Math.max(s.likesCount || 0, existing.likesCount || 0)
+                });
+              } else {
+                map.set(s.id, s);
+              }
+            });
             const merged = Array.from(map.values());
             try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(merged)); } catch {}
             return merged;
@@ -845,14 +924,26 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setSecurityLogs(prev => [newEvent, ...prev]);
   };
 
-  // Ad Campaigns State
-  const [adCampaigns, setAdCampaigns] = useState<AdCampaign[]>(SAMPLE_AD_CAMPAIGNS);
+  // Ad Campaigns State (Loaded from localStorage + synchronized with Server /api/ads)
+  const [adCampaigns, setAdCampaigns] = useState<AdCampaign[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_custom_ads');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return SAMPLE_AD_CAMPAIGNS;
+  });
 
   const addAdCampaign = (campaign: Omit<AdCampaign, 'id' | 'impressions' | 'clicks' | 'spendTZS' | 'createdAt'>): string => {
     const newId = `ad-${Date.now()}`;
+    // STRICT TAZAMA ADS RULE: Kila tangazo jipya lazima lianze na hali ya 'pending_approval'
+    // Mpaka Admin a-confirm (Approve) ndipo litakapobadilika kuwa 'active' na kuanza kuonekana!
     const newCamp: AdCampaign = {
       ...campaign,
       id: newId,
+      status: 'pending_approval',
       impressions: 0,
       clicks: 0,
       spendTZS: 0,
@@ -861,14 +952,20 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       advertiserName: campaign.creatorName
     };
     setAdCampaigns(prev => {
-      const next = [newCamp, ...prev];
+      const next = [newCamp, ...prev.filter(a => a.id !== newId)];
       try { localStorage.setItem('tazama_custom_ads', JSON.stringify(next)); } catch {}
       return next;
     });
+    fetch('/api/ads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newCamp)
+    }).catch(err => console.warn('Could not post ad to server:', err));
+
     addAuditLog(
       'AD_CAMPAIGN_CREATED', 
       `Kampeni: ${campaign.campaignName}`, 
-      `Mtangazaji: ${campaign.creatorName} (${campaign.creatorRole}). Muundo: ${campaign.adFormat}. Bajeti: TZS ${campaign.budgetTZS.toLocaleString()}. Hali: ${campaign.status}`, 
+      `Mtangazaji: ${campaign.creatorName} (${campaign.creatorRole}). Muundo: ${campaign.adFormat}. Bajeti: TZS ${campaign.budgetTZS.toLocaleString()}. Hali: Inasubiri Idhini ya Admin kabla ya kuonyeshwa.`, 
       'SUCCESS'
     );
     return newId;
@@ -880,6 +977,11 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try { localStorage.setItem('tazama_custom_ads', JSON.stringify(next)); } catch {}
       return next;
     });
+    fetch(`/api/ads/${encodeURIComponent(campaignId)}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    }).catch(() => {});
     addAuditLog('AD_CAMPAIGN_STATUS', `Campaign ID: ${campaignId}`, `Hali mpya: ${status}`, 'SUCCESS');
   };
 
@@ -895,6 +997,12 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try { localStorage.setItem('tazama_custom_ads', JSON.stringify(next)); } catch {}
       return next;
     });
+    fetch(`/api/ads/${encodeURIComponent(campaignId)}/approve`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminEmail })
+    }).catch(err => console.warn('Could not approve ad on server:', err));
+
     addAuditLog(
       'AD_CAMPAIGN_APPROVED',
       `Campaign: ${target?.campaignName || campaignId}`,
@@ -905,13 +1013,23 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const rejectAdCampaign = (campaignId: string, reason: string, adminEmail: string = 'amytzee@gmail.com') => {
     const target = adCampaigns.find(c => c.id === campaignId);
-    setAdCampaigns(prev => prev.map(c => c.id === campaignId ? {
-      ...c,
-      status: 'rejected',
-      rejectionReason: reason,
-      reviewedBy: adminEmail,
-      reviewedAt: new Date().toISOString()
-    } : c));
+    setAdCampaigns(prev => {
+      const next = prev.map(c => c.id === campaignId ? {
+        ...c,
+        status: 'rejected' as AdStatus,
+        rejectionReason: reason,
+        reviewedBy: adminEmail,
+        reviewedAt: new Date().toISOString()
+      } : c);
+      try { localStorage.setItem('tazama_custom_ads', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    fetch(`/api/ads/${encodeURIComponent(campaignId)}/reject`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason, adminEmail })
+    }).catch(err => console.warn('Could not reject ad on server:', err));
+
     addAuditLog(
       'AD_CAMPAIGN_REJECTED',
       `Campaign: ${target?.campaignName || campaignId}`,
@@ -1127,21 +1245,72 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [viewedVideoIds, setViewedVideoIds] = useState<Set<string>>(new Set());
 
   const recordView = (videoId: string) => {
+    if (!videoId) return;
     if (viewedVideoIds.has(videoId)) return; // Prevent duplicate counts in session
     setViewedVideoIds(prev => new Set(prev).add(videoId));
     
-    setVideos(prev => prev.map(v => {
-      if (v.id === videoId) {
-        return { ...v, viewsCount: v.viewsCount + 1 };
-      }
-      return v;
-    }));
+    let updatedCount = 1;
 
-    // Add to history
+    setVideos(prev => {
+      const next = prev.map(v => {
+        if (v && v.id === videoId) {
+          updatedCount = (v.viewsCount || 0) + 1;
+          return { ...v, viewsCount: updatedCount };
+        }
+        return v;
+      });
+      try { localStorage.setItem('tazama_custom_videos', JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    setShorts(prev => {
+      const next = prev.map(s => {
+        if (s && s.id === videoId) {
+          updatedCount = (s.viewsCount || 0) + 1;
+          return { ...s, viewsCount: updatedCount };
+        }
+        return s;
+      });
+      try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    setCurrentVideo(prev => prev && prev.id === videoId ? { ...prev, viewsCount: (prev.viewsCount || 0) + 1 } : prev);
+
+    // Update channel totalViews
+    setChannels(prev => {
+      const target = (videos && videos.find(v => Boolean(v && v.id === videoId))) || 
+                     (shorts && shorts.find(s => Boolean(s && s.id === videoId)));
+      if (!target) return prev;
+      const next = prev.map(ch => {
+        if (ch && (ch.id === target.channelId || (ch.name && target.channelName && ch.name.toLowerCase() === target.channelName.toLowerCase()))) {
+          return { ...ch, totalViews: (ch.totalViews || 0) + 1 };
+        }
+        return ch;
+      });
+      try { localStorage.setItem('tazama_custom_channels', JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    // 1. Post to Server API
+    fetch(`/api/videos/${encodeURIComponent(videoId)}/view`, {
+      method: 'POST'
+    }).catch(() => {});
+
+    // 2. Persist to Firestore
+    try {
+      const videoDocRef = doc(db, 'videos', videoId);
+      setDoc(videoDocRef, { viewsCount: updatedCount }, { merge: true }).catch(() => {});
+    } catch {}
+
+    // 3. Add to watch history
     const target = (videos && videos.find(v => Boolean(v && v.id === videoId))) || 
                    (shorts && shorts.find(s => Boolean(s && s.id === videoId)));
     if (target) {
-      setWatchHistory(prev => [target, ...(Array.isArray(prev) ? prev.filter(item => Boolean(item && item.id && item.id !== videoId)) : [])].slice(0, 50));
+      setWatchHistory(prev => [
+        { ...target, viewsCount: updatedCount },
+        ...(Array.isArray(prev) ? prev.filter(item => Boolean(item && item.id && item.id !== videoId)) : [])
+      ].slice(0, 50));
     }
   };
 

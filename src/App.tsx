@@ -30,10 +30,14 @@ import { Sparkles, Shield, Info, CheckCircle2 } from 'lucide-react';
 
 const AppContent: React.FC = () => {
   const { role, profile, switchDemoRole, upgradeToCreator } = useAuth();
-  const { setSelectedCategory, videos } = useVideo();
+  const { setSelectedCategory, videos, shorts } = useVideo();
 
   const [activePage, setActivePage] = useState<string>('home');
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
+
+  const liveSelectedVideo = selectedVideo 
+    ? (videos.find(v => v.id === selectedVideo.id) || (shorts && shorts.find(s => s.id === selectedVideo.id)) || selectedVideo)
+    : null;
   const [minimizedVideo, setMinimizedVideo] = useState<VideoItem | null>(null);
   const [isMiniPlaying, setIsMiniPlaying] = useState<boolean>(true);
   const [selectedChannelId, setSelectedChannelId] = useState<string>('ch-wasafi');
@@ -181,9 +185,9 @@ const AppContent: React.FC = () => {
             />
           )}
 
-          {activePage === 'watch' && selectedVideo && (
+          {activePage === 'watch' && liveSelectedVideo && (
             <WatchPage
-              video={selectedVideo}
+              video={liveSelectedVideo}
               onSelectVideo={handleSelectVideo}
               onSelectChannel={handleSelectChannel}
               onOpenWallet={handleOpenWallet}

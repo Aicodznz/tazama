@@ -63,19 +63,43 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
   const activeCount = adCampaigns.filter(c => c.status === 'active').length;
   const totalRevenueCollectedTZS = adCampaigns.reduce((sum, c) => sum + (c.budgetTZS || 0), 0);
 
+  // Toast message for instant Admin feedback
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
   const handleApprove = (ad: AdCampaign) => {
     approveAdCampaign(ad.id, profile?.email || 'amytzee@gmail.com');
+    setToastMessage(`Tangazo la "${ad.campaignName}" limeidhinishwa na limewekwa hewani (Active)!`);
+    setTimeout(() => setToastMessage(null), 5000);
   };
 
   const handleConfirmReject = () => {
     if (!rejectingAd) return;
+    const adName = rejectingAd.campaignName;
     rejectAdCampaign(rejectingAd.id, rejectionReason.trim() || 'Haikidhi sera za matangazo ya jamii za Tazama.', profile?.email || 'amytzee@gmail.com');
+    setToastMessage(`Tangazo la "${adName}" limekataliwa na msimamizi.`);
+    setTimeout(() => setToastMessage(null), 5000);
     setRejectingAd(null);
     setRejectionReason('');
   };
 
   return (
     <div className="space-y-6">
+
+      {/* Floating Toast Notification */}
+      {toastMessage && (
+        <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 text-white flex items-center justify-between gap-3 shadow-xl shadow-emerald-500/10 animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2.5 text-xs font-bold text-emerald-300">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <span>{toastMessage}</span>
+          </div>
+          <button 
+            onClick={() => setToastMessage(null)}
+            className="text-xs text-[#A7B0C0] hover:text-white px-2 py-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       
       {/* Top Banner & KPI row */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">

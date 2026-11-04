@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   ThumbsUp, 
   ThumbsDown, 
@@ -66,6 +66,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
     toggleSubscribe, 
     likedVideoIds, 
     toggleLike, 
+    recordView,
     comments, 
     addComment,
     isDownloaded,
@@ -79,6 +80,22 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   
   const { profile, language } = useAuth();
   const t = translations[language];
+
+  // Live video from context to keep viewsCount and likesCount reactive in real time
+  const liveVideo = useMemo(() => {
+    return (
+      (videos && videos.find(v => Boolean(v && v.id === video?.id))) ||
+      (shorts && shorts.find(s => Boolean(s && s.id === video?.id))) ||
+      video
+    );
+  }, [videos, shorts, video]);
+
+  // Record view as soon as user opens or switches video
+  useEffect(() => {
+    if (liveVideo?.id) {
+      recordView(liveVideo.id);
+    }
+  }, [liveVideo?.id, recordView]);
 
   // UI state
   const [isDescExpanded, setIsDescExpanded] = useState<boolean>(false);
@@ -124,16 +141,16 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
   // Look up actual channel from database
   const creatorChannel = channels.find(c => 
-    Boolean(video?.channelId && c.id === video.channelId) || 
-    Boolean(video?.channelName && c.name.toLowerCase() === video.channelName.toLowerCase())
+    Boolean(liveVideo?.channelId && c.id === liveVideo.channelId) || 
+    Boolean(liveVideo?.channelName && c.name.toLowerCase() === liveVideo.channelName.toLowerCase())
   );
   const realSubscriberCount = creatorChannel?.subscriberCount ?? 1;
 
-  const isDownloadedAlready = video?.id ? isDownloaded(video.id) : false;
-  const isSubscribed = Boolean(video?.channelId && userSubscriptions.includes(video.channelId));
-  const isLiked = Boolean(video?.id && likedVideoIds.includes(video.id));
-  const isDisliked = Boolean(video?.id && dislikedVideoIds.includes(video.id));
-  const rawVideoComments = (video?.id && comments[video.id]) || [];
+  const isDownloadedAlready = liveVideo?.id ? isDownloaded(liveVideo.id) : false;
+  const isSubscribed = Boolean(liveVideo?.channelId && userSubscriptions.includes(liveVideo.channelId));
+  const isLiked = Boolean(liveVideo?.id && likedVideoIds.includes(liveVideo.id));
+  const isDisliked = Boolean(liveVideo?.id && dislikedVideoIds.includes(liveVideo.id));
+  const rawVideoComments = (liveVideo?.id && comments[liveVideo.id]) || [];
 
   // Sorted comments
   const videoComments = useMemo(() => {
@@ -368,7 +385,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
           {/* Adaptive Video Player: edge-to-edge on mobile, rounded on sm+ */}
           <div className="w-full rounded-none sm:rounded-2xl overflow-hidden bg-black shadow-2xl">
-            <VideoPlayer video={video} autoPlay={true} />
+            <VideoPlayer video={liveVideo} autoPlay={true} />
           </div>
 
           {/* Content Wrapper for mobile padding */}
@@ -385,27 +402,27 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
             {/* 1. Video Title: bold & clear */}
             <h1 className="mt-2.5 sm:mt-4 text-base sm:text-xl font-bold text-white tracking-tight leading-snug line-clamp-2">
-              {video.title}
+              {liveVideo.title}
             </h1>
 
             {/* 2. Metadata Line (Matching image_9d55dc60.png: @channel · likes · views · time · #category · more) */}
             <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1 text-xs text-[#A7B0C0]">
               <span 
-                onClick={() => onSelectChannel(video.channelId)}
+                onClick={() => onSelectChannel(liveVideo.channelId)}
                 className="font-medium text-white/90 hover:text-white cursor-pointer"
               >
-                @{creatorChannel?.handle ? (creatorChannel.handle.startsWith('@') ? creatorChannel.handle.slice(1) : creatorChannel.handle) : video.channelName.toLowerCase().replace(/\s+/g, '')}
+                @{creatorChannel?.handle ? (creatorChannel.handle.startsWith('@') ? creatorChannel.handle.slice(1) : creatorChannel.handle) : liveVideo.channelName.toLowerCase().replace(/\s+/g, '')}
               </span>
               <span>•</span>
-              <span>{formatViews(video.likesCount, language)} likes</span>
+              <span>{formatViews(liveVideo.likesCount, language)} likes</span>
               <span>•</span>
-              <span>{formatViews(video.viewsCount, language)} views</span>
+              <span className="text-white font-semibold">{formatViews(liveVideo.viewsCount, language)} views</span>
               <span>•</span>
-              <span>{formatRelativeTime(video.createdAt, language)}</span>
-              {video.category && (
+              <span>{formatRelativeTime(liveVideo.createdAt, language)}</span>
+              {liveVideo.category && (
                 <>
                   <span>•</span>
-                  <span className="text-white/70">#{video.category}</span>
+                  <span className="text-white/70">#{liveVideo.category}</span>
                 </>
               )}
               <button 
@@ -429,11 +446,11 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   </button>
                 </div>
                 <p className="whitespace-pre-line leading-relaxed text-[#E2E8F0]">
-                  {video.description || 'Hakuna maelezo ya ziada kuhusu video hii.'}
+                  {liveVideo.description || 'Hakuna maelezo ya ziada kuhusu video hii.'}
                 </p>
-                {video.tags && video.tags.length > 0 && (
+                {liveVideo.tags && liveVideo.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 pt-1 border-t border-white/5">
-                    {video.tags.map((tag, i) => (
+                    {liveVideo.tags.map((tag, i) => (
                       <span key={i} className="text-xs text-[#FF3040] hover:underline font-medium">
                         #{tag}
                       </span>
@@ -447,15 +464,15 @@ export const WatchPage: React.FC<WatchPageProps> = ({
             <div className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x flex-nowrap -mx-3 px-3 sm:mx-0 sm:px-0 py-1">
               {/* Creator Avatar */}
               <div 
-                onClick={() => onSelectChannel(video.channelId)}
+                onClick={() => onSelectChannel(liveVideo.channelId)}
                 className="shrink-0 cursor-pointer group"
-                title={video.channelName}
+                title={liveVideo.channelName}
               >
                 <img
-                  src={video.channelAvatar || creatorChannel?.avatarUrl}
-                  alt={video.channelName}
+                  src={liveVideo.channelAvatar || creatorChannel?.avatarUrl}
+                  alt={liveVideo.channelName}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = createAvatarSvgDataUri(video.channelName);
+                    (e.target as HTMLImageElement).src = createAvatarSvgDataUri(liveVideo.channelName);
                   }}
                   className="w-9 h-9 rounded-full object-cover ring-1 ring-white/10 group-hover:ring-[#FF3040] transition-all bg-[#141824]"
                 />
@@ -463,14 +480,14 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
               {/* Channel Name (on tablet / desktop) */}
               <div 
-                onClick={() => onSelectChannel(video.channelId)}
+                onClick={() => onSelectChannel(liveVideo.channelId)}
                 className="hidden md:flex flex-col min-w-0 pr-1 cursor-pointer group shrink-0"
               >
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-bold text-white truncate group-hover:text-[#FF3040] transition-colors">
-                    {video.channelName}
+                    {liveVideo.channelName}
                   </span>
-                  {(video.isChannelVerified || creatorChannel?.isVerified) && (
+                  {(liveVideo.isChannelVerified || creatorChannel?.isVerified) && (
                     <CheckCircle2 className="w-3 h-3 text-[#A7B0C0] shrink-0" />
                   )}
                 </div>
@@ -581,7 +598,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   title="Penda video hii"
                 >
                   <ThumbsUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiked ? 'fill-[#FF3040]' : ''}`} />
-                  <span>{formatViews(video.likesCount, language)}</span>
+                  <span>{formatViews(liveVideo.likesCount, language)}</span>
                 </button>
                 <div className="w-[1px] h-3.5 bg-white/20" />
                 <button

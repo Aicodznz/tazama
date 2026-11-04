@@ -109,6 +109,31 @@ function saveStoredChannels(channels: any[]) {
   }
 }
 
+const ADS_STORAGE_FILE = path.join(__dirname, 'data', 'ads.json');
+
+function getStoredAds(): any[] {
+  try {
+    if (fs.existsSync(ADS_STORAGE_FILE)) {
+      const content = fs.readFileSync(ADS_STORAGE_FILE, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+    }
+  } catch (err) {
+    console.error('Error reading stored ads:', err);
+  }
+  return [];
+}
+
+function saveStoredAds(ads: any[]) {
+  try {
+    const dir = path.dirname(ADS_STORAGE_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(ADS_STORAGE_FILE, JSON.stringify(ads, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing stored ads:', err);
+  }
+}
+
 async function startServer() {
   const app = express();
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -155,6 +180,30 @@ async function startServer() {
 
       saveStoredVideos(updatedList);
       res.json({ success: true, video: newVideo, totalVideos: updatedList.length });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 2b. Increment video view count
+  app.post('/api/videos/:id/view', (req, res) => {
+    try {
+      const { id } = req.params;
+      const current = getStoredVideos();
+      let updatedVideo: any = null;
+      const next = current.map((v: any) => {
+        if (v.id === id) {
+          const newViews = (v.viewsCount || 0) + 1;
+          updatedVideo = { ...v, viewsCount: newViews };
+          return updatedVideo;
+        }
+        return v;
+      });
+      if (updatedVideo) {
+        saveStoredVideos(next);
+        return res.json({ success: true, viewsCount: updatedVideo.viewsCount, video: updatedVideo });
+      }
+      res.json({ success: true, viewsCount: 1 });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
@@ -222,6 +271,167 @@ async function startServer() {
       }
       saveStoredChannels(updated);
       res.json({ success: true, channel: newChannel });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ==========================================
+  // SHARED PERSISTENT AD CAMPAIGNS API
+  // Vigezo: Matangazo yanaanza kama 'pending_approval'
+  // Mpaka Admin a-confirm (Approve) ndipo yanakuwa 'active' na kuonekana!
+  // ==========================================
+
+  // 1. Get all ads (for Admin & Dashboard)
+  app.get('/api/ads', (_req, res) => {
+    try {
+      const ads = getStoredAds();
+      res.json({ success: true, ads });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message, ads: [] });
+    }
+  });
+
+  // 2. Get only active approved ads (publicly served)
+  app.get('/api/ads/active', (_req, res) => {
+    try {
+      const ads = getStoredAds();
+      const activeAds = ads.filter((a: any) => a && a.status === 'active');
+      res.json({ success: true, ads: activeAds });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message, ads: [] });
+    }
+  });
+
+  // 3. Create new ad campaign - MUST ALWAYS START IN 'pending_approval'
+  app.post('/api/ads', (req, res) => {
+    try {
+      const newAd = req.body;
+      if (!newAd || !newAd.id) {
+        return res.status(400).json({ success: false, error: 'Ad campaign data with valid ID is required' });
+      }
+
+      // STRICT VALIDATION: Force status to 'pending_approval' until Admin approves!
+      const adToSave = {
+        ...newAd,
+        status: 'pending_approval',
+        createdAt: newAd.createdAt || new Date().toISOString()
+      };
+
+      const current = getStoredAds();
+      const idx = current.findIndex(a => a.id === adToSave.id);
+      let updated;
+      if (idx >= 0) {
+        updated = [...current];
+        // Preserve admin approval status if already set, otherwise enforce pending_approval
+        updated[idx] = { 
+          ...updated[idx], 
+          ...adToSave,
+          status: updated[idx].status === 'active' ? 'active' : 'pending_approval'
+        };
+      } else {
+        updated = [adToSave, ...current];
+      }
+
+      saveStoredAds(updated);
+      console.log(`[Tazama Ads] Tangazo jipya limewasilishwa: ${adToSave.campaignName} (ID: ${adToSave.id}) - Hali: Inasubiri Idhini ya Admin`);
+      res.json({ success: true, ad: adToSave, totalAds: updated.length });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 4. Admin confirms / approves ad campaign -> status becomes 'active'
+  app.put('/api/ads/:id/approve', (req, res) => {
+    try {
+      const { id } = req.params;
+      const { adminEmail = 'amytzee@gmail.com' } = req.body || {};
+      const current = getStoredAds();
+      let approvedAd: any = null;
+
+      const updated = current.map((ad: any) => {
+        if (ad.id === id) {
+          approvedAd = {
+            ...ad,
+            status: 'active',
+            reviewedBy: adminEmail,
+            reviewedAt: new Date().toISOString()
+          };
+          return approvedAd;
+        }
+        return ad;
+      });
+
+      if (!approvedAd) {
+        return res.status(404).json({ success: false, error: 'Ad not found' });
+      }
+
+      saveStoredAds(updated);
+      console.log(`[Tazama Ads] Admin ${adminEmail} ameidhinisha tangazo: ${approvedAd.campaignName} (ID: ${id}) -> Sasa lipo hewani!`);
+      res.json({ success: true, ad: approvedAd });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 5. Admin rejects ad campaign -> status becomes 'rejected'
+  app.put('/api/ads/:id/reject', (req, res) => {
+    try {
+      const { id } = req.params;
+      const { reason = 'Haikidhi sera za matangazo ya Tazama', adminEmail = 'amytzee@gmail.com' } = req.body || {};
+      const current = getStoredAds();
+      let rejectedAd: any = null;
+
+      const updated = current.map((ad: any) => {
+        if (ad.id === id) {
+          rejectedAd = {
+            ...ad,
+            status: 'rejected',
+            rejectionReason: reason,
+            reviewedBy: adminEmail,
+            reviewedAt: new Date().toISOString()
+          };
+          return rejectedAd;
+        }
+        return ad;
+      });
+
+      if (!rejectedAd) {
+        return res.status(404).json({ success: false, error: 'Ad not found' });
+      }
+
+      saveStoredAds(updated);
+      console.log(`[Tazama Ads] Admin ${adminEmail} amekataa tangazo: ${rejectedAd.campaignName} (ID: ${id}) - Sababu: ${reason}`);
+      res.json({ success: true, ad: rejectedAd });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 6. Pause or resume ad campaign
+  app.put('/api/ads/:id/status', (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+      const current = getStoredAds();
+      let updatedAd: any = null;
+
+      const updated = current.map((ad: any) => {
+        if (ad.id === id) {
+          // Can only pause/resume if it was previously approved (active)
+          const newStatus = status === 'active' && ad.reviewedAt ? 'active' : status === 'paused' ? 'paused' : ad.status;
+          updatedAd = { ...ad, status: newStatus };
+          return updatedAd;
+        }
+        return ad;
+      });
+
+      if (!updatedAd) {
+        return res.status(404).json({ success: false, error: 'Ad not found' });
+      }
+
+      saveStoredAds(updated);
+      res.json({ success: true, ad: updatedAd });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

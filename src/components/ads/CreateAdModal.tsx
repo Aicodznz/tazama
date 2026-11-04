@@ -133,7 +133,7 @@ const PRESET_SAMPLE_MEDIA = {
 
 export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { profile, role, deductBalance } = useAuth();
-  const { addAdCampaign, triggerSTKPush } = useVideo();
+  const { addAdCampaign, approveAdCampaign, triggerSTKPush } = useVideo();
 
   // Wizard Steps: 1: Details & Creative -> 2: Pricing & Payment -> 3: Success Confirmation
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -160,6 +160,7 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [createdCampaignId, setCreatedCampaignId] = useState<string | null>(null);
+  const [isApprovedInstantly, setIsApprovedInstantly] = useState(false);
 
   // Auto-switch mediaType when format requires video or image
   const handleSelectFormat = (fmt: AdFormat) => {
@@ -295,6 +296,8 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
     setDescription('');
     setDestinationUrl('https://');
     setPaymentError(null);
+    setCreatedCampaignId(null);
+    setIsApprovedInstantly(false);
     onClose();
   };
 
@@ -743,33 +746,86 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
           {/* STEP 3: SUCCESS CONFIRMATION */}
           {currentStep === 3 && (
             <div className="py-8 text-center space-y-5">
-              <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 border border-emerald-500/40 text-[#16C784] flex items-center justify-center mx-auto shadow-xl shadow-emerald-500/20 animate-in zoom-in duration-300">
+              <div className={`w-16 h-16 rounded-3xl flex items-center justify-center mx-auto shadow-xl duration-300 ${
+                isApprovedInstantly 
+                  ? 'bg-emerald-500/20 border border-emerald-500/40 text-[#16C784] shadow-emerald-500/20 animate-in zoom-in'
+                  : 'bg-amber-500/20 border border-amber-500/40 text-amber-400 shadow-amber-500/20 animate-in zoom-in'
+              }`}>
                 <CheckCircle2 className="w-8 h-8" />
               </div>
 
               <div className="space-y-2 max-w-md mx-auto">
-                <h3 className="text-xl font-black text-white">Malipo Yamekamilika &amp; Tangazo Limewasilishwa!</h3>
+                <h3 className="text-xl font-black text-white">
+                  {isApprovedInstantly ? 'Tangazo Limeidhinishwa & Liko Hewani!' : 'Malipo Yamekamilika & Tangazo Limewasilishwa!'}
+                </h3>
                 <p className="text-xs text-[#A7B0C0] leading-relaxed">
                   Kampeni yako <strong>"{campaignName}"</strong> imepokelewa na malipo ya <strong>{formatTZS(totalCostTZS)}</strong> yamekamilika.
                 </p>
               </div>
 
               {/* Status Badge Notice */}
-              <div className="max-w-md mx-auto p-4 rounded-2xl bg-[#191E29] border border-amber-500/40 text-left space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
-                  <span>Hali ya Sasa: Inasubiri Idhini ya Admin</span>
+              <div className="max-w-md mx-auto p-4 rounded-2xl bg-[#191E29] border border-[#262E3E] text-left space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-[#A7B0C0] font-mono">HALI YA TANGAZO:</span>
+                  <span className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold flex items-center gap-1.5 ${
+                    isApprovedInstantly 
+                      ? 'bg-emerald-500/20 text-[#16C784] border border-emerald-500/30'
+                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse'
+                  }`}>
+                    {isApprovedInstantly ? '● Liko Hewani (Active)' : '⏳ Inasubiri Uthibitisho wa Admin'}
+                  </span>
                 </div>
-                <p className="text-[11px] text-[#A7B0C0] leading-relaxed">
-                  Kulingana na kanuni za Tazama, matangazo yote yaliyolipwa yanapitiwa na jopo la Admin ndani ya saa 2 kuhakikisha yanakidhi viwango kabla ya kuanza kuonekana kwenye mfumo.
-                </p>
+
+                <div className="p-3 rounded-xl bg-[#10131B] border border-[#262E3E] text-xs text-[#A7B0C0] space-y-1.5">
+                  <p className="text-white font-bold flex items-center gap-1.5 text-xs">
+                    <ShieldCheck className="w-4 h-4 text-amber-400" />
+                    Sera ya Ulinzi & Uthibitisho wa Matangazo:
+                  </p>
+                  <p className="text-[11px] leading-relaxed">
+                    {isApprovedInstantly 
+                      ? 'Tangazo hili limethibitishwa na Msimamizi wa Tazama na tayari limeanza kuonyeshwa kulingana na muundo uliouchagua.'
+                      : 'Kulingana na kanuni za Tazama, matangazo yote mapya yanabaki "Pending" na HAYATAANZA kuonekana kwa watumiaji hadi Admin atakapothibitisha maudhui na malipo kupitia Jopo la Usimamizi (Admin Panel).'}
+                  </p>
+                </div>
+
+                {/* Instant approval option for Admins */}
+                {profile && (role === 'admin' || profile.email === 'amytzee@gmail.com') && (
+                  <div className="pt-2 border-t border-[#262E3E]">
+                    {!isApprovedInstantly ? (
+                      <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="text-left">
+                          <span className="text-xs font-bold text-amber-300 block">Wewe ni Admin:</span>
+                          <span className="text-[10px] text-[#A7B0C0]">Unaweza kulithibitisha papo hapo bila kusubiri.</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (createdCampaignId) {
+                              approveAdCampaign(createdCampaignId, profile?.email || 'amytzee@gmail.com');
+                              setIsApprovedInstantly(true);
+                            }
+                          }}
+                          className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 cursor-pointer shrink-0"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Idhinisha Sasa Hivi</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>Umethibitisha tangazo hili! Sasa lipo hewani (Active).</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-center gap-3 pt-4">
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-lg"
+                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs shadow-lg cursor-pointer"
                 >
                   Sawa, Nimekamilisha
                 </button>

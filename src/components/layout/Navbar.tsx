@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Search, 
   Video as VideoIcon, 
@@ -68,9 +68,14 @@ export const Navbar: React.FC<NavbarProps> = ({
     notifications,
     unreadNotificationCount,
     markNotificationAsRead,
-    markAllNotificationsAsRead
+    markAllNotificationsAsRead,
+    adCampaigns
   } = useVideo();
   const t = translations[language];
+
+  const pendingAdsCount = useMemo(() => {
+    return (adCampaigns || []).filter(a => a && a.status === 'pending_approval').length;
+  }, [adCampaigns]);
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -229,11 +234,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           {profile && (role === 'admin' || profile.email === 'amytzee@gmail.com') && (
             <button
               onClick={() => onNavigate('admin')}
-              className="flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-amber-500/10 shrink-0"
+              className="flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-amber-500/10 shrink-0 relative"
               title="Jopo la Msimamizi Mkuu (Admin Hub)"
             >
               <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
               <span>Admin</span>
+              {pendingAdsCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center animate-bounce shadow">
+                  {pendingAdsCount}
+                </span>
+              )}
             </button>
           )}
 
