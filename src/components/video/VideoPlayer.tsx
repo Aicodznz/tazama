@@ -9,7 +9,8 @@ import {
   Settings, 
   Subtitles, 
   RotateCcw,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 import { VideoItem, AdCampaign } from '../../types';
 import { formatDuration } from '../../lib/i18n';
@@ -53,6 +54,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
   const [captionLang, setCaptionLang] = useState<'sw' | 'en'>('sw');
   const [isDataSaverActive, setIsDataSaverActive] = useState<boolean>(false);
   const [hasRecordedView, setHasRecordedView] = useState<boolean>(false);
+  const [videoError, setVideoError] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(true);
   const controlsTimeoutRef = useRef<any>(null);
 
@@ -70,6 +72,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
 
   // Initialize Ad check when video changes (VIP users are ad-free)
   useEffect(() => {
+    setVideoError(false);
     setHasRecordedView(false);
     setHasShownAdForVideo(false);
 
@@ -138,8 +141,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
     setIsAdPlaying(false);
     setActiveAd(null);
     setHasShownAdForVideo(true);
-    if (videoRef.current) {
-      videoRef.current.src = video.videoUrl;
+    if (parsedSource.sourceType === 'direct' && videoRef.current) {
+      videoRef.current.src = parsedSource.streamUrl || video.videoUrl;
       videoRef.current.load();
       videoRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
     }
@@ -180,8 +183,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
       videoRef.current.pause();
       setIsPlaying(false);
     } else {
-      videoRef.current.play();
-      setIsPlaying(true);
+      videoRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch((err) => {
+        console.warn('Play interrupted or unsupported source:', err);
+        setIsPlaying(false);
+      });
     }
   };
 
@@ -355,10 +362,15 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
       ) : (
         <video
           ref={videoRef}
-          src={isAdPlaying && activeAd ? activeAd.mediaUrl : (parsedSource.streamUrl || video.videoUrl)}
+          src={isAdPlaying && activeAd ? activeAd.mediaUrl : (parsedSource.sourceType === 'direct' ? (parsedSource.streamUrl || video.videoUrl) : '')}
           poster={isAdPlaying && activeAd ? undefined : video.thumbnailUrl}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
+          onError={(e) => {
+            console.warn('Video element source error:', e);
+            setVideoError(true);
+            setIsPlaying(false);
+          }}
           onEnded={() => {
             if (isAdPlaying) {
               handleCompleteAd();
@@ -373,6 +385,33 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
           }`}
           playsInline
         />
+      )}
+
+      {/* Video Source Error Fallback UI */}
+      {videoError && !isEmbedVideo && (
+        <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center space-y-3 z-30 animate-in fade-in">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold text-white">Hitilafu ya Chanzo cha Video</h4>
+            <p className="text-xs text-[#A7B0C0] max-w-sm">
+              Faili la video hii haliwezi kuchezwa moja kwa moja au bado linachakatwa na seva.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setVideoError(false);
+              if (videoRef.current) {
+                videoRef.current.load();
+                videoRef.current.play().catch(() => {});
+              }
+            }}
+            className="px-4 py-2 rounded-xl bg-[#FF3040] hover:bg-[#E02635] text-white text-xs font-bold transition-all shadow-lg shadow-[#FF3040]/30"
+          >
+            Jaribu Tena (Retry)
+          </button>
+        </div>
       )}
 
       {/* IN-STREAM AD OVERLAY UI (Dedicated YouTube In-Stream Ad Mode) */}

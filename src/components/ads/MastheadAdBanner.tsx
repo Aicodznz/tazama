@@ -12,6 +12,8 @@ export const MastheadAdBanner: React.FC<MastheadAdBannerProps> = ({ ad }) => {
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  const [mediaError, setMediaError] = useState(false);
+
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (videoRef.current) {
@@ -39,7 +41,7 @@ export const MastheadAdBanner: React.FC<MastheadAdBannerProps> = ({ ad }) => {
     >
       {/* 1. Background Media (Responsive height filling the card) */}
       <div className="absolute inset-0 w-full h-full overflow-hidden bg-black pointer-events-none">
-        {ad.mediaType === 'video' ? (
+        {ad.mediaType === 'video' && ad.mediaUrl && !mediaError ? (
           <video
             ref={videoRef}
             src={ad.mediaUrl}
@@ -47,12 +49,16 @@ export const MastheadAdBanner: React.FC<MastheadAdBannerProps> = ({ ad }) => {
             loop
             muted={isMuted}
             playsInline
+            onError={() => setMediaError(true)}
             className="w-full h-full object-cover opacity-60 sm:opacity-75 group-hover:opacity-85 transition-opacity duration-700"
           />
         ) : (
           <img
-            src={ad.mediaUrl}
+            src={ad.mediaUrl || ''}
             alt={ad.headline}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="300" fill="%23191E29"><rect width="100%" height="100%"/></svg>';
+            }}
             className="w-full h-full object-cover opacity-60 sm:opacity-75 group-hover:opacity-85 transition-opacity duration-700"
           />
         )}

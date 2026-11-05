@@ -1115,7 +1115,8 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 <tbody className="divide-y divide-[#262E3E]/50 text-[#A7B0C0]">
                   {creatorVideos
                     .filter(v => {
-                      if (contentSearch && !v.title.toLowerCase().includes(contentSearch.toLowerCase())) return false;
+                      if (!v) return false;
+                      if (contentSearch && !(v.title || '').toLowerCase().includes(contentSearch.toLowerCase())) return false;
                       if (contentVisibilityFilter !== 'all' && v.visibility !== contentVisibilityFilter) return false;
                       return true;
                     })

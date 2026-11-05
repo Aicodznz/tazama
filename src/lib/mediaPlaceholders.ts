@@ -59,8 +59,10 @@ export function createAvatarSvgDataUri(name: string): string {
  * ensuring the React DOM badges (Live, Category, Duration, Play) sit cleanly without duplicate tails.
  */
 export function createThumbnailSvgDataUri(title: string, category: string = 'Tazama'): string {
-  const theme = getChannelTheme(title + ' ' + category);
-  const lowerCat = category.toLowerCase();
+  const safeTitle = title || 'Video';
+  const safeCategory = category || 'Tazama';
+  const theme = getChannelTheme(safeTitle + ' ' + safeCategory);
+  const lowerCat = safeCategory.toLowerCase();
 
   // Category-specific ambient graphics
   let categoryArt = '';

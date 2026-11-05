@@ -25,7 +25,8 @@ import {
   SlidersHorizontal,
   ChevronRight,
   MoreVertical,
-  CornerDownRight
+  CornerDownRight,
+  AlertCircle
 } from 'lucide-react';
 import { VideoItem, VideoCategory } from '../types';
 import { VideoPlayer } from '../components/video/VideoPlayer';
@@ -141,8 +142,8 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
   // Look up actual channel from database
   const creatorChannel = channels.find(c => 
-    Boolean(liveVideo?.channelId && c.id === liveVideo.channelId) || 
-    Boolean(liveVideo?.channelName && c.name.toLowerCase() === liveVideo.channelName.toLowerCase())
+    Boolean(liveVideo?.channelId && c?.id === liveVideo.channelId) || 
+    Boolean(liveVideo?.channelName && c?.name && c.name.toLowerCase() === liveVideo.channelName.toLowerCase())
   );
   const realSubscriberCount = creatorChannel?.subscriberCount ?? 1;
 
@@ -298,27 +299,29 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   };
 
   // Related Videos Recommendation
-  const otherVideos = (videos || []).filter(v => Boolean(v && video && v.id && v.id !== video.id));
-  const fallbackShortsAsVideos: VideoItem[] = (shorts || []).map(s => ({
-    id: s.id,
-    title: s.title,
-    description: s.title,
-    videoUrl: s.videoUrl,
-    thumbnailUrl: s.thumbnailUrl,
-    channelId: s.channelId,
-    channelName: s.channelName,
-    channelAvatar: s.channelAvatar,
-    durationSeconds: 45,
-    viewsCount: s.viewsCount,
-    likesCount: s.likesCount,
-    commentsCount: s.commentsCount,
-    category: 'Vichekesho' as const,
-    tags: ['shorts'],
-    visibility: 'public' as const,
-    processingStatus: 'ready' as const,
-    createdAt: s.createdAt,
-    isChannelVerified: true
-  }));
+  const otherVideos = (videos || []).filter(v => Boolean(v && video && v.id && v.id !== video.id && v.videoUrl && v.title));
+  const fallbackShortsAsVideos: VideoItem[] = (shorts || [])
+    .filter(s => Boolean(s && video && s.id && s.id !== video.id && s.videoUrl && s.title))
+    .map(s => ({
+      id: s.id,
+      title: s.title,
+      description: s.title,
+      videoUrl: s.videoUrl,
+      thumbnailUrl: s.thumbnailUrl,
+      channelId: s.channelId,
+      channelName: s.channelName || 'Tazama Creator',
+      channelAvatar: s.channelAvatar,
+      durationSeconds: s.durationSeconds || 45,
+      viewsCount: s.viewsCount || 0,
+      likesCount: s.likesCount || 0,
+      commentsCount: s.commentsCount || 0,
+      category: s.category || 'Vichekesho',
+      tags: s.tags || ['shorts'],
+      visibility: 'public' as const,
+      processingStatus: 'ready' as const,
+      createdAt: s.createdAt || new Date().toISOString(),
+      isChannelVerified: true
+    }));
 
   const allRecommendations: VideoItem[] = [...otherVideos, ...fallbackShortsAsVideos];
 
@@ -385,7 +388,19 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
           {/* Adaptive Video Player: edge-to-edge on mobile, rounded on sm+ */}
           <div className="w-full rounded-none sm:rounded-2xl overflow-hidden bg-black shadow-2xl">
-            <VideoPlayer video={liveVideo} autoPlay={true} />
+            {liveVideo && liveVideo.videoUrl ? (
+              <VideoPlayer video={liveVideo} autoPlay={true} />
+            ) : (
+              <div className="aspect-video flex flex-col items-center justify-center p-6 text-center space-y-3 bg-[#141824]">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6" />
+                </div>
+                <h4 className="text-sm font-bold text-white">Video Haipatikani</h4>
+                <p className="text-xs text-[#A7B0C0] max-w-sm">
+                  Video hii haina faili halali la kucheza au bado inachakatwa.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Content Wrapper for mobile padding */}
@@ -408,10 +423,10 @@ export const WatchPage: React.FC<WatchPageProps> = ({
             {/* 2. Metadata Line (Matching image_9d55dc60.png: @channel · likes · views · time · #category · more) */}
             <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1 text-xs text-[#A7B0C0]">
               <span 
-                onClick={() => onSelectChannel(liveVideo.channelId)}
+                onClick={() => liveVideo?.channelId && onSelectChannel(liveVideo.channelId)}
                 className="font-medium text-white/90 hover:text-white cursor-pointer"
               >
-                @{creatorChannel?.handle ? (creatorChannel.handle.startsWith('@') ? creatorChannel.handle.slice(1) : creatorChannel.handle) : liveVideo.channelName.toLowerCase().replace(/\s+/g, '')}
+                @{creatorChannel?.handle ? (creatorChannel.handle.startsWith('@') ? creatorChannel.handle.slice(1) : creatorChannel.handle) : (liveVideo?.channelName ? liveVideo.channelName.toLowerCase().replace(/\s+/g, '') : 'channel')}
               </span>
               <span>•</span>
               <span>{formatViews(liveVideo.likesCount, language)} likes</span>

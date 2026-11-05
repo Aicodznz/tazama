@@ -703,14 +703,24 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                               className="w-full h-full border-0"
                               allow="autoplay; encrypted-media"
                             />
-                          ) : (
+                          ) : parsedSource.sourceType === 'vimeo' ? (
+                            <iframe
+                              src={`${parsedSource.embedUrl}?autoplay=1`}
+                              title="Hakiki ya Video"
+                              className="w-full h-full border-0"
+                              allow="autoplay; encrypted-media"
+                            />
+                          ) : parsedSource.streamUrl ? (
                             <video
                               src={parsedSource.streamUrl}
                               controls
                               autoPlay
+                              onError={() => {
+                                console.warn('Test video failed to load');
+                              }}
                               className="w-full h-full object-contain"
                             />
-                          )}
+                          ) : null}
                         </div>
                       )}
                     </div>

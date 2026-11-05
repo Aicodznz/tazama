@@ -68,7 +68,7 @@ function getStoredVideos(): any[] {
     if (fs.existsSync(VIDEOS_STORAGE_FILE)) {
       const content = fs.readFileSync(VIDEOS_STORAGE_FILE, 'utf-8');
       const parsed = JSON.parse(content);
-      if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+      if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id && item.videoUrl));
     }
   } catch (err) {
     console.error('Error reading stored videos:', err);
@@ -173,8 +173,15 @@ async function startServer() {
       let updatedList;
       if (existingIdx >= 0) {
         updatedList = [...current];
-        updatedList[existingIdx] = { ...updatedList[existingIdx], ...newVideo };
+        updatedList[existingIdx] = { 
+          ...updatedList[existingIdx], 
+          ...newVideo,
+          videoUrl: newVideo.videoUrl || updatedList[existingIdx].videoUrl 
+        };
       } else {
+        if (!newVideo.videoUrl) {
+          return res.status(400).json({ success: false, error: 'videoUrl is required for new videos' });
+        }
         updatedList = [newVideo, ...current];
       }
 

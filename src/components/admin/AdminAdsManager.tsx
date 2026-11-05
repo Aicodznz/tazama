@@ -51,11 +51,12 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
   // Filtered campaigns
   const filteredCampaigns = adCampaigns.filter(ad => {
     const matchesStatus = statusFilter === 'all' || ad.status === statusFilter;
-    const matchesSearch = 
-      ad.campaignName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ad.headline?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ad.creatorName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ad.adFormat?.toLowerCase().includes(searchQuery.toLowerCase());
+    const query = (searchQuery || '').trim().toLowerCase();
+    const matchesSearch = !query || 
+      (ad.campaignName || '').toLowerCase().includes(query) ||
+      (ad.headline || '').toLowerCase().includes(query) ||
+      (ad.creatorName || '').toLowerCase().includes(query) ||
+      (ad.adFormat || '').toLowerCase().includes(query);
     return matchesStatus && matchesSearch;
   });
 
@@ -239,10 +240,23 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
                       onClick={() => setPreviewingAd(ad)}
                       className="w-24 sm:w-32 aspect-video rounded-2xl bg-black border border-[#262E3E] overflow-hidden relative group cursor-pointer shrink-0"
                     >
-                      {ad.mediaType === 'video' ? (
-                        <video src={ad.mediaUrl} className="w-full h-full object-cover" />
+                      {ad.mediaType === 'video' && ad.mediaUrl ? (
+                        <video 
+                          src={ad.mediaUrl} 
+                          onError={(e) => {
+                            (e.target as HTMLVideoElement).style.display = 'none';
+                          }}
+                          className="w-full h-full object-cover" 
+                        />
                       ) : (
-                        <img src={ad.mediaUrl} alt={ad.headline} className="w-full h-full object-cover" />
+                        <img 
+                          src={ad.mediaUrl || ''} 
+                          alt={ad.headline} 
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="60" fill="%23191E29"><rect width="100%" height="100%"/></svg>';
+                          }}
+                          className="w-full h-full object-cover" 
+                        />
                       )}
                       <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 flex items-center justify-center transition-colors">
                         <Play className="w-6 h-6 text-white opacity-80 group-hover:scale-110 transition-transform" />
@@ -470,10 +484,19 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
 
             {/* Media playback preview */}
             <div className="rounded-2xl overflow-hidden bg-black aspect-video border border-[#262E3E] relative">
-              {previewingAd.mediaType === 'video' ? (
-                <video src={previewingAd.mediaUrl} controls autoPlay muted className="w-full h-full object-contain" />
+              {previewingAd.mediaType === 'video' && previewingAd.mediaUrl ? (
+                <video 
+                  src={previewingAd.mediaUrl} 
+                  controls 
+                  autoPlay 
+                  muted 
+                  onError={(e) => {
+                    (e.target as HTMLVideoElement).style.display = 'none';
+                  }}
+                  className="w-full h-full object-contain" 
+                />
               ) : (
-                <img src={previewingAd.mediaUrl} alt={previewingAd.headline} className="w-full h-full object-contain" />
+                <img src={previewingAd.mediaUrl || ''} alt={previewingAd.headline} className="w-full h-full object-contain" />
               )}
             </div>
 

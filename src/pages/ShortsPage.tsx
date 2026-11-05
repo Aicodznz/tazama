@@ -159,7 +159,7 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({ onSelectChannel, onOpenW
         }`}
       >
         
-        {/* Video Element or YouTube Short Embed */}
+        {/* Video Element or YouTube/Vimeo Short Embed */}
         {parseVideoSource(currentShort.videoUrl).sourceType === 'youtube' ? (
           <iframe
             src={`${parseVideoSource(currentShort.videoUrl).embedUrl}?autoplay=1&loop=1&playlist=${parseVideoSource(currentShort.videoUrl).videoId}&controls=0`}
@@ -167,16 +167,27 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({ onSelectChannel, onOpenW
             className="w-full h-full border-0 object-cover"
             allow="autoplay; encrypted-media"
           />
+        ) : parseVideoSource(currentShort.videoUrl).sourceType === 'vimeo' ? (
+          <iframe
+            src={`${parseVideoSource(currentShort.videoUrl).embedUrl}?autoplay=1&loop=1`}
+            title={currentShort.title}
+            className="w-full h-full border-0 object-cover"
+            allow="autoplay; encrypted-media"
+          />
         ) : (
           <video
             ref={videoRef}
-            src={parseVideoSource(currentShort.videoUrl).streamUrl || currentShort.videoUrl}
+            src={parseVideoSource(currentShort.videoUrl).sourceType === 'direct' ? (parseVideoSource(currentShort.videoUrl).streamUrl || currentShort.videoUrl) : currentShort.videoUrl}
             poster={currentShort.thumbnailUrl}
             autoPlay
             loop
             muted={isMuted}
             playsInline
             onClick={togglePlay}
+            onError={(e) => {
+              console.warn('Shorts video source error:', e);
+              setIsPlaying(false);
+            }}
             className="w-full h-full object-cover cursor-pointer"
           />
         )}

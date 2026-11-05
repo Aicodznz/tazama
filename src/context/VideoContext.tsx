@@ -215,7 +215,11 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem('tazama_custom_videos');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter((item: any) => Boolean(item && item.id && item.videoUrl && item.title));
+          try { localStorage.setItem('tazama_custom_videos', JSON.stringify(cleaned)); } catch {}
+          return cleaned;
+        }
       }
     } catch {}
     return [];
@@ -226,7 +230,11 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem('tazama_custom_shorts');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.filter((item: any) => Boolean(item && item.id && item.videoUrl && item.title));
+          try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(cleaned)); } catch {}
+          return cleaned;
+        }
       }
     } catch {}
     return [];
@@ -237,7 +245,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const saved = localStorage.getItem('tazama_custom_channels');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+        if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id && item.name));
       }
     } catch {}
     return [];
@@ -250,7 +258,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       .then(res => res.json())
       .then(data => {
         if (data.success && Array.isArray(data.videos) && data.videos.length > 0) {
-          const serverVideos: VideoItem[] = data.videos.filter((v: any) => Boolean(v && v.id));
+          const serverVideos: VideoItem[] = data.videos.filter((v: any) => Boolean(v && v.id && v.videoUrl));
 
     // 1b. Initial fetch for ad campaigns from server API
     fetch('/api/ads')
@@ -757,7 +765,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       deleteVideo(claim.targetVideoId);
       // Increment strikes with due-process review window
       setChannels(prev => prev.map(ch => {
-        if (ch.name.toLowerCase() === claim.targetChannelName.toLowerCase()) {
+        if (ch?.name && claim?.targetChannelName && ch.name.toLowerCase() === claim.targetChannelName.toLowerCase()) {
           const newStrikes = (ch.copyrightStrikes || 0) + 1;
           const isBlocked = newStrikes >= 3;
           return {
@@ -1547,7 +1555,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const newChannel: Channel = {
           id: channelId,
           ownerId: creatorUid,
-          handle: '@' + creatorName.toLowerCase().replace(/[^a-z0-9]/g, ''),
+          handle: '@' + (creatorName || 'muundaji').toLowerCase().replace(/[^a-z0-9]/g, ''),
           name: creatorName,
           bio: 'Kituo rasmi cha video na ubunifu kwenye Tazama.',
           avatarUrl: creatorAvatar,

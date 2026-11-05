@@ -269,12 +269,14 @@ export function formatViews(views: number, lang: Language): string {
 /**
  * Format relative time in East Africa Time (Africa/Dar_es_Salaam)
  */
-export function formatRelativeTime(dateString: string, lang: Language): string {
+export function formatRelativeTime(dateString: string | undefined | null, lang: Language): string {
+  if (!dateString) return lang === 'sw' ? 'hivi karibuni' : 'recently';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return lang === 'sw' ? 'hivi karibuni' : 'recently';
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (diffInSeconds < 60) {
+  if (isNaN(diffInSeconds) || diffInSeconds < 60) {
     return lang === 'sw' ? 'sasa hivi' : 'just now';
   }
   const minutes = Math.floor(diffInSeconds / 60);
@@ -294,13 +296,17 @@ export function formatRelativeTime(dateString: string, lang: Language): string {
     return lang === 'sw' ? `miezi ${months} iliyopita` : `${months} months ago`;
   }
   const years = Math.floor(months / 12);
+  if (isNaN(years)) return lang === 'sw' ? 'hivi karibuni' : 'recently';
   return lang === 'sw' ? `miaka ${years} iliyopita` : `${years} years ago`;
 }
 
 /**
  * Format video duration (seconds to MM:SS or HH:MM:SS)
  */
-export function formatDuration(seconds: number): string {
+export function formatDuration(seconds: number | undefined | null): string {
+  if (typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) {
+    return '0:00';
+  }
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);

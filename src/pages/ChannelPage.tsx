@@ -75,7 +75,7 @@ export const ChannelPage: React.FC<ChannelPageProps> = ({
   const channel = (channels && channels.length > 0 
     ? (channels.find(c => c && (
         c.id === channelId || 
-        c.name.toLowerCase() === (channelId || '').toLowerCase() ||
+        (c.name && (channelId || '') && c.name.toLowerCase() === (channelId || '').toLowerCase()) ||
         (c.handle && channelId && c.handle.toLowerCase() === channelId.toLowerCase())
       )) || channels[0]) 
     : null) || fallbackChannel;
@@ -218,7 +218,7 @@ export const ChannelPage: React.FC<ChannelPageProps> = ({
 
               <p className="text-xs sm:text-sm text-[#A7B0C0] font-mono flex flex-wrap items-center gap-2">
                 <span className="text-[#FF3040] font-bold">
-                  {channel.handle ? (channel.handle.startsWith('@') ? channel.handle : `@${channel.handle}`) : `@${channel.name.toLowerCase().replace(/\s+/g, '')}`}
+                  {channel.handle ? (channel.handle.startsWith('@') ? channel.handle : `@${channel.handle}`) : `@${(channel.name || 'channel').toLowerCase().replace(/\s+/g, '')}`}
                 </span>
                 <span>&bull;</span>
                 <span className="text-white font-semibold">{totalVideoCount} video</span>

@@ -63,13 +63,13 @@ export const HomePage: React.FC<HomePageProps> = ({
     const list: VideoItem[] = [];
     const seen = new Set<string>();
     (videos || []).forEach(v => {
-      if (v && v.id && !seen.has(v.id)) {
+      if (v && v.id && v.videoUrl && v.title && !seen.has(v.id)) {
         seen.add(v.id);
         list.push(v);
       }
     });
     (shorts || []).forEach(s => {
-      if (s && s.id && !seen.has(s.id)) {
+      if (s && s.id && s.videoUrl && s.title && !seen.has(s.id)) {
         seen.add(s.id);
         list.push(s);
       }
@@ -78,13 +78,15 @@ export const HomePage: React.FC<HomePageProps> = ({
   }, [videos, shorts]);
 
   const filteredVideos = React.useMemo(() => {
+    const validOnly = allContent.filter(v => Boolean(v && v.id && v.videoUrl && v.title));
     if (selectedCategory === 'Zote') {
-      if (videos && videos.length > 0) {
-        return videos.filter(Boolean);
+      const validVideos = (videos || []).filter(v => Boolean(v && v.id && v.videoUrl && v.title));
+      if (validVideos.length > 0) {
+        return validVideos;
       }
-      return allContent;
+      return validOnly;
     }
-    return allContent.filter(v => Boolean(v && v.category === selectedCategory));
+    return validOnly.filter(v => Boolean(v && v.category === selectedCategory));
   }, [selectedCategory, videos, allContent]);
 
   return (

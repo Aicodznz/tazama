@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ExternalLink, Megaphone, Sparkles } from 'lucide-react';
 import { AdCampaign } from '../../types';
 import { useVideo } from '../../context/VideoContext';
@@ -10,6 +10,7 @@ interface InFeedAdCardProps {
 
 export const InFeedAdCard: React.FC<InFeedAdCardProps> = ({ ad }) => {
   const { recordAdClick } = useVideo();
+  const [mediaError, setMediaError] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -29,18 +30,19 @@ export const InFeedAdCard: React.FC<InFeedAdCardProps> = ({ ad }) => {
           <Megaphone className="w-3 h-3" />
           <span>Tangazo • Sponsored</span>
         </div>
-        {ad.mediaType === 'video' ? (
+        {ad.mediaType === 'video' && ad.mediaUrl && !mediaError ? (
           <video 
             src={ad.mediaUrl} 
             muted 
             autoPlay 
             loop 
             playsInline
+            onError={() => setMediaError(true)}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         ) : (
           <img 
-            src={ad.mediaUrl} 
+            src={ad.mediaUrl || ''} 
             alt="" 
             onError={(e) => {
               (e.target as HTMLImageElement).src = createThumbnailSvgDataUri(ad.headline, 'Tangazo');

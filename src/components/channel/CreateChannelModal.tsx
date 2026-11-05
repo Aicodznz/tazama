@@ -124,7 +124,7 @@ export const CreateChannelModal: React.FC<CreateChannelModalProps> = ({ isOpen, 
       return { valid: false, message: 'Handle inaweza kuwa na herufi, namba na alama ya _ pekee' };
     }
     // Check uniqueness
-    const isTaken = channels.some(c => c.handle.toLowerCase() === val.toLowerCase());
+    const isTaken = channels.some(c => (c?.handle || '').toLowerCase() === (val || '').toLowerCase());
     if (isTaken) {
       return { valid: false, message: `Handle ${val} tayari inatumiwa na channel nyingine. Chagua nyingine.` };
     }

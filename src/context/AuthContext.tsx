@@ -280,7 +280,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const storedUsersRaw = localStorage.getItem('tazama_registered_users');
       const storedUsers: UserProfile[] = storedUsersRaw ? JSON.parse(storedUsersRaw) : [];
-      const matchedUser = storedUsers.find(u => u.email.toLowerCase() === cleanEmail);
+      const matchedUser = storedUsers.find(u => (u?.email || '').toLowerCase() === cleanEmail);
       if (matchedUser) {
         setProfile(matchedUser);
         setRole(matchedUser.role);
@@ -335,7 +335,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const existingRaw = localStorage.getItem('tazama_registered_users');
       const list: UserProfile[] = existingRaw ? JSON.parse(existingRaw) : [];
-      if (!list.some(u => u.email.toLowerCase() === cleanEmail)) {
+      if (!list.some(u => (u?.email || '').toLowerCase() === cleanEmail)) {
         list.push(newProfile);
         localStorage.setItem('tazama_registered_users', JSON.stringify(list));
       }
@@ -389,7 +389,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const existingRaw = localStorage.getItem('tazama_registered_users');
       const list: UserProfile[] = existingRaw ? JSON.parse(existingRaw) : [];
-      if (!list.some(u => u.email.toLowerCase() === cleanEmail)) {
+      if (!list.some(u => (u?.email || '').toLowerCase() === cleanEmail)) {
         list.push(newProfile);
         localStorage.setItem('tazama_registered_users', JSON.stringify(list));
       }

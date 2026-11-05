@@ -313,11 +313,13 @@ export const AdminPage: React.FC = () => {
 
   // Filtered Users
   const filteredUsers = useMemo(() => {
+    const searchClean = (userSearch || '').trim().toLowerCase();
     return users.filter(u => {
-      const matchesSearch = 
-        u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
-        u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-        u.uid.toLowerCase().includes(userSearch.toLowerCase());
+      if (!u) return false;
+      const matchesSearch = !searchClean || 
+        (u.displayName || '').toLowerCase().includes(searchClean) ||
+        (u.email || '').toLowerCase().includes(searchClean) ||
+        (u.uid || '').toLowerCase().includes(searchClean);
       const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
       return matchesSearch && matchesRole;
     });
@@ -325,10 +327,12 @@ export const AdminPage: React.FC = () => {
 
   // Filtered Videos
   const filteredVideos = useMemo(() => {
+    const searchClean = (videoSearch || '').trim().toLowerCase();
     return allVideos.filter(v => {
-      const matchesSearch = 
-        v.title.toLowerCase().includes(videoSearch.toLowerCase()) ||
-        v.channelName.toLowerCase().includes(videoSearch.toLowerCase());
+      if (!v) return false;
+      const matchesSearch = !searchClean || 
+        (v.title || '').toLowerCase().includes(searchClean) ||
+        (v.channelName || '').toLowerCase().includes(searchClean);
       const matchesCategory = videoCategoryFilter === 'all' || v.category === videoCategoryFilter;
       return matchesSearch && matchesCategory;
     });

@@ -461,12 +461,24 @@ export const CreateAdModal: React.FC<CreateAdModalProps> = ({ isOpen, onClose, o
                 </div>
 
                 {/* Media Preview Box */}
-                {mediaUrl && (
+                {mediaUrl && mediaUrl.trim().length > 10 && (
                   <div className="mt-2 rounded-xl overflow-hidden bg-black aspect-video max-h-48 border border-[#262E3E] flex items-center justify-center relative">
                     {mediaType === 'video' ? (
-                      <video src={mediaUrl} controls className="w-full h-full object-contain" />
+                      <video 
+                        src={mediaUrl} 
+                        controls 
+                        onError={() => {}}
+                        className="w-full h-full object-contain" 
+                      />
                     ) : (
-                      <img src={mediaUrl} alt="Ad Preview" className="w-full h-full object-contain" />
+                      <img 
+                        src={mediaUrl} 
+                        alt="Ad Preview" 
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="60" fill="%23191E29"><rect width="100%" height="100%"/></svg>';
+                        }}
+                        className="w-full h-full object-contain" 
+                      />
                     )}
                   </div>
                 )}
