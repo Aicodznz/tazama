@@ -395,37 +395,17 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
         )}
       </div>
 
-      {/* 5. AI Scene Discovery Chapter Badge (When previewing) */}
-      {isPreviewActive && activeScene && (
-        <div className="absolute top-8 left-2 right-2 z-20 flex items-center gap-1 px-2 py-1 rounded-lg bg-black/85 backdrop-blur-md border border-amber-500/30 text-white pointer-events-none animate-in fade-in slide-in-from-top-1 duration-200">
-          <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
-          <span className="text-[10px] font-bold text-amber-300 truncate">
-            {activeScene.title}
-          </span>
-        </div>
-      )}
-
-      {/* 6. Live Caption Preview Overlay (Kiswahili sample subtitles) */}
-      {isPreviewActive && (
-        <div className="absolute bottom-9 left-2 right-2 z-20 pointer-events-none text-center">
-          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/85 backdrop-blur-sm text-yellow-300 font-bold text-[10px] shadow-lg border border-yellow-400/20">
-            <Subtitles className="w-2.5 h-2.5" />
-            <span>[Kiswahili]: Maudhui bora ya Tazama</span>
-          </div>
-        </div>
-      )}
-
-      {/* 7. YouTube-Style Hover Scrubber Tooltip Bubble (Shows exact timestamp & scene when mouse moves) */}
+      {/* 7. YouTube-Style Hover Scrubber Tooltip Bubble (Clean exact timestamp) */}
       {isPreviewActive && (isScrubbing || isHovered) && (
         <div 
           className="absolute bottom-6 z-30 pointer-events-none -translate-x-1/2 transition-all duration-75 flex flex-col items-center"
-          style={{ left: `${Math.max(16, Math.min(84, currentScrubPercent))}%` }}
+          style={{ left: `${Math.max(18, Math.min(82, currentScrubPercent))}%` }}
         >
-          <div className="px-2 py-0.5 rounded-md bg-black/95 backdrop-blur-md border border-white/20 text-white shadow-2xl flex items-center gap-1.5 whitespace-nowrap">
-            <span className="text-[11px] font-mono font-black text-white">
+          <div className="px-2 py-0.5 rounded-md bg-black/95 backdrop-blur-md border border-white/20 text-white shadow-2xl flex items-center gap-1 whitespace-nowrap ring-1 ring-black/50 font-mono">
+            <span className="text-[11px] font-black text-[#FF3040]">
               {currentTimeFormatted}
             </span>
-            <span className="text-[9px] text-[#A7B0C0] font-mono">
+            <span className="text-[9px] text-[#A7B0C0]">
               / {totalDurationFormatted}
             </span>
           </div>

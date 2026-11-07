@@ -48,6 +48,16 @@ const AppContent: React.FC = () => {
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState<boolean>(false);
   const [isCreateAdOpen, setIsCreateAdOpen] = useState<boolean>(false);
   const [premiumTarget, setPremiumTarget] = useState<'viewer' | 'creator'>('viewer');
+  const [authActionPrompt, setAuthActionPrompt] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    const handleAuthReq = (e: any) => {
+      const action = e.detail?.action || 'kutumia huduma hii';
+      setAuthActionPrompt(action);
+    };
+    window.addEventListener('tazama_show_auth_modal', handleAuthReq);
+    return () => window.removeEventListener('tazama_show_auth_modal', handleAuthReq);
+  }, []);
 
   const handleSelectVideo = (video: VideoItem) => {
     setSelectedVideo(video);
@@ -427,6 +437,51 @@ const AppContent: React.FC = () => {
         isOpen={isCreateAdOpen}
         onClose={() => setIsCreateAdOpen(false)}
       />
+
+      {/* Global Auth Prompt Modal */}
+      {authActionPrompt && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-[#191E2A] border border-white/10 rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl animate-in zoom-in-95">
+            <div className="w-12 h-12 rounded-full bg-[#FF3040]/10 text-[#FF3040] flex items-center justify-center mx-auto">
+              <Shield className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-white">Ingia kwenye Akaunti</h3>
+              <p className="text-xs text-[#A7B0C0]">
+                Ili uweze {authActionPrompt}, unahitaji kuwa umeingia kwenye akaunti yako ya Tazama.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setAuthActionPrompt(null);
+                  setActivePage('login');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="w-full py-2.5 rounded-xl bg-[#FF3040] hover:bg-[#FF3040]/90 text-white font-bold text-sm transition-colors cursor-pointer"
+              >
+                Ingia Sasa (Sign In)
+              </button>
+              <button
+                onClick={() => {
+                  setAuthActionPrompt(null);
+                  setActivePage('register');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-sm transition-colors cursor-pointer"
+              >
+                Tengeneza Akaunti Mpya (Register)
+              </button>
+              <button
+                onClick={() => setAuthActionPrompt(null)}
+                className="text-xs text-[#A7B0C0] hover:text-white pt-1 cursor-pointer"
+              >
+                Baadaye (Ghairi)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

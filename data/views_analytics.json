@@ -1,0 +1,15 @@
+{
+  "vid-tz-1793679908401-l3vkb": {
+    "videoId": "vid-tz-1793679908401-l3vkb",
+    "totalViews": 1,
+    "uniqueViewers": 1,
+    "watchTimeSeconds": 10.622,
+    "viewerHistory": {
+      "user:viewer-test-user-1": {
+        "lastViewedAt": 1794018255710,
+        "totalWatchSeconds": 10.622,
+        "viewCount": 1
+      }
+    }
+  }
+}

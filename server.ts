@@ -134,6 +134,91 @@ function saveStoredAds(ads: any[]) {
   }
 }
 
+const VIEWS_ANALYTICS_FILE = path.join(__dirname, 'data', 'views_analytics.json');
+
+export interface ViewerHistoryItem {
+  lastViewedAt: number;
+  totalWatchSeconds: number;
+  viewCount: number;
+}
+
+export interface VideoAnalyticsRecord {
+  videoId: string;
+  totalViews: number;
+  uniqueViewers: number;
+  watchTimeSeconds: number;
+  viewerHistory: Record<string, ViewerHistoryItem>;
+}
+
+function getStoredAnalytics(): Record<string, VideoAnalyticsRecord> {
+  try {
+    if (fs.existsSync(VIEWS_ANALYTICS_FILE)) {
+      const content = fs.readFileSync(VIEWS_ANALYTICS_FILE, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object') return parsed;
+    }
+  } catch (err) {
+    console.error('Error reading stored views analytics:', err);
+  }
+  return {};
+}
+
+function saveStoredAnalytics(data: Record<string, VideoAnalyticsRecord>) {
+  try {
+    const dir = path.dirname(VIEWS_ANALYTICS_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(VIEWS_ANALYTICS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing stored views analytics:', err);
+  }
+}
+
+const LIKES_STORAGE_FILE = path.join(__dirname, 'data', 'likes.json');
+
+function getStoredLikes(): Record<string, string[]> {
+  try {
+    if (fs.existsSync(LIKES_STORAGE_FILE)) {
+      const content = fs.readFileSync(LIKES_STORAGE_FILE, 'utf-8');
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object') return parsed;
+    }
+  } catch (err) {
+    console.error('Error reading stored likes:', err);
+  }
+  return {};
+}
+
+function saveStoredLikes(likes: Record<string, string[]>) {
+  try {
+    const dir = path.dirname(LIKES_STORAGE_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(LIKES_STORAGE_FILE, JSON.stringify(likes, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing stored likes:', err);
+  }
+}
+
+// Concurrency mutex lock per video to prevent race condition double-counting
+const videoMutexQueues = new Map<string, Promise<any>>();
+function runWithVideoLock<T>(videoId: string, task: () => Promise<T>): Promise<T> {
+  const previousPromise = videoMutexQueues.get(videoId) || Promise.resolve();
+  const nextPromise = previousPromise.then(task, task);
+  videoMutexQueues.set(videoId, nextPromise.catch(() => {}));
+  return nextPromise;
+}
+
+// Bot & fake view crawler detection
+function isSuspiciousBot(req: express.Request): boolean {
+  const ua = ((req.headers['user-agent'] as string) || '').toLowerCase();
+  if (!ua) return true;
+  const botPatterns = [
+    'bot', 'crawl', 'spider', 'slurp', 'mediapartners', 'phantomjs', 'selenium', 
+    'headless', 'puppeteer', 'playwright', 'curl', 'wget', 'python', 'postman', 
+    'insomnia', 'httpclient', 'node-fetch', 'axios', 'scrapy'
+  ];
+  return botPatterns.some(pattern => ua.includes(pattern));
+}
+
 async function startServer() {
   const app = express();
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -192,25 +277,505 @@ async function startServer() {
     }
   });
 
-  // 2b. Increment video view count
-  app.post('/api/videos/:id/view', (req, res) => {
+  // Active playback sessions for real video event & heartbeat verification
+  interface PlaybackSession {
+    sessionId: string;
+    videoId: string;
+    userKey: string;           // "user:<uid>" (cross-device) or "guest:<deviceId>:<ipSubnet>"
+    viewerUid?: string;
+    isOwner: boolean;
+    createdAt: number;
+    lastHeartbeatAt: number;
+    lastCurrentTime: number;
+    accumulatedWatchSeconds: number;
+    viewAwarded: boolean;
+    duration: number;
+    minWatchTime: number;
+  }
+
+  const activePlaybackSessions = new Map<string, PlaybackSession>();
+
+  // Cleanup stale sessions older than 30 minutes every 10 minutes
+  setInterval(() => {
+    const now = Date.now();
+    for (const [sId, sess] of activePlaybackSessions.entries()) {
+      if (now - sess.lastHeartbeatAt > 30 * 60 * 1000) {
+        activePlaybackSessions.delete(sId);
+      }
+    }
+  }, 10 * 60 * 1000);
+
+  // Helper to determine owner and viewerKey
+  function resolveViewerContext(target: any, viewerUid?: string, viewerChannelId?: string, viewerName?: string, deviceId?: string, clientIp?: string) {
+    const isOwner = Boolean(
+      (target.channelOwnerId && viewerUid && target.channelOwnerId === viewerUid) ||
+      (target.channelId && viewerChannelId && target.channelId === viewerChannelId) ||
+      (target.channelName && viewerName && target.channelName.trim().toLowerCase() === viewerName.trim().toLowerCase())
+    );
+
+    const rawIp = clientIp || '127.0.0.1';
+    const ipPart = rawIp.split(',')[0].trim().split('.').slice(0, 3).join('.');
+    // Multi-device deduplication: if signed in, user identity deduplicates phone + desktop + tablet!
+    const userKey = viewerUid ? `user:${viewerUid}` : `dev:${deviceId || 'anon'}:${ipPart}`;
+
+    return { isOwner, userKey };
+  }
+
+  // 2b. Start Playback Session (Called when user actually presses Play on a video)
+  app.post('/api/videos/:id/playback-session/start', (req, res) => {
+    try {
+      if (isSuspiciousBot(req)) {
+        return res.status(403).json({ success: false, error: 'Automated or suspicious traffic blocked' });
+      }
+
+      const { id } = req.params;
+      const { viewerUid, viewerChannelId, viewerName, deviceId, duration, initialTime } = req.body || {};
+      const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
+
+      const current = getStoredVideos();
+      const target = current.find((v: any) => v.id === id);
+      if (!target) {
+        return res.status(404).json({ success: false, error: 'Video not found' });
+      }
+
+      const { isOwner, userKey } = resolveViewerContext(target, viewerUid, viewerChannelId, viewerName, deviceId, clientIp);
+      const videoDuration = Number(duration) || Number(target.durationSeconds) || 0;
+      // Minimum watch requirement: 5s (or 3s for short videos under 10s)
+      const minWatchTime = (videoDuration > 0 && videoDuration < 10) ? 3 : 5;
+
+      const sessionId = crypto.randomUUID();
+      const session: PlaybackSession = {
+        sessionId,
+        videoId: id,
+        userKey,
+        viewerUid: viewerUid || undefined,
+        isOwner,
+        createdAt: Date.now(),
+        lastHeartbeatAt: Date.now(),
+        lastCurrentTime: Math.max(0, Number(initialTime) || 0),
+        accumulatedWatchSeconds: 0,
+        viewAwarded: false,
+        duration: videoDuration,
+        minWatchTime
+      };
+
+      activePlaybackSessions.set(sessionId, session);
+
+      res.json({
+        success: true,
+        sessionId,
+        isOwner,
+        minWatchTime,
+        viewsCount: target.viewsCount || 0
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 2c. Playback Heartbeat (Called continuously during active playback with video events)
+  app.post('/api/videos/:id/playback-heartbeat', async (req, res) => {
+    try {
+      if (isSuspiciousBot(req)) {
+        return res.status(403).json({ success: false, error: 'Automated traffic blocked' });
+      }
+
+      const { id } = req.params;
+      const { sessionId, currentTime, playbackRate, isPlaying } = req.body || {};
+
+      if (!sessionId || !activePlaybackSessions.has(sessionId)) {
+        return res.status(400).json({ success: false, error: 'Session expired or invalid' });
+      }
+
+      const session = activePlaybackSessions.get(sessionId)!;
+      if (session.videoId !== id) {
+        return res.status(400).json({ success: false, error: 'Session video mismatch' });
+      }
+
+      const now = Date.now();
+      const deltaWallClockMs = now - session.lastHeartbeatAt;
+      
+      // Throttle heartbeat spam: require at least 350ms between heartbeats
+      if (deltaWallClockMs < 350) {
+        return res.json({ 
+          success: true, 
+          viewAwarded: session.viewAwarded,
+          accumulatedWatchSeconds: session.accumulatedWatchSeconds 
+        });
+      }
+
+      const deltaWallClockSec = deltaWallClockMs / 1000;
+      const currTime = Math.max(0, Number(currentTime) || 0);
+      const deltaMedia = currTime - session.lastCurrentTime;
+      const rate = Math.max(0.25, Math.min(2.5, Number(playbackRate) || 1));
+      const playing = Boolean(isPlaying);
+
+      // Verify legitimate media progress:
+      // If paused or seeking, media elapsed is 0 or capped by wall-clock time elapsed
+      let legitimateProgressSec = 0;
+      if (playing && deltaMedia > 0) {
+        const maxExpectedProgress = deltaWallClockSec * rate * 1.5; // 1.5x tolerance for micro-jitters
+        legitimateProgressSec = Math.min(deltaMedia, maxExpectedProgress);
+        legitimateProgressSec = Math.min(legitimateProgressSec, deltaWallClockSec * rate);
+      }
+
+      session.accumulatedWatchSeconds += legitimateProgressSec;
+      session.lastHeartbeatAt = now;
+      session.lastCurrentTime = currTime;
+
+      // Check if viewing criteria met (accumulatedWatchSeconds >= minWatchTime)
+      if (session.accumulatedWatchSeconds >= session.minWatchTime && !session.viewAwarded) {
+        session.viewAwarded = true;
+
+        // 1. CREATOR SELF-VIEW FILTER: Never award views to the video creator
+        if (session.isOwner) {
+          return res.json({
+            success: true,
+            viewAwarded: false,
+            isOwner: true,
+            reason: 'creator_self_view_ignored',
+            message: 'Creator views are not counted towards view metrics',
+            accumulatedWatchSeconds: Math.round(session.accumulatedWatchSeconds * 10) / 10
+          });
+        }
+
+        // 2. CONCURRENCY MUTEX LOCK & 24-HOUR MULTI-DEVICE DEDUPLICATION
+        const awardResult = await runWithVideoLock(id, async () => {
+          const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+          const analytics = getStoredAnalytics();
+          if (!analytics[id]) {
+            analytics[id] = {
+              videoId: id,
+              totalViews: 0,
+              uniqueViewers: 0,
+              watchTimeSeconds: 0,
+              viewerHistory: {}
+            };
+          }
+
+          const videoRec = analytics[id];
+          if (!videoRec.viewerHistory) videoRec.viewerHistory = {};
+          const viewerHist = videoRec.viewerHistory[session.userKey];
+
+          // Deduplication check: Has this user/device viewed within 24h?
+          if (viewerHist && (now - viewerHist.lastViewedAt < COOLDOWN_MS)) {
+            // Already viewed within 24h: Update watch time only, DO NOT double-count view
+            viewerHist.totalWatchSeconds = (viewerHist.totalWatchSeconds || 0) + session.accumulatedWatchSeconds;
+            videoRec.watchTimeSeconds = (videoRec.watchTimeSeconds || 0) + session.accumulatedWatchSeconds;
+            saveStoredAnalytics(analytics);
+
+            const vids = getStoredVideos();
+            const currentVid = vids.find((v: any) => v.id === id);
+            return {
+              awarded: false,
+              deduplicated: true,
+              viewsCount: currentVid?.viewsCount || videoRec.totalViews,
+              uniqueViewers: videoRec.uniqueViewers,
+              watchTimeSeconds: Math.round(videoRec.watchTimeSeconds),
+              reason: '24h_cooldown_active'
+            };
+          }
+
+          // Certified Legitimate View! Atomically increment views
+          const isUnique = !viewerHist;
+          videoRec.totalViews = (videoRec.totalViews || 0) + 1;
+          if (isUnique) {
+            videoRec.uniqueViewers = (videoRec.uniqueViewers || 0) + 1;
+          }
+          videoRec.watchTimeSeconds = (videoRec.watchTimeSeconds || 0) + session.accumulatedWatchSeconds;
+          videoRec.viewerHistory[session.userKey] = {
+            lastViewedAt: now,
+            totalWatchSeconds: ((viewerHist?.totalWatchSeconds) || 0) + session.accumulatedWatchSeconds,
+            viewCount: ((viewerHist?.viewCount) || 0) + 1
+          };
+
+          // Synchronize atomically into data/videos.json
+          const currentVids = getStoredVideos();
+          let updatedVideo: any = null;
+          const nextVids = currentVids.map((v: any) => {
+            if (v.id === id) {
+              const newViews = (v.viewsCount || 0) + 1;
+              updatedVideo = {
+                ...v,
+                viewsCount: newViews,
+                uniqueViewers: videoRec.uniqueViewers,
+                watchTimeSeconds: Math.round(videoRec.watchTimeSeconds)
+              };
+              return updatedVideo;
+            }
+            return v;
+          });
+
+          saveStoredVideos(nextVids);
+          saveStoredAnalytics(analytics);
+
+          return {
+            awarded: true,
+            deduplicated: false,
+            viewsCount: updatedVideo ? updatedVideo.viewsCount : videoRec.totalViews,
+            uniqueViewers: videoRec.uniqueViewers,
+            watchTimeSeconds: Math.round(videoRec.watchTimeSeconds),
+            video: updatedVideo
+          };
+        });
+
+        return res.json({
+          success: true,
+          viewAwarded: awardResult.awarded,
+          deduplicated: awardResult.deduplicated,
+          viewsCount: awardResult.viewsCount,
+          uniqueViewers: awardResult.uniqueViewers,
+          watchTimeSeconds: awardResult.watchTimeSeconds,
+          video: awardResult.video,
+          accumulatedWatchSeconds: Math.round(session.accumulatedWatchSeconds * 10) / 10
+        });
+      }
+
+      res.json({
+        success: true,
+        viewAwarded: session.viewAwarded,
+        accumulatedWatchSeconds: Math.round(session.accumulatedWatchSeconds * 10) / 10
+      });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 2d. Video Analytics Endpoint (Records and serves unique viewers, total views, and watch time)
+  app.get('/api/videos/:id/analytics', (req, res) => {
     try {
       const { id } = req.params;
-      const current = getStoredVideos();
-      let updatedVideo: any = null;
-      const next = current.map((v: any) => {
-        if (v.id === id) {
-          const newViews = (v.viewsCount || 0) + 1;
-          updatedVideo = { ...v, viewsCount: newViews };
-          return updatedVideo;
+      const analytics = getStoredAnalytics();
+      const videoRec = analytics[id] || {
+        videoId: id,
+        totalViews: 0,
+        uniqueViewers: 0,
+        watchTimeSeconds: 0
+      };
+      res.json({
+        success: true,
+        analytics: {
+          videoId: id,
+          totalViews: videoRec.totalViews || 0,
+          uniqueViewers: videoRec.uniqueViewers || 0,
+          watchTimeSeconds: Math.round(videoRec.watchTimeSeconds || 0)
         }
-        return v;
       });
-      if (updatedVideo) {
-        saveStoredVideos(next);
-        return res.json({ success: true, viewsCount: updatedVideo.viewsCount, video: updatedVideo });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 2e. Legacy/Fallback Direct View Increment Endpoint (With Concurrency Lock & 24h Deduplication)
+  app.post('/api/videos/:id/view', async (req, res) => {
+    try {
+      if (isSuspiciousBot(req)) {
+        return res.status(403).json({ success: false, error: 'Suspicious bot traffic rejected' });
       }
-      res.json({ success: true, viewsCount: 1 });
+
+      const { id } = req.params;
+      const { viewerUid, viewerChannelId, viewerName, deviceId } = req.body || {};
+      const clientIp = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'unknown';
+
+      const current = getStoredVideos();
+      const target = current.find((v: any) => v.id === id);
+      if (!target) {
+        return res.json({ success: true, viewsCount: 1 });
+      }
+
+      const { isOwner, userKey } = resolveViewerContext(target, viewerUid, viewerChannelId, viewerName, deviceId, clientIp);
+      if (isOwner) {
+        return res.json({ 
+          success: false, 
+          reason: 'owner_view_ignored', 
+          message: 'Creator self-views are not counted', 
+          viewsCount: target.viewsCount || 0 
+        });
+      }
+
+      const awardResult = await runWithVideoLock(id, async () => {
+        const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+        const analytics = getStoredAnalytics();
+        if (!analytics[id]) {
+          analytics[id] = {
+            videoId: id,
+            totalViews: target.viewsCount || 0,
+            uniqueViewers: 0,
+            watchTimeSeconds: 0,
+            viewerHistory: {}
+          };
+        }
+        const videoRec = analytics[id];
+        if (!videoRec.viewerHistory) videoRec.viewerHistory = {};
+        const viewerHist = videoRec.viewerHistory[userKey];
+
+        if (viewerHist && (Date.now() - viewerHist.lastViewedAt < COOLDOWN_MS)) {
+          return {
+            success: false,
+            reason: 'cooldown_active',
+            message: 'Duplicate view within 24 hours ignored',
+            viewsCount: target.viewsCount || 0
+          };
+        }
+
+        const isUnique = !viewerHist;
+        videoRec.totalViews = (videoRec.totalViews || 0) + 1;
+        if (isUnique) videoRec.uniqueViewers = (videoRec.uniqueViewers || 0) + 1;
+        videoRec.viewerHistory[userKey] = {
+          lastViewedAt: Date.now(),
+          totalWatchSeconds: ((viewerHist?.totalWatchSeconds) || 0) + 5,
+          viewCount: ((viewerHist?.viewCount) || 0) + 1
+        };
+
+        const vids = getStoredVideos();
+        let updatedVideo: any = null;
+        const next = vids.map((v: any) => {
+          if (v.id === id) {
+            const newViews = (v.viewsCount || 0) + 1;
+            updatedVideo = { 
+              ...v, 
+              viewsCount: newViews,
+              uniqueViewers: videoRec.uniqueViewers,
+              watchTimeSeconds: Math.round(videoRec.watchTimeSeconds || 0)
+            };
+            return updatedVideo;
+          }
+          return v;
+        });
+
+        if (updatedVideo) saveStoredVideos(next);
+        saveStoredAnalytics(analytics);
+
+        return {
+          success: true,
+          viewsCount: updatedVideo ? updatedVideo.viewsCount : videoRec.totalViews,
+          uniqueViewers: videoRec.uniqueViewers,
+          watchTimeSeconds: Math.round(videoRec.watchTimeSeconds || 0),
+          video: updatedVideo
+        };
+      });
+
+      return res.json(awardResult);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // ==========================================
+  // AUTHORITATIVE LIKE / UNLIKE SYSTEM
+  // ==========================================
+
+  // 2f. Authoritative Like / Unlike Video Toggle
+  app.post('/api/videos/:id/like', async (req, res) => {
+    try {
+      if (isSuspiciousBot(req)) {
+        return res.status(403).json({ success: false, error: 'Suspicious bot traffic rejected' });
+      }
+
+      const { id } = req.params;
+      const { userId } = req.body || {};
+
+      // 1. MUST BE AUTHENTICATED: Non-logged-in users cannot like
+      if (!userId || typeof userId !== 'string' || !userId.trim()) {
+        return res.status(401).json({ 
+          success: false, 
+          error: 'Mtumiaji lazima aingie kwenye akaunti ili kuweka Like (Tafadhali ingia kwanza)',
+          requiresAuth: true
+        });
+      }
+
+      const cleanUserId = userId.trim();
+
+      // 2. CONCURRENCY MUTEX LOCK PER VIDEO
+      const result = await runWithVideoLock(id, async () => {
+        const allLikes = getStoredLikes();
+        const currentLikesForVideo = Array.isArray(allLikes[id]) ? [...allLikes[id]] : [];
+        const existingIdx = currentLikesForVideo.indexOf(cleanUserId);
+
+        let isLikedNow = false;
+        if (existingIdx >= 0) {
+          // Already liked: UNLIKE (remove like)
+          currentLikesForVideo.splice(existingIdx, 1);
+          isLikedNow = false;
+        } else {
+          // Not liked: LIKE (add single like)
+          currentLikesForVideo.push(cleanUserId);
+          isLikedNow = true;
+        }
+
+        allLikes[id] = currentLikesForVideo;
+        saveStoredLikes(allLikes);
+
+        // Update video likesCount atomically in data/videos.json
+        const currentVids = getStoredVideos();
+        let updatedVideo: any = null;
+        const nextVids = currentVids.map((v: any) => {
+          if (v.id === id) {
+            updatedVideo = {
+              ...v,
+              likesCount: currentLikesForVideo.length
+            };
+            return updatedVideo;
+          }
+          return v;
+        });
+
+        if (updatedVideo) {
+          saveStoredVideos(nextVids);
+        }
+
+        return {
+          success: true,
+          isLiked: isLikedNow,
+          likesCount: currentLikesForVideo.length,
+          videoId: id,
+          video: updatedVideo
+        };
+      });
+
+      res.json(result);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
+  // 2g. Get User's Liked Videos (Cross-Device & Page Refresh Sync)
+  app.get('/api/users/:uid/likes', (req, res) => {
+    try {
+      const { uid } = req.params;
+      if (!uid) {
+        return res.json({ success: true, likedVideoIds: [] });
+      }
+
+      const allLikes = getStoredLikes();
+      const likedVideoIds: string[] = [];
+
+      for (const [videoId, userList] of Object.entries(allLikes)) {
+        if (Array.isArray(userList) && userList.includes(uid)) {
+          likedVideoIds.push(videoId);
+        }
+      }
+
+      res.json({ success: true, likedVideoIds });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message, likedVideoIds: [] });
+    }
+  });
+
+  // 2h. Get Video Likes Status
+  app.get('/api/videos/:id/likes', (req, res) => {
+    try {
+      const { id } = req.params;
+      const { userId } = req.query;
+      const allLikes = getStoredLikes();
+      const userList = Array.isArray(allLikes[id]) ? allLikes[id] : [];
+
+      res.json({
+        success: true,
+        videoId: id,
+        likesCount: userList.length,
+        isLiked: typeof userId === 'string' && userId ? userList.includes(userId) : false
+      });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }

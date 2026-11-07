@@ -17,7 +17,7 @@ import { formatDuration } from '../../lib/i18n';
 import { useVideo } from '../../context/VideoContext';
 import { useAuth } from '../../context/AuthContext';
 import { ExternalLink } from 'lucide-react';
-import { createAvatarSvgDataUri } from '../../lib/mediaPlaceholders';
+import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../../lib/mediaPlaceholders';
 import { parseVideoSource } from '../../lib/videoUtils';
 import { getVideoScenes, getActiveSceneForTime } from '../../lib/videoScenes';
 
@@ -29,7 +29,7 @@ interface VideoPlayerProps {
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { recordView, adCampaigns, recordAdImpression, recordAdClick } = useVideo();
+  const { syncServerViews, recordView, adCampaigns, recordAdImpression, recordAdClick } = useVideo();
   const { profile } = useAuth();
 
   // In-Stream Video Ad State
@@ -66,6 +66,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
     scrubberHoverTime !== null ? getActiveSceneForTime(scenes, scrubberHoverTime) : null,
     [scenes, scrubberHoverTime]
   );
+  const [hoverVideoLoaded, setHoverVideoLoaded] = useState<boolean>(false);
+  const [hoverVideoError, setHoverVideoError] = useState<boolean>(false);
+  const hoverVideoRef = useRef<HTMLVideoElement>(null);
 
   const parsedSource = React.useMemo(() => parseVideoSource(video.videoUrl), [video.videoUrl]);
   const isEmbedVideo = (parsedSource.sourceType === 'youtube' || parsedSource.sourceType === 'vimeo') && !(isAdPlaying && activeAd);
@@ -155,27 +158,171 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
     }
   };
 
-  // Deduplicated view increment: record on playback (active play or >= 2s) and embeds
-  useEffect(() => {
-    setHasRecordedView(false);
-  }, [video.id]);
+  // Playback session state (YouTube-standard real playback event & server heartbeat verification)
+  const playbackSessionIdRef = useRef<string | null>(null);
+  const heartbeatIntervalRef = useRef<any>(null);
+  const hasAwardedViewRef = useRef<boolean>(false);
+  const isStartingSessionRef = useRef<boolean>(false);
 
+  // Helper for persistent device identity (Multi-device / guest recognition)
+  const getDeviceId = () => {
+    try {
+      let id = localStorage.getItem('tazama_device_id');
+      if (!id) {
+        id = 'tz_dev_' + Math.random().toString(36).slice(2, 11) + '_' + Date.now().toString(36);
+        localStorage.setItem('tazama_device_id', id);
+      }
+      return id;
+    } catch {
+      return 'tz_dev_anon';
+    }
+  };
+
+  // Start playback session on server when playback starts
+  const startPlaybackSession = async () => {
+    if (playbackSessionIdRef.current || isStartingSessionRef.current || !video?.id) return;
+    isStartingSessionRef.current = true;
+    try {
+      const res = await fetch(`/api/videos/${encodeURIComponent(video.id)}/playback-session/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          viewerUid: profile?.uid || null,
+          viewerChannelId: profile?.channelId || null,
+          viewerName: profile?.displayName || null,
+          deviceId: getDeviceId(),
+          duration: video.durationSeconds || duration || 0,
+          initialTime: videoRef.current?.currentTime || 0
+        })
+      });
+      const data = await res.json();
+      if (data && data.success && data.sessionId) {
+        playbackSessionIdRef.current = data.sessionId;
+      }
+    } catch (err) {
+      console.warn('Playback session start notice:', err);
+    } finally {
+      isStartingSessionRef.current = false;
+    }
+  };
+
+  // Send periodic or event-driven heartbeat to server
+  const sendHeartbeat = async (eventType?: string) => {
+    const sId = playbackSessionIdRef.current;
+    if (!sId || !video?.id) return;
+
+    const currTime = videoRef.current ? videoRef.current.currentTime : currentTime;
+    const isActuallyPlaying = videoRef.current 
+      ? (!videoRef.current.paused && !videoRef.current.ended && !videoRef.current.seeking)
+      : isPlaying;
+    const currentRate = videoRef.current ? videoRef.current.playbackRate : playbackSpeed;
+
+    try {
+      const res = await fetch(`/api/videos/${encodeURIComponent(video.id)}/playback-heartbeat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sId,
+          currentTime: currTime,
+          playbackRate: currentRate || 1,
+          isPlaying: isActuallyPlaying,
+          eventType
+        })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        if (data.viewAwarded && !hasAwardedViewRef.current && typeof data.viewsCount === 'number') {
+          hasAwardedViewRef.current = true;
+          setHasRecordedView(true);
+          syncServerViews(video.id, data.viewsCount, data.uniqueViewers, data.watchTimeSeconds);
+        }
+      }
+    } catch {
+      // Jitter will catch up on next tick
+    }
+  };
+
+  const startHeartbeatLoop = () => {
+    if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current);
+    heartbeatIntervalRef.current = setInterval(() => {
+      if (videoRef.current && !videoRef.current.paused && !videoRef.current.ended) {
+        sendHeartbeat('tick');
+      }
+    }, 2000);
+  };
+
+  const stopHeartbeatLoop = () => {
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+      heartbeatIntervalRef.current = null;
+    }
+  };
+
+  const handleVideoPlay = () => {
+    setIsPlaying(true);
+    if (!playbackSessionIdRef.current) {
+      startPlaybackSession().then(() => {
+        startHeartbeatLoop();
+        sendHeartbeat('play');
+      });
+    } else {
+      startHeartbeatLoop();
+      sendHeartbeat('play');
+    }
+  };
+
+  const handleVideoPause = () => {
+    setIsPlaying(false);
+    stopHeartbeatLoop();
+    sendHeartbeat('pause');
+  };
+
+  const handleVideoEnded = () => {
+    setIsPlaying(false);
+    stopHeartbeatLoop();
+    sendHeartbeat('ended');
+    if (isAdPlaying) {
+      handleCompleteAd();
+    }
+  };
+
+  const handleVideoSeeking = () => {
+    sendHeartbeat('seeking');
+  };
+
+  const handleVideoSeeked = () => {
+    sendHeartbeat('seeked');
+  };
+
+  // Video change lifecycle
+  useEffect(() => {
+    stopHeartbeatLoop();
+    playbackSessionIdRef.current = null;
+    hasAwardedViewRef.current = false;
+    isStartingSessionRef.current = false;
+    setHasRecordedView(false);
+
+    if (autoPlay && !isAdPlaying && !isEmbedVideo) {
+      startPlaybackSession().then(() => {
+        startHeartbeatLoop();
+      });
+    }
+
+    return () => {
+      stopHeartbeatLoop();
+    };
+  }, [video.id, isAdPlaying]);
+
+  // Fallback for embed videos (YouTube/Vimeo embeds without direct HTML5 video element)
   useEffect(() => {
     if (isEmbedVideo && !hasRecordedView && video?.id) {
       const timer = setTimeout(() => {
         setHasRecordedView(true);
         recordView(video.id);
-      }, 1500);
+      }, 5000);
       return () => clearTimeout(timer);
     }
   }, [isEmbedVideo, hasRecordedView, video?.id, recordView]);
-
-  useEffect(() => {
-    if ((currentTime >= 2 || (isPlaying && currentTime > 0.5)) && !hasRecordedView && video?.id) {
-      setHasRecordedView(true);
-      recordView(video.id);
-    }
-  }, [currentTime, isPlaying, hasRecordedView, video?.id, recordView]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -366,17 +513,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
           poster={isAdPlaying && activeAd ? undefined : video.thumbnailUrl}
           onTimeUpdate={handleTimeUpdate}
           onLoadedMetadata={handleLoadedMetadata}
+          onPlay={handleVideoPlay}
+          onPause={handleVideoPause}
+          onSeeking={handleVideoSeeking}
+          onSeeked={handleVideoSeeked}
+          onEnded={handleVideoEnded}
           onError={(e) => {
             console.warn('Video element source error:', e);
             setVideoError(true);
             setIsPlaying(false);
-          }}
-          onEnded={() => {
-            if (isAdPlaying) {
-              handleCompleteAd();
-            } else {
-              setIsPlaying(false);
-            }
+            stopHeartbeatLoop();
           }}
           onClick={togglePlay}
           onDoubleClick={toggleFullscreen}
@@ -519,16 +665,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
         </button>
       )}
 
-      {/* CDN / Stream Watermark (Only during normal video playback) */}
-      {!isAdPlaying && !isEmbedVideo && (
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] text-white/90 border border-white/10 pointer-events-none">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#16C784] animate-pulse" />
-          <span className="font-medium">
-            {video.videoUrl.includes('cloudinary') ? 'Cloudinary HD CDN' : 'Tazama HD Stream'}
-          </span>
-        </div>
-      )}
-
       {/* Captions Overlay (Synchronized Kiswahili / English captions) */}
       {showCaptions && !isAdPlaying && !isEmbedVideo && (
         <div className="absolute bottom-14 sm:bottom-16 left-1/2 -translate-x-1/2 bg-black/85 backdrop-blur-md text-amber-300 font-semibold px-4 py-2 rounded-xl text-xs sm:text-sm text-center pointer-events-none max-w-[90%] shadow-2xl border border-amber-500/30 transition-all duration-300">
@@ -579,34 +715,84 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
             const time = (offsetX / rect.width) * (duration || video.durationSeconds || 100);
             setScrubberHoverPercent(percent);
             setScrubberHoverTime(time);
+            if (hoverVideoRef.current && !isEmbedVideo && !hoverVideoError) {
+              try {
+                hoverVideoRef.current.currentTime = time;
+                hoverVideoRef.current.play().catch(() => {});
+              } catch {}
+            }
           }}
           onMouseLeave={() => {
             setScrubberHoverPercent(null);
             setScrubberHoverTime(null);
+            if (hoverVideoRef.current) {
+              try {
+                hoverVideoRef.current.pause();
+              } catch {}
+            }
           }}
         >
-          {/* Smart Timeline Floating Hover Preview Popup */}
+          {/* Smart Timeline Floating Hover Preview Popup with Live Video & Full Time */}
           {scrubberHoverPercent !== null && scrubberHoverTime !== null && (
             <div 
               className="absolute bottom-6 pointer-events-none z-50 transform -translate-x-1/2 flex flex-col items-center animate-in fade-in zoom-in-95 duration-100"
               style={{ left: `${Math.max(14, Math.min(86, scrubberHoverPercent))}%` }}
             >
-              <div className="w-36 aspect-video rounded-xl overflow-hidden bg-black/95 border border-white/20 shadow-2xl relative">
+              <div className="w-44 sm:w-52 aspect-video rounded-xl overflow-hidden bg-black/95 border-2 border-white/25 shadow-2xl relative ring-1 ring-black/80">
+                {/* Fallback Static Thumbnail */}
                 <img
-                  src={video.thumbnailUrl}
+                  src={video.thumbnailUrl || createThumbnailSvgDataUri(video.title, video.category)}
                   alt=""
-                  className="w-full h-full object-cover"
+                  className={`w-full h-full object-cover transition-opacity duration-200 ${
+                    hoverVideoLoaded && !hoverVideoError && !isEmbedVideo ? 'opacity-0' : 'opacity-100'
+                  }`}
                 />
-                {activeHoverScene && (
-                  <div className="absolute top-1 left-1 right-1 px-1.5 py-0.5 rounded bg-black/85 backdrop-blur-sm text-[9px] font-bold text-amber-300 truncate border border-amber-400/25">
-                    ✨ {activeHoverScene.title}
-                  </div>
+
+                {/* Live Video Preview playing muted for 5–8 seconds in a loop */}
+                {!isEmbedVideo && !hoverVideoError && (
+                  <video
+                    ref={hoverVideoRef}
+                    src={parsedSource.streamUrl || video.videoUrl}
+                    muted
+                    playsInline
+                    loop
+                    preload="auto"
+                    onLoadedData={() => setHoverVideoLoaded(true)}
+                    onError={() => setHoverVideoError(true)}
+                    onTimeUpdate={() => {
+                      if (hoverVideoRef.current && scrubberHoverTime !== null) {
+                        const cur = hoverVideoRef.current.currentTime;
+                        const loopDuration = 7; // 5–8 seconds loop
+                        const loopEnd = Math.min(duration || 100, scrubberHoverTime + loopDuration);
+                        if (cur >= loopEnd || cur < scrubberHoverTime - 0.5) {
+                          hoverVideoRef.current.currentTime = scrubberHoverTime;
+                        }
+                      }
+                    }}
+                    className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${
+                      hoverVideoLoaded ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  />
                 )}
-                <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/85 font-mono text-[10px] font-bold text-white shadow">
-                  {formatDuration(scrubberHoverTime)}
+
+                {/* Exact full time badge: e.g. 0:14 / 0:21 */}
+                <div className="absolute bottom-1.5 right-1.5 px-2 py-0.5 rounded-md bg-black/90 backdrop-blur-md font-mono text-[10px] font-bold text-white shadow-lg border border-white/20 flex items-center gap-1">
+                  <span className="text-[#FF3040]">{formatDuration(scrubberHoverTime)}</span>
+                  <span className="text-white/60">/</span>
+                  <span>{formatDuration(duration || video.durationSeconds || 0)}</span>
+                </div>
+
+                {/* Mini progress line at bottom of floating card */}
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#FF3040] to-amber-400"
+                    style={{ width: `${scrubberHoverPercent}%` }}
+                  />
                 </div>
               </div>
-              <div className="w-2.5 h-2.5 bg-black/95 border-r border-b border-white/20 transform rotate-45 -mt-1 shadow" />
+
+              {/* Triangle pointer downward */}
+              <div className="w-2.5 h-2.5 bg-black/95 border-r border-b border-white/25 transform rotate-45 -mt-1.5 shadow" />
             </div>
           )}
 

@@ -91,12 +91,6 @@ export const WatchPage: React.FC<WatchPageProps> = ({
     );
   }, [videos, shorts, video]);
 
-  // Record view as soon as user opens or switches video
-  useEffect(() => {
-    if (liveVideo?.id) {
-      recordView(liveVideo.id);
-    }
-  }, [liveVideo?.id, recordView]);
 
   // UI state
   const [isDescExpanded, setIsDescExpanded] = useState<boolean>(false);

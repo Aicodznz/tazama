@@ -121,6 +121,8 @@ export interface VideoItem {
   createdAt: string;
   isMembersOnly?: boolean;
   scenes?: VideoScene[];
+  uniqueViewers?: number;
+  watchTimeSeconds?: number;
 }
 
 export interface CommentItem {
