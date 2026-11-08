@@ -12,5 +12,19 @@
     "isVerified": true,
     "isMonetized": false,
     "createdAt": "2026-11-03T04:25:08.401Z"
+  },
+  {
+    "id": "ch-lucifer-donghua-tz",
+    "name": "Lucifer Donghua TZ",
+    "ownerId": "user-admin-amytzee",
+    "handle": "@luciferdonghua",
+    "bio": "Nyumba rasmi ya Donghua (Chinese Anime), First Dragon, Mortal's Journey na vipindi bora vya kusisimua kwa lugha ya Kiswahili na Kiingereza.",
+    "avatarUrl": "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80",
+    "bannerUrl": "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1200&auto=format&fit=crop&q=80",
+    "subscriberCount": 24800,
+    "videoCount": 2,
+    "isVerified": true,
+    "isMonetized": true,
+    "createdAt": "2026-11-05T10:00:00.000Z"
   }
 ]

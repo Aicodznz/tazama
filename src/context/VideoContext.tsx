@@ -210,20 +210,23 @@ const VideoContext = createContext<VideoContextType | undefined>(undefined);
 export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { profile, deductBalance } = useAuth();
 
-  // PRODUCTION STATE: Start with clean empty data or sync from server / Firestore
+  // PRODUCTION STATE: Start with clean seed videos + dynamic user uploads
   const [videos, setVideos] = useState<VideoItem[]>(() => {
     try {
       const saved = localStorage.getItem('tazama_custom_videos');
+      const map = new Map<string, VideoItem>();
+      INITIAL_VIDEOS.forEach(v => { if (v && v.id) map.set(v.id, v); });
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          const cleaned = parsed.filter((item: any) => Boolean(item && item.id && item.videoUrl && item.title));
-          try { localStorage.setItem('tazama_custom_videos', JSON.stringify(cleaned)); } catch {}
-          return cleaned;
+          parsed.filter((item: any) => Boolean(item && item.id && item.videoUrl && item.title)).forEach(v => map.set(v.id, v));
         }
       }
+      const combined = Array.from(map.values());
+      try { localStorage.setItem('tazama_custom_videos', JSON.stringify(combined)); } catch {}
+      return combined;
     } catch {}
-    return [];
+    return INITIAL_VIDEOS;
   });
 
   const [shorts, setShorts] = useState<VideoItem[]>(() => {
@@ -244,12 +247,17 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [channels, setChannels] = useState<Channel[]>(() => {
     try {
       const saved = localStorage.getItem('tazama_custom_channels');
+      const map = new Map<string, Channel>();
+      INITIAL_CHANNELS.forEach(c => { if (c && c.id) map.set(c.id, c); });
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id && item.name));
+        if (Array.isArray(parsed)) {
+          parsed.filter((item: any) => Boolean(item && item.id && item.name)).forEach(c => map.set(c.id, c));
+        }
       }
+      return Array.from(map.values());
     } catch {}
-    return [];
+    return INITIAL_CHANNELS;
   });
 
   // Global Sync: Listen in real-time to Firestore videos & channels + sync with server API

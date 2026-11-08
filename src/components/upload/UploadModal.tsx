@@ -18,13 +18,14 @@ import {
   Image as ImageIcon,
   Link2,
   Play,
-  Check
+  Check,
+  Crown
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useVideo } from '../../context/VideoContext';
 import { VideoCategory, VideoItem } from '../../types';
 import { translations } from '../../lib/i18n';
-import { parseVideoSource, ParsedVideoSource } from '../../lib/videoUtils';
+import { parseVideoSource, ParsedVideoSource, extractIframeSrc } from '../../lib/videoUtils';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -86,6 +87,13 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         .catch(() => {});
     }
   }, [isOpen]);
+
+  // Security: Guarantee non-admins are restricted strictly to file upload
+  useEffect(() => {
+    if (!isAdmin && uploadMode === 'link') {
+      setUploadMode('file');
+    }
+  }, [isAdmin, uploadMode]);
 
   if (!isOpen) return null;
 
@@ -158,32 +166,47 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   ];
 
   const handleVideoLinkChange = (rawUrl: string) => {
-    setVideoLink(rawUrl);
+    let cleanUrl = rawUrl.trim();
+    if (cleanUrl.includes('<iframe') && cleanUrl.includes('src=')) {
+      const extracted = extractIframeSrc(cleanUrl);
+      if (extracted) {
+        cleanUrl = extracted;
+      }
+    }
+    setVideoLink(cleanUrl);
     setErrorMsg(null);
-    if (!rawUrl.trim()) {
+    if (!cleanUrl) {
       setParsedSource(null);
       return;
     }
-    const parsed = parseVideoSource(rawUrl);
+    const parsed = parseVideoSource(cleanUrl);
     setParsedSource(parsed);
 
     // If YouTube link detected, auto-populate thumbnail and adjust title
     if (parsed.sourceType === 'youtube' && parsed.suggestedThumbnail) {
       setThumbnailUrl(parsed.suggestedThumbnail);
-      if (rawUrl.includes('/shorts/')) {
+      if (cleanUrl.includes('/shorts/')) {
         setIsShort(true);
       }
       if (!title) {
-        if (rawUrl.includes('/shorts/')) {
+        if (cleanUrl.includes('/shorts/')) {
           setTitle('Tazama Short #Shorts 🔥');
         } else {
           setTitle('Video Mpya ya Tazama');
         }
       }
+    } else if (parsed.sourceType === 'embed') {
+      if (!title) {
+        if (cleanUrl.includes('luciferdonghua.in')) {
+          setTitle('Donghua Episode [Tazama Streaming]');
+        } else if (parsed.providerName) {
+          setTitle(`Video ya ${parsed.providerName}`);
+        }
+      }
     } else if (parsed.sourceType === 'direct') {
       if (!title) {
         try {
-          const urlObj = new URL(rawUrl);
+          const urlObj = new URL(cleanUrl);
           const filename = urlObj.pathname.split('/').pop() || '';
           const cleanName = decodeURIComponent(filename.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '));
           if (cleanName && cleanName.length > 2) {
@@ -201,12 +224,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       return;
     }
 
-    if (uploadMode === 'file' && !selectedFile) {
-      setErrorMsg('Tafadhali chagua faili la video kutoka kwenye kifaa chako au bofya "Weka Linki ya Video" ili kuweka linki.');
-      return;
-    }
-
+    // STRICT ADMIN VERIFICATION FOR EXTERNAL LINK / STREAMING EMBEDDING
     if (uploadMode === 'link') {
+      if (!isAdmin) {
+        setErrorMsg('Ni Wasimamizi (Admin) pekee wanaoruhusiwa kuweka video kupitia linki za nje au mifumo ya streaming.');
+        return;
+      }
       if (!videoLink.trim()) {
         setErrorMsg('Tafadhali weka linki ya video (mfano: https://...).');
         return;
@@ -217,6 +240,11 @@ export const UploadModal: React.FC<UploadModalProps> = ({
         setErrorMsg('Linki uliyoweka si sahihi. Tafadhali hakikisha inaanza na https:// au http://');
         return;
       }
+    }
+
+    if (uploadMode === 'file' && !selectedFile) {
+      setErrorMsg('Tafadhali chagua faili la video kutoka kwenye kifaa chako.');
+      return;
     }
 
     setErrorMsg(null);
@@ -575,33 +603,49 @@ export const UploadModal: React.FC<UploadModalProps> = ({
           {step === 'details' && (
             <form onSubmit={handleStartUpload} className="space-y-3.5">
               
-              {/* Upload Mode Selector: Faili vs Linki */}
-              <div className="grid grid-cols-2 p-1 rounded-2xl bg-[#10131B] border border-[#262E3E] text-xs font-bold gap-1">
-                <button
-                  type="button"
-                  onClick={() => setUploadMode('file')}
-                  className={`flex items-center justify-center gap-2 py-2 rounded-xl transition-all ${
-                    uploadMode === 'file'
-                      ? 'bg-[#FF3040] text-white shadow-md shadow-[#FF3040]/30'
-                      : 'text-[#A7B0C0] hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <FileVideo className="w-4 h-4" />
-                  <span>Pakia Faili (Kifaa)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setUploadMode('link')}
-                  className={`flex items-center justify-center gap-2 py-2 rounded-xl transition-all ${
-                    uploadMode === 'link'
-                      ? 'bg-[#FF3040] text-white shadow-md shadow-[#FF3040]/30'
-                      : 'text-[#A7B0C0] hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Link2 className="w-4 h-4" />
-                  <span>Weka Linki ya Video (URL)</span>
-                </button>
-              </div>
+              {/* Upload Mode Selector: Faili vs Linki - Link mode is STRICTLY Admin Only */}
+              {isAdmin ? (
+                <div className="grid grid-cols-2 p-1 rounded-2xl bg-[#10131B] border border-[#262E3E] text-xs font-bold gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode('file')}
+                    className={`flex items-center justify-center gap-2 py-2 rounded-xl transition-all ${
+                      uploadMode === 'file'
+                        ? 'bg-[#FF3040] text-white shadow-md shadow-[#FF3040]/30'
+                        : 'text-[#A7B0C0] hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <FileVideo className="w-4 h-4" />
+                    <span>Pakia Faili (Kifaa)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadMode('link')}
+                    className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all ${
+                      uploadMode === 'link'
+                        ? 'bg-gradient-to-r from-amber-500 to-[#FF3040] text-white shadow-md shadow-amber-500/20'
+                        : 'text-[#A7B0C0] hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <Link2 className="w-4 h-4" />
+                    <span>Linki & Streaming</span>
+                    <span className="px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 text-[9px] font-black uppercase tracking-wider border border-amber-400/40">
+                      Admin
+                    </span>
+                  </button>
+                </div>
+              ) : (
+                <div className="p-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E] flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-white">
+                    <FileVideo className="w-4 h-4 text-[#FF3040]" />
+                    <span>Pakia Faili la Video kutoka Kwenye Kifaa Chako</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-[10px] text-[#A7B0C0] bg-white/5 px-2 py-1 rounded-lg">
+                    <Lock className="w-3 h-3 text-amber-400" />
+                    <span>Linki za nje: Admin Pekee</span>
+                  </div>
+                </div>
+              )}
 
               {/* Mode 1: File Select Area */}
               {uploadMode === 'file' ? (
@@ -634,12 +678,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                   )}
                 </div>
               ) : (
-                /* Mode 2: Video Link / URL Input Area */
-                <div className="p-3.5 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-2.5">
+                /* Mode 2: Video Link / URL Input Area (ADMIN ONLY) */
+                <div className="p-3.5 rounded-2xl bg-[#10131B] border border-amber-500/30 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Link2 className="w-4 h-4 text-[#FF3040]" />
-                      <span>Weka Linki ya Video (Direct MP4, YouTube, Vimeo, n.k.)</span>
+                      <Crown className="w-4 h-4 text-amber-400" />
+                      <span>Admin Streaming Integration (LuciferDonghua, DoodStream, Streamtape, n.k.)</span>
                     </label>
                     {videoLink && (
                       <button
@@ -654,23 +698,24 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
                   <div className="relative">
                     <input
-                      type="url"
+                      type="text"
                       value={videoLink}
                       onChange={(e) => handleVideoLinkChange(e.target.value)}
-                      placeholder="https://... (mfano: YouTube, MP4, HLS, Cloudinary, Vimeo)"
-                      className="w-full bg-[#191E29] border border-[#262E3E] rounded-xl px-3 py-2.5 text-xs text-white placeholder-[#A7B0C0]/60 focus:outline-none focus:border-[#FF3040] font-mono"
+                      placeholder="Paste link au <iframe> tag (mfano: LuciferDonghua, DoodStream, Streamtape, YouTube, MP4)"
+                      className="w-full bg-[#191E29] border border-[#262E3E] rounded-xl px-3 py-2.5 text-xs text-white placeholder-[#A7B0C0]/60 focus:outline-none focus:border-amber-400 font-mono"
                     />
                   </div>
 
                   {/* Supported formats helper badge row */}
                   <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-[#A7B0C0]">
-                    <span className="text-white font-semibold">Inakubali:</span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-[#16C784] font-mono font-semibold">YouTube</span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">MP4</span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">WebM</span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">HLS (.m3u8)</span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">Cloudinary</span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">Google Drive</span>
+                    <span className="text-white font-semibold">Mifumo Inayoungwa Mkono:</span>
+                    <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono font-bold border border-purple-500/30">LuciferDonghua</span>
+                    <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono font-bold border border-blue-500/30">Streamtape</span>
+                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono font-bold border border-cyan-500/30">DoodStream</span>
+                    <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold border border-amber-500/30">Filemoon</span>
+                    <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 font-mono font-semibold">YouTube</span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">MP4 / HLS (.m3u8)</span>
+                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-[#16C784] font-mono">&lt;iframe&gt; Embed Code</span>
                   </div>
 
                   {/* Detected format feedback & Preview */}
@@ -681,6 +726,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                           <Check className="w-3.5 h-3.5" />
                           {parsedSource.sourceType === 'youtube' && 'Video ya YouTube Imetambuliwa (Picha ya jalada imewekwa)'}
                           {parsedSource.sourceType === 'vimeo' && 'Video ya Vimeo Imetambuliwa'}
+                          {parsedSource.sourceType === 'embed' && `${parsedSource.providerName || 'Streaming Embed'} Imetambuliwa Kikamilifu (Iframe Player)`}
                           {parsedSource.sourceType === 'direct' && 'Faili la Video Mtandaoni Limethibitishwa'}
                         </span>
                         <button
@@ -709,6 +755,15 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                               title="Hakiki ya Video"
                               className="w-full h-full border-0"
                               allow="autoplay; encrypted-media"
+                            />
+                          ) : parsedSource.sourceType === 'embed' ? (
+                            <iframe
+                              src={parsedSource.embedUrl || parsedSource.streamUrl}
+                              title="Hakiki ya Video"
+                              className="w-full h-full border-0"
+                              referrerPolicy="no-referrer"
+                              allow="autoplay; encrypted-media; fullscreen"
+                              sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups-to-escape-sandbox"
                             />
                           ) : parsedSource.streamUrl ? (
                             <video

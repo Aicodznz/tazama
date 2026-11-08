@@ -71,7 +71,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
   const hoverVideoRef = useRef<HTMLVideoElement>(null);
 
   const parsedSource = React.useMemo(() => parseVideoSource(video.videoUrl), [video.videoUrl]);
-  const isEmbedVideo = (parsedSource.sourceType === 'youtube' || parsedSource.sourceType === 'vimeo') && !(isAdPlaying && activeAd);
+  const isEmbedVideo = (
+    parsedSource.sourceType === 'youtube' || 
+    parsedSource.sourceType === 'vimeo' || 
+    parsedSource.sourceType === 'embed'
+  ) && !(isAdPlaying && activeAd);
 
   // Initialize Ad check when video changes (VIP users are ad-free)
   useEffect(() => {
@@ -497,15 +501,25 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, autoPlay = true
           : 'aspect-video-player rounded-none sm:rounded-2xl overflow-hidden shadow-2xl group'
       }`}
     >
-      {/* HTML5 video element with Cloudflare Stream / CDN or Embedded YouTube/Vimeo player */}
+      {/* HTML5 video element with Cloudflare Stream / CDN or Embedded YouTube/Vimeo/Streamtape/LuciferDonghua player */}
       {isEmbedVideo ? (
-        <iframe
-          src={`${parsedSource.embedUrl}?autoplay=${autoPlay ? 1 : 0}&enablejsapi=1&rel=0&modestbranding=1`}
-          title={video.title}
-          className="w-full h-full border-0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowFullScreen
-        />
+        <div className="relative w-full h-full bg-black flex items-center justify-center">
+          <iframe
+            src={
+              parsedSource.sourceType === 'youtube'
+                ? `${parsedSource.embedUrl}?autoplay=${autoPlay ? 1 : 0}&enablejsapi=1&rel=0&modestbranding=1`
+                : parsedSource.sourceType === 'vimeo'
+                ? `${parsedSource.embedUrl}?autoplay=${autoPlay ? 1 : 0}`
+                : (parsedSource.embedUrl || parsedSource.streamUrl)
+            }
+            title={video.title}
+            className="w-full h-full border-0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+            allowFullScreen
+            referrerPolicy="no-referrer"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups-to-escape-sandbox"
+          />
+        </div>
       ) : (
         <video
           ref={videoRef}

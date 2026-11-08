@@ -153,7 +153,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   video={short}
                   onSelectVideo={onSelectVideo}
                   aspectRatioClass="aspect-shorts"
-                  className="rounded-2xl border border-[#262E3E] group-hover:scale-102 transition-transform shadow-md"
+                  className="rounded-2xl group-hover:scale-102 transition-transform shadow-md"
                 />
                 <div 
                   onClick={() => onSelectVideo(short)}

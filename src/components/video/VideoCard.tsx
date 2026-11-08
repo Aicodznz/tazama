@@ -32,7 +32,7 @@ export const VideoCard: React.FC<VideoCardProps> = ({
         video={video}
         onSelectVideo={onSelectVideo}
         aspectRatioClass="aspect-video"
-        className="rounded-2xl sm:rounded-3xl border border-[#262E3E]/70 shadow-lg group-hover:shadow-2xl"
+        className="rounded-2xl sm:rounded-3xl shadow-lg group-hover:shadow-2xl"
       />
 
       {/* Video Details & Meta */}

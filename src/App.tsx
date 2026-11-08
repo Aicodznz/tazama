@@ -114,7 +114,7 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#10131B] text-white flex flex-col font-sans selection:bg-[#FF3040] selection:text-white">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F4F6F9] dark:bg-[#10131B] text-[#0F172A] dark:text-white flex flex-col font-sans selection:bg-[#FF3040] selection:text-white transition-colors duration-200">
       
       {/* Main App Navbar (Hidden on mobile watch page for focused immersion) */}
       <div className={activePage === 'watch' ? 'hidden sm:block' : 'block'}>

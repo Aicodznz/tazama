@@ -269,13 +269,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-xs font-bold uppercase">{language}</span>
           </button>
 
-          {/* Theme Switcher (Desktop) */}
+          {/* Theme Switcher (Mobile & Desktop) */}
           <button
             onClick={toggleTheme}
-            className="hidden md:flex p-2 rounded-full text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors"
-            title={theme === 'dark' ? 'Washa Hali Nyeupe' : 'Washa Hali Nyeusi'}
+            className="flex items-center justify-center p-2 rounded-full text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-[#191E29] transition-colors cursor-pointer"
+            title={theme === 'dark' ? 'Washa Hali ya Mchana (Light Mode)' : 'Washa Hali ya Usiku (Dark Mode)'}
+            aria-label="Badili Mandhari / Switch Theme"
           >
-            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-400 animate-in spin-in-180 duration-300" />
+            ) : (
+              <Moon className="w-4 h-4 text-purple-600 animate-in spin-in-180 duration-300" />
+            )}
           </button>
 
           {/* Notifications (Only for authenticated users) */}

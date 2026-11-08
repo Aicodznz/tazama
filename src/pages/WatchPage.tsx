@@ -910,7 +910,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                     <VideoThumbnailPreview
                       video={item}
                       aspectRatioClass="aspect-video"
-                      className="rounded-2xl sm:rounded-xl border border-white/5 overflow-hidden"
+                      className="rounded-2xl sm:rounded-xl overflow-hidden"
                       onSelectVideo={(v) => {
                         onSelectVideo(v);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
