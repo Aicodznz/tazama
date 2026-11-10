@@ -27,6 +27,7 @@ interface VideoThumbnailPreviewProps {
   showCreatorOverlay?: boolean;
   compact?: boolean;
   compactMobile?: boolean;
+  autoPlayPreview?: boolean;
   onSelectVideo?: (video: VideoItem) => void;
   onQuickSave?: (videoId: string) => void;
   onQuickLike?: (videoId: string) => void;
@@ -39,6 +40,7 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
   showCreatorOverlay = false,
   compact = false,
   compactMobile = false,
+  autoPlayPreview = false,
   onSelectVideo,
   onQuickSave,
   onQuickLike
@@ -48,7 +50,8 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isPreviewActive, setIsPreviewActive] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(true);
-  const [, setPreviewTime] = useState<number>(0);
+  const [showPreviewCaptions, setShowPreviewCaptions] = useState<boolean>(false);
+  const [previewTime, setPreviewTime] = useState<number>(0);
   const [isVideoLoaded, setIsVideoLoaded] = useState<boolean>(false);
   const [thumbError, setThumbError] = useState<boolean>(false);
   const [previewVideoError, setPreviewVideoError] = useState<boolean>(false);
@@ -107,6 +110,24 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
     return unsubscribe;
   }, [video.id, isPreviewActive]);
 
+  // Auto-start muted inline preview when direct video is autoPlayPreview
+  useEffect(() => {
+    if (!autoPlayPreview || isDataSaver || !canPlayDirectVideo) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      previewManager.setActiveId(video.id);
+      setIsPreviewActive(true);
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.muted = true;
+        videoRef.current.play().then(() => setIsVideoLoaded(true)).catch(() => {});
+      }
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [autoPlayPreview, isDataSaver, canPlayDirectVideo, video.id]);
+
   // Clean up timers on unmount
   useEffect(() => {
     return () => {
@@ -117,7 +138,7 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
 
   const playVideoSafely = useCallback(() => {
     if (videoRef.current && canPlayDirectVideo) {
-      videoRef.current.muted = true;
+      videoRef.current.muted = isMuted;
       const playPromise = videoRef.current.play();
       if (playPromise !== undefined) {
         playPromise
@@ -128,12 +149,13 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
             console.debug('Preview autoplay deferred:', err?.message || err);
             if (videoRef.current) {
               videoRef.current.muted = true;
+              setIsMuted(true);
               videoRef.current.play().then(() => setIsVideoLoaded(true)).catch(() => {});
             }
           });
       }
     }
-  }, [canPlayDirectVideo]);
+  }, [canPlayDirectVideo, isMuted]);
 
   const startPreview = useCallback(() => {
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -183,7 +205,7 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
     if (!isPreviewActive) {
       if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
       startPreview();
-    } else if (videoRef.current && videoRef.current.paused) {
+    } else if (videoRef.current && videoRef.current.paused && canPlayDirectVideo) {
       playVideoSafely();
     }
   };
@@ -191,7 +213,9 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
   const handleMouseLeave = () => {
     setIsHovered(false);
     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-    stopPreview();
+    if (!autoPlayPreview) {
+      stopPreview();
+    }
   };
 
   // Mobile Touch-and-Hold
@@ -204,9 +228,11 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
 
   const handleTouchEnd = () => {
     if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
-    setTimeout(() => {
-      stopPreview();
-    }, 3000);
+    if (!autoPlayPreview) {
+      setTimeout(() => {
+        stopPreview();
+      }, 3000);
+    }
   };
 
   // Video Time Update & 5–8 Second Continuous Loop
@@ -233,6 +259,11 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
     if (videoRef.current) {
       videoRef.current.muted = next;
     }
+  };
+
+  const handleToggleCaptions = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowPreviewCaptions((prev) => !prev);
   };
 
   const handleQuickLike = (e: React.MouseEvent) => {
@@ -341,7 +372,7 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
             }`}
           />
 
-          {/* Cinematic Auto Preview Video Element (Plays muted loop on hover) */}
+          {/* Cinematic Auto Preview Video Element (Plays muted loop cleanly when playable) */}
           {isPreviewActive && canPlayDirectVideo && (
             <video
               ref={videoRef}
@@ -367,16 +398,24 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
             />
           )}
 
-          {/* YouTube Live Hover Player Preview (Muted instant preview on card hover) */}
-          {isPreviewActive && !isDataSaver && parsedSource.sourceType === 'youtube' && parsedSource.videoId && (
-            <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden scale-[1.05] transition-opacity duration-300">
-              <iframe
-                src={`https://www.youtube.com/embed/${parsedSource.videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${parsedSource.videoId}&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}`}
-                title={video.title}
-                className="w-full h-full border-0 pointer-events-none"
-                allow="autoplay; encrypted-media"
-                referrerPolicy="strict-origin-when-cross-origin"
-              />
+          {/* Inline Preview Captions Pill (when user toggles CC during live video preview) */}
+          {isPreviewActive && isVideoLoaded && showPreviewCaptions && !isDataSaver && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-md bg-black/80 text-white text-[10px] font-semibold max-w-[85%] truncate pointer-events-none z-20">
+              {video.title}
+            </div>
+          )}
+
+          {/* Live Inline Preview Red Scrubber Bar & Red Dot (only while video actually plays) */}
+          {isPreviewActive && isVideoLoaded && canPlayDirectVideo && !isDataSaver && !isLive && (
+            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/25 z-30 pointer-events-none">
+              <div
+                className="relative h-full bg-[#FF3040] transition-[width] duration-150"
+                style={{
+                  width: `${Math.min(100, Math.max(4, (previewTime / 7) * 100))}%`,
+                }}
+              >
+                <span className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2.5 h-2.5 rounded-full bg-[#FF3040] ring-1 ring-white shadow-md" />
+              </div>
             </div>
           )}
 
@@ -391,8 +430,8 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
             </div>
           )}
 
-          {/* Top Overlay: Category / Live / Compact VIP Badge & Audio Toggle */}
-          <div className={`absolute flex items-center justify-between pointer-events-none z-20 ${compact || compactMobile ? 'top-1.5 left-1.5 right-1.5 sm:top-2 sm:left-2 sm:right-2' : 'top-2 left-2 right-2'}`}>
+          {/* Top Overlay: Category / Live / Compact VIP Badge & Top-Right Stacked Mute + CC Controls */}
+          <div className={`absolute flex items-start justify-between pointer-events-none z-20 ${compact || compactMobile ? 'top-1.5 left-1.5 right-1.5 sm:top-2 sm:left-2 sm:right-2' : 'top-2 left-2 right-2'}`}>
             <div className="flex items-center gap-1.5">
               {isLive ? (
                 <div className="px-2 py-0.5 rounded-full bg-[#FF3040] text-white text-[9.5px] sm:text-[10px] font-extrabold flex items-center gap-1 shadow-md shadow-[#FF3040]/30 animate-pulse">
@@ -415,19 +454,34 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
               )}
             </div>
 
-            <div className="flex items-center gap-1.5">
-              {/* Quick Audio Toggle button when preview is active */}
-              {isPreviewActive && canPlayDirectVideo && (
+            {isPreviewActive && isVideoLoaded && canPlayDirectVideo && !isDataSaver && !compact && (
+              <div className="flex flex-col items-end gap-1.5 pointer-events-auto">
                 <button
                   type="button"
                   onClick={handleToggleMute}
-                  className="p-1.5 rounded-full bg-black/80 hover:bg-black text-white border border-white/20 backdrop-blur-md transition-all active:scale-95 pointer-events-auto cursor-pointer shadow-lg"
+                  className="w-8 h-8 rounded-full bg-black/75 hover:bg-black text-white border border-white/20 backdrop-blur-md flex items-center justify-center transition-all active:scale-95 cursor-pointer shadow-lg"
                   title={isMuted ? 'Washa Sauti' : 'Zima Sauti'}
                 >
-                  {isMuted ? <VolumeX className="w-3.5 h-3.5 text-white/80" /> : <Volume2 className="w-3.5 h-3.5 text-amber-400" />}
+                  {isMuted ? (
+                    <VolumeX className="w-4 h-4 text-white" />
+                  ) : (
+                    <Volume2 className="w-4 h-4 text-amber-400" />
+                  )}
                 </button>
-              )}
-            </div>
+                <button
+                  type="button"
+                  onClick={handleToggleCaptions}
+                  className={`px-1.5 py-0.5 rounded-md border text-[10px] font-black backdrop-blur-md transition-all active:scale-95 cursor-pointer shadow-lg ${
+                    showPreviewCaptions
+                      ? 'bg-[#FF3040] border-[#FF3040] text-white'
+                      : 'bg-black/75 hover:bg-black border-white/20 text-white'
+                  }`}
+                  title="Manukuu (CC)"
+                >
+                  CC
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Bottom-left Quick Action Buttons (Watch Later / Bookmark & Like) on hover */}

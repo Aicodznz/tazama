@@ -357,24 +357,24 @@ export const WatchPage: React.FC<WatchPageProps> = ({
     <div className="w-full max-w-[1720px] mx-auto px-0 sm:px-4 lg:px-6 py-0 sm:py-4 select-none">
       
       {/* 2-Column Responsive Layout (YouTube-Style: Left Player & Discussion, Right Suggested Feed) */}
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-start">
         
         {/* LEFT PRIMARY COLUMN: Player, Title, Creator/Action Row, Description, Comments */}
         <div className="flex-1 min-w-0 w-full">
           
           {/* Mobile Top Navigation Bar */}
-          <div className="flex items-center justify-between py-2 px-3 sm:hidden bg-white dark:bg-[#10131B] border-b border-slate-200 dark:border-[#262E3E]/60 sticky top-0 z-30 mb-0">
+          <div className="flex items-center justify-between py-1.5 px-3 sm:hidden bg-white/95 dark:bg-[#10131B]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-[#262E3E]/70 sticky top-0 z-30 mb-0">
             <button
               onClick={handleMinimize}
-              className="p-1 -ml-1 rounded-full hover:bg-slate-100 dark:hover:bg-[#191E29] text-slate-900 dark:text-white active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
+              className="min-h-[40px] py-1 px-1.5 -ml-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-[#191E29] text-slate-900 dark:text-white active:scale-95 transition-all flex items-center gap-1 cursor-pointer shrink-0"
               title="Punguza video kwenye Mini-Player"
             >
               <ChevronDown className="w-5 h-5 text-[#FF3040]" />
-              <span className="text-[11px] font-bold text-slate-600 dark:text-[#A7B0C0]">Rudi</span>
+              <span className="text-xs font-bold text-slate-700 dark:text-[#A7B0C0]">Rudi</span>
             </button>
 
-            <div className="flex items-center gap-1.5 min-w-0 max-w-[200px] text-center">
-              <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+            <div className="flex items-center justify-center gap-1.5 min-w-0 max-w-[200px] text-center px-2">
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
                 {video.channelName}
               </span>
               {video.isChannelVerified && (
@@ -382,10 +382,10 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               )}
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 shrink-0">
               <button
                 onClick={() => setShowReportModal(true)}
-                className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-[#191E29] text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white transition-colors cursor-pointer"
+                className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-[#191E29] text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white transition-colors cursor-pointer"
                 title="Ripoti Video"
               >
                 <Settings className="w-4 h-4" />
@@ -393,8 +393,8 @@ export const WatchPage: React.FC<WatchPageProps> = ({
             </div>
           </div>
 
-          {/* Adaptive Video Player: edge-to-edge on mobile, rounded on sm+ */}
-          <div className="w-full rounded-none sm:rounded-2xl overflow-hidden bg-black shadow-2xl relative">
+          {/* Adaptive Video Player: edge-to-edge flush on mobile, rounded on sm+ */}
+          <div className="w-full rounded-none sm:rounded-2xl overflow-hidden bg-[#07090E] sm:shadow-2xl relative">
             {liveVideo && liveVideo.videoUrl ? (
               <VideoPlayer 
                 video={liveVideo} 
@@ -415,8 +415,8 @@ export const WatchPage: React.FC<WatchPageProps> = ({
             )}
           </div>
 
-          {/* Modern YouTube Mobile Sheet Container */}
-          <div className="relative -mt-2 sm:mt-4 rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0F131C] border-t sm:border border-slate-200 dark:border-white/10 px-4 sm:px-6 pt-4 pb-6 shadow-sm sm:shadow-xl dark:shadow-2xl z-10 transition-colors">
+          {/* Seamless Video Info Panel (Flush below player on mobile with zero corner notches; rounded card on sm+) */}
+          <div className="relative mt-0 sm:mt-4 rounded-none sm:rounded-3xl bg-white dark:bg-[#0F131C] border-b sm:border border-slate-200/90 dark:border-white/10 px-3.5 sm:px-6 pt-3.5 sm:pt-5 pb-5 sm:pb-6 shadow-none sm:shadow-xl dark:sm:shadow-2xl z-10 transition-colors">
             {/* Data Saver Mode Notice */}
             {isDataSaver && (
               <div className="mb-3 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-300 text-xs flex items-center justify-between">
@@ -528,7 +528,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 <div className="flex items-center rounded-full bg-slate-100 border border-slate-200 dark:bg-white/10 dark:border-white/15 shrink-0">
                   <button
                     onClick={handleSubscribeClick}
-                    className="px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1 cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1 cursor-pointer whitespace-nowrap shrink-0"
                     title="Umesubscribe kwenye chaneli hii"
                   >
                     <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
@@ -537,7 +537,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   <div className="w-[1px] h-3.5 bg-slate-300 dark:bg-white/20" />
                   <button
                     onClick={handleBellClick}
-                    className="px-2 py-1.5 text-slate-700 hover:text-slate-900 dark:text-white/90 dark:hover:text-white cursor-pointer relative"
+                    className="px-2 py-1.5 text-slate-700 hover:text-slate-900 dark:text-white/90 dark:hover:text-white cursor-pointer relative shrink-0"
                     title="Aina ya taarifa za kengele"
                   >
                     {bellMode === 'all' ? (
@@ -552,7 +552,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               ) : (
                 <button
                   onClick={handleSubscribeClick}
-                  className="shrink-0 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm"
+                  className="shrink-0 whitespace-nowrap px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm"
                 >
                   Subscribe
                 </button>
@@ -717,18 +717,14 @@ export const WatchPage: React.FC<WatchPageProps> = ({
             {/* 4. COMMENTS PREVIEW CARD */}
             <div 
               onClick={() => setShowCommentsMobile(!showCommentsMobile)}
-              className="mt-3 p-3 sm:hidden rounded-2xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 dark:bg-[#181E29] dark:hover:bg-[#202737] dark:border-white/5 cursor-pointer transition-all active:scale-[0.99]"
+              className="mt-3 p-3 sm:hidden rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/90 dark:bg-[#171C28] dark:hover:bg-[#1E2434] dark:border-white/10 cursor-pointer transition-all active:scale-[0.99]"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black text-slate-900 dark:text-white">Comments</span>
-                  <span className="text-xs text-slate-600 dark:text-[#A7B0C0] font-bold">{videoComments.length}</span>
+                  <span className="text-xs text-slate-600 dark:text-[#A7B0C0] font-bold tabular-nums">{videoComments.length}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-slate-500 dark:text-[#A7B0C0]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500 dark:bg-white/40"></span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-white/20"></span>
-                  <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform duration-200 ${showCommentsMobile ? 'rotate-180' : ''}`} />
-                </div>
+                <ChevronDown className={`w-4 h-4 text-slate-500 dark:text-[#A7B0C0] transition-transform duration-200 ${showCommentsMobile ? 'rotate-180' : ''}`} />
               </div>
 
               {/* Top Comment Snippet Preview */}
@@ -934,11 +930,11 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 group cursor-pointer p-1.5 sm:p-1 rounded-2xl sm:rounded-xl hover:bg-slate-200/50 dark:hover:bg-white/5 transition-colors"
                 >
                   {/* Video Thumbnail Preview */}
-                  <div className="w-full sm:w-40 md:w-44 shrink-0">
+                  <div className="w-full sm:w-40 md:w-44 shrink-0 px-0.5 sm:px-0">
                     <VideoThumbnailPreview
                       video={item}
                       aspectRatioClass="aspect-video"
-                      className="rounded-2xl sm:rounded-xl overflow-hidden"
+                      className="rounded-2xl sm:rounded-xl"
                       onSelectVideo={(v) => {
                         onSelectVideo(v);
                         window.scrollTo({ top: 0, behavior: 'smooth' });

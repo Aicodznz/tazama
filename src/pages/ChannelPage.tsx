@@ -175,7 +175,7 @@ export const ChannelPage: React.FC<ChannelPageProps> = ({
         </div>
 
         {/* Compact Header: Raised Avatar (Left) + Channel Title & Details (Center) + Compact Actions (Right) */}
-        <div className="px-3 sm:px-6 pt-2 sm:pt-3 pb-3 space-y-2">
+        <div className="px-3 sm:px-6 pt-1.5 sm:pt-3 pb-2.5 sm:pb-3 space-y-1.5 sm:space-y-2">
           <div className="flex items-start justify-between gap-2.5 sm:gap-4">
 
             {/* Left: Raised Channel Avatar Overlapping Banner Seam */}
@@ -204,8 +204,8 @@ export const ChannelPage: React.FC<ChannelPageProps> = ({
               )}
             </div>
 
-            {/* Middle: Channel Name & Metadata Centered Cleanly Between Avatar and Actions */}
-            <div className="flex-1 min-w-0 pt-0.5 sm:pt-1 space-y-0.5">
+            {/* Middle: Channel Name & Metadata Flush Below Banner Seam */}
+            <div className="flex-1 min-w-0 -mt-1.5 sm:mt-0 pt-0 sm:pt-0.5 space-y-0.5">
               <div className="flex items-center gap-1">
                 <h1 className="text-[13.5px] sm:text-xl font-black text-slate-900 dark:text-white tracking-tight truncate leading-tight">
                   {channel.name}

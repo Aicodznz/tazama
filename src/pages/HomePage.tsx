@@ -90,7 +90,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   }, [selectedCategory, videos, allContent]);
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-6 select-none">
+    <div className="space-y-3 sm:space-y-5 pb-6 select-none">
       
       {/* 1. Top Creator Stories Bar (Matching Screenshot 1 & 7) */}
       <StoriesBar
@@ -107,7 +107,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 cursor-pointer transition-all ${
                 isSelected
                   ? 'bg-slate-900 text-white font-bold shadow-md dark:bg-white dark:text-black'
                   : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 dark:bg-[#191E29] dark:text-[#A7B0C0] dark:hover:text-white dark:hover:bg-[#232A39] dark:border-[#262E3E]'
@@ -124,62 +124,14 @@ export const HomePage: React.FC<HomePageProps> = ({
         <MastheadAdBanner ad={mastheadAd} />
       )}
 
-      {/* Shorts Vertical Reels Section (Only if real shorts exist) */}
-      {shorts.length > 0 && (
-        <div className="pt-2">
-          <div className="flex items-center justify-between mb-3.5">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FF3040] to-orange-500 flex items-center justify-center text-white shadow-md">
-                <Film className="w-4 h-4" />
-              </div>
-              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Tazama Shorts</h2>
-            </div>
-            <button 
-              onClick={() => onNavigate('shorts')}
-              className="flex items-center gap-1 text-xs font-semibold text-[#FF3040] hover:underline"
-            >
-              <span>{t.viewAll}</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            {shorts.slice(0, 4).map((short) => (
-              <div
-                key={short.id}
-                className="group flex flex-col gap-1.5 cursor-pointer select-none"
-              >
-                <VideoThumbnailPreview
-                  video={short}
-                  onSelectVideo={onSelectVideo}
-                  aspectRatioClass="aspect-shorts"
-                  className="rounded-2xl group-hover:scale-102 transition-transform shadow-md"
-                />
-                <div 
-                  onClick={() => onSelectVideo(short)}
-                  className="px-1"
-                >
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-[#FF3040] transition-colors">
-                    {short.title}
-                  </h4>
-                  <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0] mt-0.5">
-                    {formatViews(short.viewsCount, language)} views
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Main Recommended Videos Grid */}
-      <div className="pt-4">
-        <div className="flex items-center justify-between mb-3.5">
+      {/* Main Recommended Videos Grid (Positioned above Tazama Shorts) */}
+      <div className="pt-0.5">
+        <div className="flex items-center justify-between mb-2.5 sm:mb-3.5">
           <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-[#FF3040]" />
             <span>{selectedCategory === 'Zote' ? t.recommended : `${selectedCategory} Tanzania`}</span>
           </h2>
-          <span className="text-xs text-slate-600 dark:text-[#A7B0C0]">{filteredVideos.length} video</span>
+          <span className="text-xs font-medium text-slate-600 dark:text-[#A7B0C0] tabular-nums">{filteredVideos.length} video</span>
         </div>
 
         {filteredVideos.length === 0 ? (
@@ -209,21 +161,21 @@ export const HomePage: React.FC<HomePageProps> = ({
               {selectedCategory !== 'Zote' && (
                 <button
                   onClick={() => setSelectedCategory('Zote')}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md transition-all"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
                 >
                   Onyesha Video Zote
                 </button>
               )}
               <button
                 onClick={onOpenUpload || (() => onNavigate('studio'))}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF3040] to-[#E02635] text-white text-xs font-bold shadow-lg shadow-[#FF3040]/25 hover:brightness-110 active:scale-95 transition-all"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#FF3040] to-[#E02635] text-white text-xs font-bold shadow-lg shadow-[#FF3040]/25 hover:brightness-110 active:scale-95 transition-all cursor-pointer"
               >
                 Pakia Video Sasa
               </button>
               {!isRegistered && (
                 <button
                   onClick={() => onNavigate('register')}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 dark:bg-[#191E29] dark:hover:bg-[#232A39] dark:border-[#262E3E] dark:text-white text-xs font-semibold transition-colors"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 dark:bg-[#191E29] dark:hover:bg-[#232A39] dark:border-[#262E3E] dark:text-white text-xs font-semibold transition-colors cursor-pointer"
                 >
                   Jisajili Kwenye Mfumo
                 </button>
@@ -231,7 +183,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               {isRegistered && (role === 'creator' || profile?.channelId) && (
                 <button
                   onClick={() => onNavigate('studio')}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 dark:bg-[#191E29] dark:hover:bg-[#232A39] dark:border-[#262E3E] dark:text-white text-xs font-semibold transition-colors"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 dark:bg-[#191E29] dark:hover:bg-[#232A39] dark:border-[#262E3E] dark:text-white text-xs font-semibold transition-colors cursor-pointer"
                 >
                   Fungua Studio
                 </button>
@@ -239,7 +191,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {filteredVideos.map((video, idx) => {
               const shouldShowInFeedAd = inFeedAds.length > 0 && (idx === 2 || (idx > 2 && (idx + 1) % 5 === 0));
               const adIndex = Math.floor(idx / 3) % inFeedAds.length;
@@ -249,6 +201,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <React.Fragment key={video.id}>
                   <VideoCard
                     video={video}
+                    autoPlayPreview={idx === 0}
                     onSelectVideo={onSelectVideo}
                     onSelectChannel={onSelectChannel}
                   />
@@ -261,6 +214,54 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
         )}
       </div>
+
+      {/* Shorts Vertical Reels Section (Below Recommended Videos; only if real shorts exist) */}
+      {shorts.length > 0 && (
+        <div className="pt-4 sm:pt-5">
+          <div className="flex items-center justify-between mb-3.5">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FF3040] to-orange-500 flex items-center justify-center text-white shadow-md">
+                <Film className="w-4 h-4" />
+              </div>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Tazama Shorts</h2>
+            </div>
+            <button 
+              onClick={() => onNavigate('shorts')}
+              className="flex items-center gap-1 text-xs font-semibold text-[#FF3040] hover:underline whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <span>{t.viewAll}</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+            {shorts.slice(0, 4).map((short) => (
+              <div
+                key={short.id}
+                className="group flex flex-col gap-1.5 cursor-pointer select-none"
+              >
+                <VideoThumbnailPreview
+                  video={short}
+                  onSelectVideo={onSelectVideo}
+                  aspectRatioClass="aspect-shorts"
+                  className="rounded-2xl group-hover:scale-[1.02] transition-transform shadow-md"
+                />
+                <div 
+                  onClick={() => onSelectVideo(short)}
+                  className="px-1"
+                >
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-[#FF3040] transition-colors">
+                    {short.title}
+                  </h4>
+                  <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0] mt-0.5 tabular-nums">
+                    {formatViews(short.viewsCount, language)} views
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Top Tanzanian Creators Showcase (Only if channels exist) */}
       {channels.length > 0 && (

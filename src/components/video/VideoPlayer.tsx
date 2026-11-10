@@ -69,6 +69,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [isDataSaverActive, setIsDataSaverActive] = useState<boolean>(false);
   const [hasRecordedView, setHasRecordedView] = useState<boolean>(false);
   const [videoError, setVideoError] = useState<boolean>(false);
+  const [ambientImgError, setAmbientImgError] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(true);
   const controlsTimeoutRef = useRef<any>(null);
 
@@ -137,8 +138,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   // Initialize Ad check when video changes (VIP users are ad-free)
   useEffect(() => {
     setVideoError(false);
+    setAmbientImgError(false);
     setHasRecordedView(false);
     setHasShownAdForVideo(false);
+    setHoverVideoLoaded(false);
+    setHoverVideoError(false);
+    setCurrentTime(0);
+    setShowControls(true);
 
     const isVIP = profile?.premiumPlanId === 'plan-viewer-monthly' || profile?.premiumPlanId === 'plan-viewer-yearly';
     
@@ -415,7 +421,19 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (videoRef.current) {
       setDuration(videoRef.current.duration || video.durationSeconds);
       if (autoPlay) {
-        videoRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        videoRef.current.play()
+          .then(() => setIsPlaying(true))
+          .catch(() => {
+            if (videoRef.current) {
+              videoRef.current.muted = true;
+              setIsMuted(true);
+              videoRef.current.play()
+                .then(() => setIsPlaying(true))
+                .catch(() => setIsPlaying(false));
+            } else {
+              setIsPlaying(false);
+            }
+          });
       }
     }
   };
@@ -542,12 +560,36 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isPlaying, isMuted, isFullscreen]);
 
+  // Auto-hide HUD controls smoothly during active playback
+  useEffect(() => {
+    if (isPlaying && showControls && !showSettingsMenu && !showChaptersDrawer && !showCastModal) {
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+      controlsTimeoutRef.current = setTimeout(() => {
+        setShowControls(false);
+      }, 3500);
+    }
+    return () => {
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    };
+  }, [isPlaying, showControls, showSettingsMenu, showChaptersDrawer, showCastModal]);
+
   const handleMouseMove = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
     controlsTimeoutRef.current = setTimeout(() => {
-      if (isPlaying) setShowControls(false);
+      if (isPlaying && !showSettingsMenu && !showChaptersDrawer && !showCastModal) {
+        setShowControls(false);
+      }
     }, 3500);
+  };
+
+  const handleVideoSurfaceClick = () => {
+    if (!showControls && isPlaying) {
+      handleMouseMove();
+      return;
+    }
+    togglePlay();
+    handleMouseMove();
   };
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
@@ -556,11 +598,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     <div 
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      onMouseLeave={() => isPlaying && setShowControls(false)}
-      className={`relative w-full bg-black select-none transition-all duration-200 ${
+      onTouchStart={handleMouseMove}
+      onMouseLeave={() =>
+        isPlaying && !showSettingsMenu && !showChaptersDrawer && !showCastModal && setShowControls(false)
+      }
+      className={`relative w-full bg-[#07090E] select-none transition-all duration-200 ${
         isFullscreen
           ? 'fixed inset-0 z-[99999] w-screen h-screen rounded-none flex items-center justify-center overflow-hidden'
-          : 'aspect-video-player rounded-none sm:rounded-2xl overflow-hidden shadow-2xl group'
+          : 'aspect-video-player rounded-none sm:rounded-2xl overflow-hidden sm:shadow-2xl group'
       }`}
     >
       {/* HTML5 video element with Cloudflare Stream / CDN or Embedded YouTube/Vimeo/Streamtape/LuciferDonghua player */}
@@ -597,30 +642,54 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           )}
         </div>
       ) : (
-        <video
-          ref={videoRef}
-          src={isAdPlaying && activeAd ? activeAd.mediaUrl : (parsedSource.sourceType === 'direct' ? (parsedSource.streamUrl || video.videoUrl) : '')}
-          poster={isAdPlaying && activeAd ? undefined : video.thumbnailUrl}
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onPlay={handleVideoPlay}
-          onPause={handleVideoPause}
-          onSeeking={handleVideoSeeking}
-          onSeeked={handleVideoSeeked}
-          onEnded={handleVideoEnded}
-          onError={(e) => {
-            console.warn('Video element source error:', e);
-            setVideoError(true);
-            setIsPlaying(false);
-            stopHeartbeatLoop();
-          }}
-          onClick={togglePlay}
-          onDoubleClick={toggleFullscreen}
-          className={`w-full h-full cursor-pointer ${
-            isFullscreen ? 'max-h-screen object-contain' : 'object-contain'
-          }`}
-          playsInline
-        />
+        <>
+          {/* Soft Cinema Ambient Backdrop so narrow/square clips blend smoothly instead of sitting in a stark black void */}
+          {!isFullscreen && !isAdPlaying && !videoError && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+              {video.thumbnailUrl && !ambientImgError && (
+                <img
+                  src={video.thumbnailUrl}
+                  alt=""
+                  referrerPolicy="no-referrer"
+                  onError={() => setAmbientImgError(true)}
+                  className="w-full h-full object-cover blur-2xl scale-110 opacity-40 saturate-125"
+                />
+              )}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    'radial-gradient(ellipse at center, rgba(18, 22, 34, 0.38) 0%, rgba(7, 9, 14, 0.88) 85%)',
+                }}
+              />
+            </div>
+          )}
+
+          <video
+            ref={videoRef}
+            src={isAdPlaying && activeAd ? activeAd.mediaUrl : (parsedSource.sourceType === 'direct' ? (parsedSource.streamUrl || video.videoUrl) : '')}
+            poster={isAdPlaying && activeAd ? undefined : video.thumbnailUrl}
+            onTimeUpdate={handleTimeUpdate}
+            onLoadedMetadata={handleLoadedMetadata}
+            onPlay={handleVideoPlay}
+            onPause={handleVideoPause}
+            onSeeking={handleVideoSeeking}
+            onSeeked={handleVideoSeeked}
+            onEnded={handleVideoEnded}
+            onError={(e) => {
+              console.warn('Video element source error:', e);
+              setVideoError(true);
+              setIsPlaying(false);
+              stopHeartbeatLoop();
+            }}
+            onClick={handleVideoSurfaceClick}
+            onDoubleClick={toggleFullscreen}
+            className={`relative z-10 w-full h-full cursor-pointer object-contain ${
+              isFullscreen ? 'max-h-screen' : ''
+            }`}
+            playsInline
+          />
+        </>
       )}
 
       {/* Video Source Error Fallback UI */}
@@ -911,16 +980,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       )}
 
+      {/* Subtle Bottom Progress Line when HUD Controls Auto-Hide */}
+      {!isAdPlaying && !isEmbedVideo && !videoError && !showControls && isPlaying && (
+        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-white/15 z-20 pointer-events-none">
+          <div
+            className="h-full bg-[#FF3040] transition-[width] duration-150"
+            style={{ width: `${Math.min(100, Math.max(0, progressPercentage))}%` }}
+          />
+        </div>
+      )}
+
       {/* Main Video Controls Container (Strictly Hidden during In-Stream Ad or External Embed) */}
       {!isAdPlaying && !isEmbedVideo && (
         <div 
-          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent px-3 md:px-5 py-3 transition-opacity duration-300 z-20 ${
+          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/60 to-transparent px-3 md:px-5 py-2.5 sm:py-3 transition-opacity duration-300 z-20 ${
             showControls || !isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
         >
         {/* Scrubber Progress bar with Smart Timeline Hover Preview & Glowing Red Knob */}
         <div 
-          className="relative mb-2 flex items-center group/scrubber cursor-pointer py-1.5"
+          className="relative mb-2 flex items-center group/scrubber cursor-pointer py-2 sm:py-1.5"
           onMouseMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const offsetX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
@@ -1020,9 +1099,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
 
         {/* Bottom Control Bar: Time, Chapter Chip, Fullscreen */}
-        <div className="flex items-center justify-between text-white text-xs px-1 sm:px-2 py-1 max-w-full">
+        <div className="flex items-center justify-between text-white text-xs px-1 sm:px-2 py-0.5 sm:py-1 max-w-full">
           {/* 1. Time Stamp */}
-          <div className="text-[11px] sm:text-xs font-mono font-bold text-[#A7B0C0] shrink-0 whitespace-nowrap">
+          <div className="text-[11px] sm:text-xs font-mono tabular-nums font-bold text-[#A7B0C0] shrink-0 whitespace-nowrap">
             <span className="text-white">{formatDuration(currentTime)}</span>
             <span className="mx-1 text-white/50">/</span>
             <span>{formatDuration(duration || video.durationSeconds || 0)}</span>
