@@ -54,8 +54,26 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({
   onOpenUpload,
   onNavigateShorts,
 }) => {
-  const { channels } = useVideo();
+  const { channels, userSubscriptions } = useVideo();
   const { profile } = useAuth();
+
+  const subscribedChannels = React.useMemo(
+    () =>
+      (channels || []).filter(
+        (ch) =>
+          Boolean(
+            ch &&
+              ch.id &&
+              Array.isArray(userSubscriptions) &&
+              userSubscriptions.includes(ch.id)
+          )
+      ),
+    [channels, userSubscriptions]
+  );
+
+  if (subscribedChannels.length === 0) {
+    return null;
+  }
 
   return (
     <div className="flex items-center gap-3.5 overflow-x-auto no-scrollbar py-2 px-1 select-none">
@@ -98,8 +116,8 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({
         </span>
       </div>
 
-      {/* 2. Popular Tanzanian Creators with Active Status Dot */}
-      {channels.filter(ch => Boolean(ch && ch.id)).map((ch, idx) => (
+      {/* 2. Subscribed Creators with Active Status Dot */}
+      {subscribedChannels.map((ch, idx) => (
         <StoryItem
           key={ch.id}
           channel={ch}
