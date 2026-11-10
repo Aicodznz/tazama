@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  Sparkles, 
   CheckCircle2, 
   Film, 
   ChevronRight, 
@@ -100,7 +99,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       />
 
       {/* 2. Category Pills Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
         {categories.map((cat) => {
           const isSelected = selectedCategory === cat;
           return (
@@ -124,16 +123,8 @@ export const HomePage: React.FC<HomePageProps> = ({
         <MastheadAdBanner ad={mastheadAd} />
       )}
 
-      {/* Main Recommended Videos Grid (Positioned above Tazama Shorts) */}
-      <div className="pt-0.5">
-        <div className="flex items-center justify-between mb-2.5 sm:mb-3.5">
-          <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#FF3040]" />
-            <span>{selectedCategory === 'Zote' ? t.recommended : `${selectedCategory} Tanzania`}</span>
-          </h2>
-          <span className="text-xs font-medium text-slate-600 dark:text-[#A7B0C0] tabular-nums">{filteredVideos.length} video</span>
-        </div>
-
+      {/* Main Videos Grid (Positioned above Tazama Shorts) */}
+      <div>
         {filteredVideos.length === 0 ? (
           <div className="py-16 sm:py-20 px-4 text-center bg-white dark:bg-[#141824] rounded-3xl border border-slate-200 dark:border-[#262E3E] space-y-4 max-w-xl mx-auto shadow-sm dark:shadow-2xl">
             <div className="w-16 h-16 rounded-3xl bg-[#FF3040]/10 border border-[#FF3040]/30 flex items-center justify-center mx-auto text-[#FF3040]">
