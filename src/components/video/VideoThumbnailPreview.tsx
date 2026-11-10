@@ -25,6 +25,8 @@ interface VideoThumbnailPreviewProps {
   className?: string;
   aspectRatioClass?: string;
   showCreatorOverlay?: boolean;
+  compact?: boolean;
+  compactMobile?: boolean;
   onSelectVideo?: (video: VideoItem) => void;
   onQuickSave?: (videoId: string) => void;
   onQuickLike?: (videoId: string) => void;
@@ -35,6 +37,8 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
   className = '',
   aspectRatioClass = 'aspect-video',
   showCreatorOverlay = false,
+  compact = false,
+  compactMobile = false,
   onSelectVideo,
   onQuickSave,
   onQuickLike
@@ -255,18 +259,33 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
     ? createThumbnailSvgDataUri(video.title, video.category)
     : (video.thumbnailUrl || createThumbnailSvgDataUri(video.title, video.category));
 
-  // Clean custom class names by removing redundant static border tokens so the animated gradient shines
-  const cleanedClassName = className.replace(/\bborder(-[^\s]+)?(\/[^\s]+)?\b/g, '').trim();
+  // Strip redundant static border or root overflow classes so the animated gradient border & outer glow remain unclipped
+  const cleanedClassName = className
+    .replace(/\bborder(-[^\s]+)?(\/[^\s]+)?\b/g, '')
+    .replace(/\boverflow-hidden\b/g, '')
+    .trim();
 
   return (
     <div
-      className={`relative group/gradient-card select-none cursor-pointer ${aspectRatioClass} ${cleanedClassName}`}
-      onClick={() => onSelectVideo?.(video)}
+      className={`relative isolate group/gradient-card select-none cursor-pointer ${aspectRatioClass} ${cleanedClassName}`}
+      onClick={(e) => {
+        if (onSelectVideo) {
+          e.stopPropagation();
+          onSelectVideo(video);
+        }
+      }}
     >
-      {/* 1. Dynamic Directional Outer Glow (Rotates in sync with the laser beam) */}
+      {/* 1. Dynamic Directional Outer Glow (Isolate context prevents parent opaque backgrounds from hiding glow) */}
       <div
-        className="absolute -inset-1.5 rounded-[inherit] overflow-hidden -z-10 pointer-events-none opacity-60 group-hover/gradient-card:opacity-90 transition-opacity duration-300"
+        className="absolute -inset-1 sm:-inset-1.5 rounded-[inherit] overflow-hidden -z-10 pointer-events-none opacity-45 dark:opacity-75 group-hover/gradient-card:opacity-80 dark:group-hover/gradient-card:opacity-100 transition-opacity duration-300"
       >
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            background: borderConfig.baseBorderGradient,
+            filter: 'blur(7px)',
+          }}
+        />
         <div
           className={`absolute -inset-[150%] pointer-events-none ${
             borderConfig.animationType === 'pulse-live'
@@ -275,12 +294,12 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
           }`}
           style={{
             background: borderConfig.beamConicGradient,
-            filter: 'blur(10px) brightness(1.7)',
+            filter: 'blur(9px) brightness(1.55)',
           }}
         />
       </div>
 
-      {/* 2. Animated Border Beam Frame Wrapper */}
+      {/* 2. Animated Gradient Border Frame Wrapper */}
       <div
         ref={containerRef}
         onMouseEnter={handleMouseEnter}
@@ -288,11 +307,12 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
         onMouseMove={handleMouseMove}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className={`relative w-full h-full p-[1.5px] sm:p-[2px] rounded-[inherit] overflow-hidden transition-all duration-300 ${
-          isPreviewActive ? 'shadow-2xl' : 'shadow-lg'
+        className={`relative w-full h-full p-[2px] sm:p-[2.5px] rounded-[inherit] overflow-hidden transition-all duration-300 ${
+          isPreviewActive ? 'shadow-2xl' : 'shadow-md dark:shadow-lg'
         }`}
         style={{
           backgroundColor: borderConfig.baseBorderColor,
+          backgroundImage: borderConfig.baseBorderGradient,
         }}
       >
         {/* High-Intensity Traveling Conic Laser Beam Layer */}
@@ -308,11 +328,12 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
         />
 
         {/* 3. Inner Card Mask (Protects thumbnail, video, and text from overpowering) */}
-        <div className="relative z-10 w-full h-full rounded-[inherit] bg-[#0E121A] overflow-hidden">
+        <div className="relative z-10 w-full h-full rounded-[inherit] bg-[#0E121A] overflow-hidden ring-1 ring-black/25 dark:ring-black/50">
           {/* Main Static Thumbnail Image */}
           <img
             src={thumbnailSrc}
             alt=""
+            referrerPolicy="no-referrer"
             onError={() => setThumbError(true)}
             loading="lazy"
             className={`w-full h-full object-cover transition-opacity duration-300 ${
@@ -354,6 +375,7 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
                 title={video.title}
                 className="w-full h-full border-0 pointer-events-none"
                 allow="autoplay; encrypted-media"
+                referrerPolicy="strict-origin-when-cross-origin"
               />
             </div>
           )}
@@ -369,18 +391,27 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
             </div>
           )}
 
-          {/* Top Overlay: Category / Live Badge, 4K Badge, Audio Toggle */}
-          <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none z-20">
+          {/* Top Overlay: Category / Live / Compact VIP Badge & Audio Toggle */}
+          <div className={`absolute flex items-center justify-between pointer-events-none z-20 ${compact || compactMobile ? 'top-1.5 left-1.5 right-1.5 sm:top-2 sm:left-2 sm:right-2' : 'top-2 left-2 right-2'}`}>
             <div className="flex items-center gap-1.5">
               {isLive ? (
-                <div className="px-2 py-0.5 rounded-full bg-[#FF3040] text-white text-[10px] font-extrabold flex items-center gap-1 shadow-md shadow-[#FF3040]/30 animate-pulse">
+                <div className="px-2 py-0.5 rounded-full bg-[#FF3040] text-white text-[9.5px] sm:text-[10px] font-extrabold flex items-center gap-1 shadow-md shadow-[#FF3040]/30 animate-pulse">
                   <span className="w-1.5 h-1.5 rounded-full bg-white" />
                   <span>Live</span>
                 </div>
               ) : (
-                <div className="px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[10px] font-semibold text-white/90 border border-white/10 uppercase tracking-wide">
-                  {video.category || 'Tazama'}
-                </div>
+                <>
+                  {borderConfig.variant === 'premium' && (compact || compactMobile) && (
+                    <div className={`${compact ? 'inline-flex' : 'inline-flex sm:hidden'} items-center gap-0.5 px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 text-black text-[9px] font-black tracking-wide shadow`}>
+                      <span>VIP</span>
+                    </div>
+                  )}
+                  {!compact && (
+                    <div className={`${compactMobile ? 'hidden sm:block' : 'block'} px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[10px] font-semibold text-white/90 border border-white/10 uppercase tracking-wide`}>
+                      {video.category || 'Tazama'}
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -400,9 +431,9 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
           </div>
 
           {/* Bottom-left Quick Action Buttons (Watch Later / Bookmark & Like) on hover */}
-          {isHovered && !isLive && (
+          {isHovered && !isLive && !compact && (
             <div 
-              className="absolute bottom-2 left-2 flex items-center gap-1.5 z-30 animate-in fade-in duration-150"
+              className={`${compactMobile ? 'hidden sm:flex' : 'flex'} absolute bottom-2 left-2 items-center gap-1.5 z-30 animate-in fade-in duration-150`}
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -433,14 +464,23 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
             </div>
           )}
 
-          {/* Bottom-right: PREMIUM Badge (reference image_97ec2eb4.png) or Duration Badge */}
+          {/* Bottom-right: PREMIUM Badge on desktop or Duration Badge */}
           {borderConfig.variant === 'premium' ? (
-            <div className="absolute bottom-2 right-2 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 text-black text-[10px] font-black tracking-wide shadow-lg border border-amber-200/50 flex items-center gap-1 z-20">
-              <span>👑</span>
-              <span>PREMIUM</span>
-            </div>
+            <>
+              {!compact && (
+                <div className={`${compactMobile ? 'hidden sm:flex' : 'flex'} absolute bottom-2 right-2 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 text-black text-[10px] font-black tracking-wide shadow-lg border border-amber-200/50 items-center gap-1 z-20`}>
+                  <span>👑</span>
+                  <span>PREMIUM</span>
+                </div>
+              )}
+              {(compact || compactMobile) && (
+                <div className={`${compact ? 'block' : 'block sm:hidden'} absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/85 backdrop-blur-sm text-[9.5px] font-mono font-bold text-white border border-white/10 z-20 shadow`}>
+                  {formatDuration(video.durationSeconds)}
+                </div>
+              )}
+            </>
           ) : !isLive ? (
-            <div className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-md bg-black/85 backdrop-blur-sm text-[10px] font-mono font-bold text-white border border-white/10 z-20 shadow">
+            <div className={`absolute rounded-md bg-black/85 backdrop-blur-sm font-mono font-bold text-white border border-white/10 z-20 shadow ${compact || compactMobile ? 'bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 px-1.5 py-0.5 text-[9.5px] sm:text-[10px]' : 'bottom-2 right-2 px-1.5 py-0.5 text-[10px]'}`}>
               {formatDuration(video.durationSeconds)}
             </div>
           ) : null}
@@ -451,6 +491,10 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
               <img
                 src={video.channelAvatar || createAvatarSvgDataUri(video.channelName)}
                 alt=""
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = createAvatarSvgDataUri(video.channelName);
+                }}
                 className="w-4 h-4 rounded-full object-cover"
               />
               <span className="text-[10px] text-white font-medium truncate max-w-[100px]">

@@ -21,7 +21,7 @@ export const InFeedAdCard: React.FC<InFeedAdCardProps> = ({ ad }) => {
   return (
     <div 
       onClick={handleClick}
-      className="flex flex-col rounded-2xl sm:rounded-3xl bg-[#141824] border border-amber-500/40 hover:border-amber-400 p-3 sm:p-4 group cursor-pointer transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/10 hover:-translate-y-1 relative overflow-hidden"
+      className="flex flex-col rounded-2xl sm:rounded-3xl bg-white dark:bg-[#141824] border border-amber-300 dark:border-amber-500/40 hover:border-amber-500 dark:hover:border-amber-400 p-3 sm:p-4 group cursor-pointer transition-all duration-300 hover:shadow-lg dark:hover:shadow-xl hover:shadow-amber-500/10 hover:-translate-y-1 relative overflow-hidden"
     >
       {/* Media Container */}
       <div className="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black mb-3">
@@ -60,23 +60,23 @@ export const InFeedAdCard: React.FC<InFeedAdCardProps> = ({ ad }) => {
       {/* Content */}
       <div className="flex flex-col flex-1 justify-between space-y-2">
         <div>
-          <div className="flex items-center justify-between text-[11px] text-[#A7B0C0] mb-1">
-            <span className="font-bold text-amber-300 truncate max-w-[200px]">{ad.creatorName}</span>
-            <span className="text-[10px] text-emerald-400 font-mono">Tazama Verified Partner</span>
+          <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-[#A7B0C0] mb-1">
+            <span className="font-bold text-amber-700 dark:text-amber-300 truncate max-w-[200px]">{ad.creatorName}</span>
+            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono">Tazama Verified Partner</span>
           </div>
 
-          <h3 className="text-sm font-black text-white group-hover:text-amber-400 transition-colors line-clamp-2 leading-snug">
+          <h3 className="text-sm font-black text-slate-900 dark:text-white group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors line-clamp-2 leading-snug">
             {ad.headline}
           </h3>
 
-          <p className="text-xs text-[#A7B0C0] line-clamp-2 mt-1 leading-relaxed">
+          <p className="text-xs text-slate-600 dark:text-[#A7B0C0] line-clamp-2 mt-1 leading-relaxed">
             {ad.description}
           </p>
         </div>
 
         {/* CTA Button */}
-        <div className="pt-2 border-t border-[#262E3E]/60 flex items-center justify-between">
-          <span className="text-[10px] text-[#A7B0C0] truncate max-w-[140px] font-mono">
+        <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]/60 flex items-center justify-between">
+          <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] truncate max-w-[140px] font-mono">
             {ad.destinationUrl.replace('https://', '')}
           </span>
 

@@ -18,6 +18,7 @@ import {
 } from '../lib/firebase';
 import { UserProfile, Channel, UserRole, Language, Theme } from '../types';
 import { INITIAL_CHANNELS, INITIAL_USERS } from '../data/mockData';
+import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -114,7 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (savedLang) setLanguageState(savedLang);
 
     const savedTheme = localStorage.getItem('tazama_theme') as Theme;
-    if (savedTheme) setTheme(savedTheme);
+    if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -140,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               uid: firebaseUser.uid,
               email: firebaseUser.email || '',
               displayName: firebaseUser.displayName || 'Mtumiaji Mpya wa Tazama',
-              photoURL: firebaseUser.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+              photoURL: firebaseUser.photoURL || createAvatarSvgDataUri(firebaseUser.displayName || 'Tazama User'),
               role: isAdminEmail ? 'admin' : 'viewer',
               country: 'Tanzania',
               preferredLanguage: language,
@@ -232,7 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         uid: 'user-google-tz',
         email: 'amytzee@gmail.com',
         displayName: 'Amytzee (Admin)',
-        photoURL: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+        photoURL: createAvatarSvgDataUri('Amytzee'),
         role: 'admin',
         country: 'Tanzania',
         preferredLanguage: language,
@@ -323,11 +324,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       uid: 'user-' + Date.now(),
       email: cleanEmail,
       displayName: cleanEmail.split('@')[0].replace('.', ' '),
-      photoURL: isAdmin 
-        ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
-        : resolvedRole === 'creator'
-        ? 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80'
-        : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      photoURL: createAvatarSvgDataUri(cleanEmail.split('@')[0].replace('.', ' ') || 'Tazama'),
       role: resolvedRole,
       country: 'Tanzania',
       preferredLanguage: language,
@@ -380,9 +377,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       uid: 'user-' + Date.now(),
       email: cleanEmail,
       displayName: userData.name,
-      photoURL: isAdmin 
-        ? 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80'
-        : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+      photoURL: createAvatarSvgDataUri(userData.name || 'Mtumiaji'),
       role: assignedRole,
       country: 'Tanzania',
       preferredLanguage: language,
@@ -440,8 +435,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       handle: channelData?.handle || ('@' + (profile.displayName || 'creator').toLowerCase().replace(/\s+/g, '')),
       name: channelData?.name || (profile.displayName || 'Kituo Changu'),
       bio: channelData?.bio || `Kituo rasmi cha ${profile.displayName} kwenye Tazama.`,
-      avatarUrl: channelData?.avatarUrl || profile.photoURL || 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-      bannerUrl: channelData?.bannerUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80',
+      avatarUrl: channelData?.avatarUrl || profile.photoURL || createAvatarSvgDataUri(channelData?.name || profile.displayName || 'Kituo'),
+      bannerUrl: channelData?.bannerUrl || createThumbnailSvgDataUri(channelData?.name || profile.displayName || 'Kituo', 'Burudani'),
       subscriberCount: 0,
       videoCount: 0,
       isVerified: false,

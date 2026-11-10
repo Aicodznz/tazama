@@ -26,7 +26,8 @@ import {
   ChevronRight,
   MoreVertical,
   CornerDownRight,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 import { VideoItem, VideoCategory } from '../types';
 import { VideoPlayer } from '../components/video/VideoPlayer';
@@ -107,8 +108,20 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   const [showAddToPlaylistModal, setShowAddToPlaylistModal] = useState<boolean>(false);
   const [showDownloadModal, setShowDownloadModal] = useState<boolean>(false);
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
+  const [showAiSummaryModal, setShowAiSummaryModal] = useState<boolean>(false);
   const [newPlaylistTitle, setNewPlaylistTitle] = useState<string>('');
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState<boolean>(false);
+
+  // Next video calculation for autoplay
+  const nextVideo = useMemo(() => {
+    return (videos && videos.find(v => Boolean(v && v.id !== liveVideo?.id))) || null;
+  }, [videos, liveVideo?.id]);
+
+  const handleNextVideo = () => {
+    if (nextVideo) {
+      onSelectVideo(nextVideo);
+    }
+  };
 
   // Guest Auth Prompt Modal
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
@@ -350,29 +363,29 @@ export const WatchPage: React.FC<WatchPageProps> = ({
         <div className="flex-1 min-w-0 w-full">
           
           {/* Mobile Top Navigation Bar */}
-          <div className="flex items-center justify-between py-2 px-3 sm:hidden bg-[#10131B] border-b border-[#262E3E]/60 sticky top-0 z-30 mb-0">
+          <div className="flex items-center justify-between py-2 px-3 sm:hidden bg-white dark:bg-[#10131B] border-b border-slate-200 dark:border-[#262E3E]/60 sticky top-0 z-30 mb-0">
             <button
               onClick={handleMinimize}
-              className="p-1 -ml-1 rounded-full hover:bg-[#191E29] text-white active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
+              className="p-1 -ml-1 rounded-full hover:bg-slate-100 dark:hover:bg-[#191E29] text-slate-900 dark:text-white active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
               title="Punguza video kwenye Mini-Player"
             >
               <ChevronDown className="w-5 h-5 text-[#FF3040]" />
-              <span className="text-[11px] font-bold text-[#A7B0C0]">Rudi</span>
+              <span className="text-[11px] font-bold text-slate-600 dark:text-[#A7B0C0]">Rudi</span>
             </button>
 
             <div className="flex items-center gap-1.5 min-w-0 max-w-[200px] text-center">
-              <span className="text-xs font-bold text-white truncate">
+              <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
                 {video.channelName}
               </span>
               {video.isChannelVerified && (
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
               )}
             </div>
 
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setShowReportModal(true)}
-                className="p-1.5 rounded-full hover:bg-[#191E29] text-[#A7B0C0] hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-[#191E29] text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white transition-colors cursor-pointer"
                 title="Ripoti Video"
               >
                 <Settings className="w-4 h-4" />
@@ -381,9 +394,14 @@ export const WatchPage: React.FC<WatchPageProps> = ({
           </div>
 
           {/* Adaptive Video Player: edge-to-edge on mobile, rounded on sm+ */}
-          <div className="w-full rounded-none sm:rounded-2xl overflow-hidden bg-black shadow-2xl">
+          <div className="w-full rounded-none sm:rounded-2xl overflow-hidden bg-black shadow-2xl relative">
             {liveVideo && liveVideo.videoUrl ? (
-              <VideoPlayer video={liveVideo} autoPlay={true} />
+              <VideoPlayer 
+                video={liveVideo} 
+                autoPlay={true} 
+                onMinimize={handleMinimize}
+                onNextVideo={handleNextVideo}
+              />
             ) : (
               <div className="aspect-video flex flex-col items-center justify-center p-6 text-center space-y-3 bg-[#141824]">
                 <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center">
@@ -397,46 +415,46 @@ export const WatchPage: React.FC<WatchPageProps> = ({
             )}
           </div>
 
-          {/* Content Wrapper for mobile padding */}
-          <div className="px-3 sm:px-0">
+          {/* Modern YouTube Mobile Sheet Container */}
+          <div className="relative -mt-2 sm:mt-4 rounded-t-3xl sm:rounded-3xl bg-white dark:bg-[#0F131C] border-t sm:border border-slate-200 dark:border-white/10 px-4 sm:px-6 pt-4 pb-6 shadow-sm sm:shadow-xl dark:shadow-2xl z-10 transition-colors">
             {/* Data Saver Mode Notice */}
             {isDataSaver && (
-              <div className="mt-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center justify-between">
+              <div className="mb-3 px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-500/10 dark:border-amber-500/20 dark:text-amber-300 text-xs flex items-center justify-between">
                 <span className="flex items-center gap-1.5 font-medium">
                   ⚡ Hali ya Kubana Bando (Data Saver) Imewashwa: Ubora wa 360p
                 </span>
-                <span className="text-[10px] font-bold text-amber-400">MBs Zinaokolewa</span>
+                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">MBs Zinaokolewa</span>
               </div>
             )}
 
-            {/* 1. Video Title: bold & clear */}
-            <h1 className="mt-2.5 sm:mt-4 text-base sm:text-xl font-bold text-white tracking-tight leading-snug line-clamp-2">
+            {/* 1. Video Title: bold & prominent typography */}
+            <h1 className="mt-1 sm:mt-2 text-base sm:text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight leading-snug line-clamp-2">
               {liveVideo.title}
             </h1>
 
-            {/* 2. Metadata Line (Matching image_9d55dc60.png: @channel · likes · views · time · #category · more) */}
-            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1 text-xs text-[#A7B0C0]">
+            {/* 2. Metadata Line: @channel · likes · views · time · #category more */}
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-1.5 text-xs text-slate-600 dark:text-[#A7B0C0]">
               <span 
                 onClick={() => liveVideo?.channelId && onSelectChannel(liveVideo.channelId)}
-                className="font-medium text-white/90 hover:text-white cursor-pointer"
+                className="font-semibold text-slate-900 hover:text-black dark:text-white/95 dark:hover:text-white cursor-pointer"
               >
                 @{creatorChannel?.handle ? (creatorChannel.handle.startsWith('@') ? creatorChannel.handle.slice(1) : creatorChannel.handle) : (liveVideo?.channelName ? liveVideo.channelName.toLowerCase().replace(/\s+/g, '') : 'channel')}
               </span>
               <span>•</span>
               <span>{formatViews(liveVideo.likesCount, language)} likes</span>
               <span>•</span>
-              <span className="text-white font-semibold">{formatViews(liveVideo.viewsCount, language)} views</span>
+              <span className="text-slate-900 dark:text-white font-semibold">{formatViews(liveVideo.viewsCount, language)} views</span>
               <span>•</span>
               <span>{formatRelativeTime(liveVideo.createdAt, language)}</span>
               {liveVideo.category && (
                 <>
                   <span>•</span>
-                  <span className="text-white/70">#{liveVideo.category}</span>
+                  <span className="text-slate-700 dark:text-white/80">#{liveVideo.category}</span>
                 </>
               )}
               <button 
                 onClick={() => setIsDescExpanded(!isDescExpanded)} 
-                className="font-bold text-white hover:underline cursor-pointer ml-0.5"
+                className="font-bold text-slate-900 dark:text-white hover:underline cursor-pointer ml-0.5"
               >
                 {isDescExpanded ? 'less' : 'more'}
               </button>
@@ -444,8 +462,8 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
             {/* Expandable Description Box (when user clicks more) */}
             {isDescExpanded && (
-              <div className="mt-2.5 p-3.5 rounded-2xl bg-[#191E2A] border border-white/10 text-xs text-[#D1D7E0] animate-in fade-in space-y-2">
-                <div className="flex items-center justify-between pb-2 border-b border-white/10 text-[11px] font-bold text-[#A7B0C0]">
+              <div className="mt-2.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-[#191E2A] border border-slate-200 dark:border-white/10 text-xs text-slate-700 dark:text-[#D1D7E0] animate-in fade-in space-y-2">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-white/10 text-[11px] font-bold text-slate-500 dark:text-[#A7B0C0]">
                   <span>Maelezo ya Video (Description)</span>
                   <button 
                     onClick={() => setIsDescExpanded(false)} 
@@ -454,11 +472,11 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                     Onyesha kidogo
                   </button>
                 </div>
-                <p className="whitespace-pre-line leading-relaxed text-[#E2E8F0]">
+                <p className="whitespace-pre-line leading-relaxed text-slate-800 dark:text-[#E2E8F0]">
                   {liveVideo.description || 'Hakuna maelezo ya ziada kuhusu video hii.'}
                 </p>
                 {liveVideo.tags && liveVideo.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-1 border-t border-white/5">
+                  <div className="flex flex-wrap gap-1.5 pt-1 border-t border-slate-200 dark:border-white/5">
                     {liveVideo.tags.map((tag, i) => (
                       <span key={i} className="text-xs text-[#FF3040] hover:underline font-medium">
                         #{tag}
@@ -469,7 +487,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               </div>
             )}
 
-            {/* 3. SINGLE-ROW ACTION & CHANNEL BAR (Exact 2024 YouTube Mobile layout from image_9d55dc60.png) */}
+            {/* 3. SINGLE-ROW ACTION & CHANNEL BAR */}
             <div className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth touch-pan-x flex-nowrap -mx-3 px-3 sm:mx-0 sm:px-0 py-1">
               {/* Creator Avatar */}
               <div 
@@ -483,7 +501,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = createAvatarSvgDataUri(liveVideo.channelName);
                   }}
-                  className="w-9 h-9 rounded-full object-cover ring-1 ring-white/10 group-hover:ring-[#FF3040] transition-all bg-[#141824]"
+                  className="w-9 h-9 rounded-full object-cover ring-1 ring-slate-200 dark:ring-white/10 group-hover:ring-[#FF3040] transition-all bg-slate-100 dark:bg-[#141824]"
                 />
               </div>
 
@@ -493,48 +511,48 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 className="hidden md:flex flex-col min-w-0 pr-1 cursor-pointer group shrink-0"
               >
                 <div className="flex items-center gap-1">
-                  <span className="text-xs font-bold text-white truncate group-hover:text-[#FF3040] transition-colors">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-[#FF3040] transition-colors">
                     {liveVideo.channelName}
                   </span>
                   {(liveVideo.isChannelVerified || creatorChannel?.isVerified) && (
-                    <CheckCircle2 className="w-3 h-3 text-[#A7B0C0] shrink-0" />
+                    <CheckCircle2 className="w-3 h-3 text-slate-500 dark:text-[#A7B0C0] shrink-0" />
                   )}
                 </div>
-                <span className="text-[10px] text-[#A7B0C0]">
+                <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0]">
                   {formatViews(realSubscriberCount, language)} {language === 'sw' ? 'wafuasi' : 'subs'}
                 </span>
               </div>
 
-              {/* Subscribe Button (Prominent white pill button on mobile just like image_9d55dc60.png) */}
+              {/* Subscribe Button */}
               {isSubscribed ? (
-                <div className="flex items-center rounded-full bg-white/10 border border-white/15 shrink-0">
+                <div className="flex items-center rounded-full bg-slate-100 border border-slate-200 dark:bg-white/10 dark:border-white/15 shrink-0">
                   <button
                     onClick={handleSubscribeClick}
-                    className="px-3 py-1.5 text-xs font-bold text-white flex items-center gap-1 cursor-pointer"
+                    className="px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1 cursor-pointer"
                     title="Umesubscribe kwenye chaneli hii"
                   >
-                    <Check className="w-3.5 h-3.5 text-[#16C784]" />
+                    <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
                     <span>Unafuatilia</span>
                   </button>
-                  <div className="w-[1px] h-3.5 bg-white/20" />
+                  <div className="w-[1px] h-3.5 bg-slate-300 dark:bg-white/20" />
                   <button
                     onClick={handleBellClick}
-                    className="px-2 py-1.5 text-white/90 hover:text-white cursor-pointer relative"
+                    className="px-2 py-1.5 text-slate-700 hover:text-slate-900 dark:text-white/90 dark:hover:text-white cursor-pointer relative"
                     title="Aina ya taarifa za kengele"
                   >
                     {bellMode === 'all' ? (
-                      <BellRing className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                      <BellRing className="w-3.5 h-3.5 text-amber-500 fill-amber-500 dark:text-amber-400 dark:fill-amber-400" />
                     ) : bellMode === 'personalized' ? (
-                      <Bell className="w-3.5 h-3.5 text-blue-400" />
+                      <Bell className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                     ) : (
-                      <BellOff className="w-3.5 h-3.5 text-[#A7B0C0]" />
+                      <BellOff className="w-3.5 h-3.5 text-slate-500 dark:text-[#A7B0C0]" />
                     )}
                   </button>
                 </div>
               ) : (
                 <button
                   onClick={handleSubscribeClick}
-                  className="shrink-0 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white text-black hover:bg-gray-200 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm"
+                  className="shrink-0 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm"
                 >
                   Subscribe
                 </button>
@@ -542,47 +560,47 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
               {/* 3-Tier Bell Dropdown Popover */}
               {showBellDropdown && (
-                <div className="absolute top-12 left-10 sm:left-auto w-64 bg-[#191E29] border border-[#262E3E] rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-1">
-                  <div className="px-3 py-1.5 text-[10px] font-black text-[#A7B0C0] border-b border-[#262E3E] uppercase tracking-wider">
+                <div className="absolute top-12 left-10 sm:left-auto w-64 bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150 space-y-1">
+                  <div className="px-3 py-1.5 text-[10px] font-black text-slate-500 dark:text-[#A7B0C0] border-b border-slate-200 dark:border-[#262E3E] uppercase tracking-wider">
                     Aina ya Taarifa (Notifications)
                   </div>
 
                   <button
                     onClick={() => handleSelectBellMode('all')}
                     className={`w-full flex items-start gap-2.5 p-2 rounded-xl text-left cursor-pointer transition-colors ${
-                      bellMode === 'all' ? 'bg-[#232A39] text-amber-400 font-bold' : 'hover:bg-[#232A39]/60 text-white'
+                      bellMode === 'all' ? 'bg-amber-50 text-amber-700 dark:bg-[#232A39] dark:text-amber-400 font-bold' : 'hover:bg-slate-50 text-slate-900 dark:hover:bg-[#232A39]/60 dark:text-white'
                     }`}
                   >
-                    <BellRing className="w-4 h-4 mt-0.5 shrink-0 text-amber-400" />
+                    <BellRing className="w-4 h-4 mt-0.5 shrink-0 text-amber-500 dark:text-amber-400" />
                     <div>
                       <div className="text-xs font-bold">Zote (All)</div>
-                      <div className="text-[10px] text-[#A7B0C0]">Pokea taarifa zote za video mpya na Live</div>
+                      <div className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">Pokea taarifa zote za video mpya na Live</div>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleSelectBellMode('personalized')}
                     className={`w-full flex items-start gap-2.5 p-2 rounded-xl text-left cursor-pointer transition-colors ${
-                      bellMode === 'personalized' ? 'bg-[#232A39] text-blue-400 font-bold' : 'hover:bg-[#232A39]/60 text-white'
+                      bellMode === 'personalized' ? 'bg-blue-50 text-blue-700 dark:bg-[#232A39] dark:text-blue-400 font-bold' : 'hover:bg-slate-50 text-slate-900 dark:hover:bg-[#232A39]/60 dark:text-white'
                     }`}
                   >
-                    <Bell className="w-4 h-4 mt-0.5 shrink-0 text-blue-400" />
+                    <Bell className="w-4 h-4 mt-0.5 shrink-0 text-blue-600 dark:text-blue-400" />
                     <div>
                       <div className="text-xs font-bold">Zilizochaguliwa (Personalized)</div>
-                      <div className="text-[10px] text-[#A7B0C0]">Taarifa maalum kulingana na unachopenda</div>
+                      <div className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">Taarifa maalum kulingana na unachopenda</div>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleSelectBellMode('none')}
                     className={`w-full flex items-start gap-2.5 p-2 rounded-xl text-left cursor-pointer transition-colors ${
-                      bellMode === 'none' ? 'bg-[#232A39] text-[#FF3040] font-bold' : 'hover:bg-[#232A39]/60 text-white'
+                      bellMode === 'none' ? 'bg-red-50 text-[#FF3040] dark:bg-[#232A39] font-bold' : 'hover:bg-slate-50 text-slate-900 dark:hover:bg-[#232A39]/60 dark:text-white'
                     }`}
                   >
                     <BellOff className="w-4 h-4 mt-0.5 shrink-0 text-[#FF3040]" />
                     <div>
                       <div className="text-xs font-bold">Hakuna (None)</div>
-                      <div className="text-[10px] text-[#A7B0C0]">Usipokee taarifa kutoka chaneli hii</div>
+                      <div className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">Usipokee taarifa kutoka chaneli hii</div>
                     </div>
                   </button>
                 </div>
@@ -591,50 +609,60 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               {/* Join Club button on desktop */}
               <button
                 onClick={handleJoinClubClick}
-                className="hidden lg:flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#1F2533] hover:bg-[#262E3E] text-white border border-white/10 text-xs font-semibold transition-all cursor-pointer shrink-0"
+                className="hidden lg:flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-900 border border-slate-200 dark:bg-[#1F2533] dark:hover:bg-[#262E3E] dark:text-white dark:border-white/10 text-xs font-semibold transition-all cursor-pointer shrink-0"
               >
-                <Award className="w-3.5 h-3.5 text-amber-400" />
+                <Award className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>Jiunge</span>
               </button>
 
-              {/* 1. Like & Dislike Combined Pill (Exact YouTube style) */}
-              <div className="flex items-center shrink-0 rounded-full bg-[#1F2533] hover:bg-[#262E3E] border border-white/10 overflow-hidden shadow-sm">
+              {/* 1. Like & Dislike Combined Pill */}
+              <div className="flex items-center shrink-0 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 dark:bg-[#1F2533] dark:hover:bg-[#262E3E] dark:border-white/10 overflow-hidden shadow-sm">
                 <button
                   onClick={handleLikeClick}
                   className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold transition-colors cursor-pointer ${
-                    isLiked ? 'text-[#FF3040]' : 'text-white'
+                    isLiked ? 'text-[#FF3040]' : 'text-slate-900 dark:text-white'
                   }`}
                   title="Penda video hii"
                 >
                   <ThumbsUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiked ? 'fill-[#FF3040]' : ''}`} />
                   <span>{formatViews(liveVideo.likesCount, language)}</span>
                 </button>
-                <div className="w-[1px] h-3.5 bg-white/20" />
+                <div className="w-[1px] h-3.5 bg-slate-300 dark:bg-white/20" />
                 <button
                   onClick={handleDislikeClick}
                   className={`px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold transition-colors cursor-pointer ${
-                    isDisliked ? 'text-amber-400' : 'text-[#A7B0C0] hover:text-white'
+                    isDisliked ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white'
                   }`}
                   title="Sipendi video hii"
                 >
-                  <ThumbsDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isDisliked ? 'fill-amber-400' : ''}`} />
+                  <ThumbsDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isDisliked ? 'fill-amber-600 dark:fill-amber-400' : ''}`} />
                 </button>
               </div>
 
               {/* 2. Shiriki (Share) Pill */}
               <button
                 onClick={() => setShowShareModal(true)}
-                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-[#1F2533] hover:bg-[#262E3E] border border-white/10 text-xs font-bold text-white transition-all active:scale-95 cursor-pointer"
+                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-bold text-slate-900 dark:bg-[#1F2533] dark:hover:bg-[#262E3E] dark:border-white/10 dark:text-white transition-all active:scale-95 cursor-pointer"
                 title="Shiriki video"
               >
                 <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>Shiriki</span>
               </button>
 
+              {/* 2.5. Tazama AI */}
+              <button
+                onClick={() => setShowAiSummaryModal(true)}
+                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 hover:from-purple-200/80 hover:to-pink-200/80 border border-purple-300 text-purple-900 dark:from-purple-600/30 dark:to-pink-600/30 dark:hover:from-purple-600/40 dark:hover:to-pink-600/40 dark:border-purple-500/40 text-xs font-bold dark:text-white transition-all active:scale-95 cursor-pointer shadow-sm shadow-purple-500/10"
+                title="Muhtasari wa Video kwa AI (Tazama AI)"
+              >
+                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-700 dark:text-amber-300" />
+                <span className="bg-gradient-to-r from-purple-700 to-pink-600 dark:from-amber-300 dark:to-pink-200 bg-clip-text text-transparent font-extrabold">Tazama AI</span>
+              </button>
+
               {/* 3. Remix / Zawadi (Gift) */}
               <button
                 onClick={handleGiftClick}
-                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-[#1F2533] hover:bg-[#262E3E] border border-[#16C784]/30 text-xs font-bold text-[#16C784] transition-all active:scale-95 cursor-pointer shadow-sm"
+                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-100 hover:bg-slate-200 border border-emerald-300 text-emerald-700 dark:bg-[#1F2533] dark:hover:bg-[#262E3E] dark:border-[#16C784]/30 text-xs font-bold dark:text-[#16C784] transition-all active:scale-95 cursor-pointer shadow-sm"
                 title="Tuma zawadi ya kidijitali"
               >
                 <Gift className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -646,13 +674,13 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 onClick={handleDownloadClick}
                 className={`flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full border text-xs font-bold transition-all active:scale-95 cursor-pointer ${
                   isDownloadedAlready 
-                    ? 'bg-[#16C784]/20 border-[#16C784]/50 text-[#16C784]' 
-                    : 'bg-[#1F2533] hover:bg-[#262E3E] border-white/10 text-white'
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-700 dark:bg-[#16C784]/20 dark:border-[#16C784]/50 dark:text-[#16C784]' 
+                    : 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-900 dark:bg-[#1F2533] dark:hover:bg-[#262E3E] dark:border-white/10 dark:text-white'
                 }`}
                 title="Pakua video"
               >
                 {isDownloadedAlready ? (
-                  <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#16C784]" />
+                  <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 dark:text-[#16C784]" />
                 ) : (
                   <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 )}
@@ -662,7 +690,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               {/* 5. Orodha (Save) Pill */}
               <button
                 onClick={handleSaveClick}
-                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-[#1F2533] hover:bg-[#262E3E] border border-white/10 text-xs font-bold text-white transition-all active:scale-95 cursor-pointer"
+                className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-xs font-bold text-slate-900 dark:bg-[#1F2533] dark:hover:bg-[#262E3E] dark:border-white/10 dark:text-white transition-all active:scale-95 cursor-pointer"
                 title="Hifadhi kwenye playlist"
               >
                 <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -672,7 +700,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               {/* 6. More Actions (⋯) */}
               <button
                 onClick={() => setShowReportModal(true)}
-                className="shrink-0 p-2 sm:p-2.5 rounded-full bg-[#1F2533] hover:bg-[#262E3E] border border-white/10 text-white transition-all active:scale-95 cursor-pointer"
+                className="shrink-0 p-2 sm:p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-900 dark:bg-[#1F2533] dark:hover:bg-[#262E3E] dark:border-white/10 dark:text-white transition-all active:scale-95 cursor-pointer"
                 title="Mengineyo"
               >
                 <MoreVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -681,24 +709,24 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
             {/* Bell Toast Notification */}
             {bellToast && (
-              <div className="mt-2.5 px-4 py-2 rounded-xl bg-[#191E29] border border-[#262E3E] text-xs text-white text-center shadow-lg animate-in fade-in duration-200">
+              <div className="mt-2.5 px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-[#191E29] border border-slate-800 dark:border-[#262E3E] text-xs text-center shadow-lg animate-in fade-in duration-200">
                 {bellToast}
               </div>
             )}
 
-            {/* 4. COMMENTS PREVIEW CARD (Exact image_9d55dc60.png on mobile) */}
+            {/* 4. COMMENTS PREVIEW CARD */}
             <div 
               onClick={() => setShowCommentsMobile(!showCommentsMobile)}
-              className="mt-3 p-3 sm:hidden rounded-2xl bg-[#181E29] hover:bg-[#202737] border border-white/5 cursor-pointer transition-all active:scale-[0.99]"
+              className="mt-3 p-3 sm:hidden rounded-2xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 dark:bg-[#181E29] dark:hover:bg-[#202737] dark:border-white/5 cursor-pointer transition-all active:scale-[0.99]"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-black text-white">Comments</span>
-                  <span className="text-xs text-[#A7B0C0] font-bold">{videoComments.length}</span>
+                  <span className="text-xs font-black text-slate-900 dark:text-white">Comments</span>
+                  <span className="text-xs text-slate-600 dark:text-[#A7B0C0] font-bold">{videoComments.length}</span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[#A7B0C0]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/40"></span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-white/20"></span>
+                <div className="flex items-center gap-1.5 text-slate-500 dark:text-[#A7B0C0]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500 dark:bg-white/40"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-white/20"></span>
                   <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform duration-200 ${showCommentsMobile ? 'rotate-180' : ''}`} />
                 </div>
               </div>
@@ -711,21 +739,21 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = createAvatarSvgDataUri('Mtumiaji');
                   }}
-                  className="w-6 h-6 rounded-full object-cover shrink-0 ring-1 ring-white/10 bg-[#141824] mt-0.5"
+                  className="w-6 h-6 rounded-full object-cover shrink-0 ring-1 ring-slate-200 dark:ring-white/10 bg-slate-200 dark:bg-[#141824] mt-0.5"
                 />
-                <p className="text-xs text-[#D1D7E0] line-clamp-2 leading-relaxed">
+                <p className="text-xs text-slate-700 dark:text-[#D1D7E0] line-clamp-2 leading-relaxed">
                   {videoComments[0]?.text || 'Kuwa wa kwanza kutoa maoni... Bofya hapa kuandika maoni yako.'}
                 </p>
               </div>
             </div>
 
-          {/* COMMENTS SECTION (Matching YouTube: Header with count, Sort button, Add comment box, Comments list) */}
-          <div className={`${showCommentsMobile ? 'block' : 'hidden sm:block'} mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-white/10 animate-in fade-in duration-200`}>
+          {/* COMMENTS SECTION */}
+          <div className={`${showCommentsMobile ? 'block' : 'hidden sm:block'} mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-200 dark:border-white/10 animate-in fade-in duration-200`}>
             
             {/* Comments Header & Sort By */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4 sm:gap-6">
-                <h3 className="text-base sm:text-lg font-black text-white">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
                   {videoComments.length} Maoni
                 </h3>
 
@@ -733,27 +761,27 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 <div className="relative">
                   <button
                     onClick={() => setShowSortDropdown(!showSortDropdown)}
-                    className="flex items-center gap-1.5 text-xs font-bold text-white/90 hover:text-white cursor-pointer px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
+                    className="flex items-center gap-1.5 text-xs font-bold text-slate-800 hover:text-black hover:bg-slate-100 dark:text-white/90 dark:hover:text-white cursor-pointer px-2 py-1 rounded-lg dark:hover:bg-white/5 transition-colors"
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5" />
                     <span>Panga kwa: {commentSort === 'top' ? 'Maarufu zaidi' : 'Mpya zaidi'}</span>
-                    <ChevronDown className="w-3 h-3 text-[#A7B0C0]" />
+                    <ChevronDown className="w-3 h-3 text-slate-500 dark:text-[#A7B0C0]" />
                   </button>
 
                   {showSortDropdown && (
-                    <div className="absolute top-8 left-0 w-44 bg-[#191E29] border border-[#262E3E] rounded-xl shadow-2xl py-1 z-40 text-xs">
+                    <div className="absolute top-8 left-0 w-44 bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-xl shadow-2xl py-1 z-40 text-xs">
                       <button
                         onClick={() => { setCommentSort('top'); setShowSortDropdown(false); }}
-                        className={`w-full text-left px-3 py-2 hover:bg-[#232A39] transition-colors ${
-                          commentSort === 'top' ? 'text-[#FF3040] font-bold' : 'text-white'
+                        className={`w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-[#232A39] transition-colors ${
+                          commentSort === 'top' ? 'text-[#FF3040] font-bold' : 'text-slate-800 dark:text-white'
                         }`}
                       >
                         Maarufu zaidi (Top)
                       </button>
                       <button
                         onClick={() => { setCommentSort('newest'); setShowSortDropdown(false); }}
-                        className={`w-full text-left px-3 py-2 hover:bg-[#232A39] transition-colors ${
-                          commentSort === 'newest' ? 'text-[#FF3040] font-bold' : 'text-white'
+                        className={`w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-[#232A39] transition-colors ${
+                          commentSort === 'newest' ? 'text-[#FF3040] font-bold' : 'text-slate-800 dark:text-white'
                         }`}
                       >
                         Mpya zaidi (Newest)
@@ -766,13 +794,13 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               {/* Mobile Close Comments Button */}
               <button
                 onClick={() => setShowCommentsMobile(false)}
-                className="sm:hidden text-xs font-bold text-[#A7B0C0] hover:text-white px-2.5 py-1 rounded-lg bg-white/5 cursor-pointer"
+                className="sm:hidden text-xs font-bold text-slate-600 hover:text-slate-900 bg-slate-100 dark:text-[#A7B0C0] dark:hover:text-white px-2.5 py-1 rounded-lg dark:bg-white/5 cursor-pointer"
               >
                 Funga ✕
               </button>
             </div>
 
-            {/* Comment Input Box (Clean underline style like YouTube) */}
+            {/* Comment Input Box */}
             <form onSubmit={handleCommentSubmit} className="flex gap-3 mb-6">
               <img
                 src={profile?.photoURL || createAvatarSvgDataUri(profile?.displayName || 'User')}
@@ -780,7 +808,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = createAvatarSvgDataUri(profile?.displayName || 'User');
                 }}
-                className="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-white/10 bg-[#141824]"
+                className="w-10 h-10 rounded-full object-cover shrink-0 ring-1 ring-slate-200 dark:ring-white/10 bg-slate-100 dark:bg-[#141824]"
               />
               <div className="flex-1">
                 <input
@@ -789,10 +817,10 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   onFocus={() => setIsCommentFocused(true)}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder={profile ? 'Andika maoni yako hapa...' : 'Ingia kwenye akaunti ili uweze kutoa maoni...'}
-                  className="w-full bg-transparent border-b border-white/20 pb-2 text-sm text-white placeholder-[#A7B0C0]/70 focus:outline-none focus:border-[#FF3040] transition-colors"
+                  className="w-full bg-transparent border-b border-slate-300 dark:border-white/20 pb-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0]/70 focus:outline-none focus:border-[#FF3040] transition-colors"
                 />
 
-                {/* Comment Action Buttons (Visible when input is focused or has text) */}
+                {/* Comment Action Buttons */}
                 {(isCommentFocused || commentText.trim()) && (
                   <div className="mt-2.5 flex items-center justify-end gap-2">
                     <button
@@ -801,7 +829,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                         setCommentText('');
                         setIsCommentFocused(false);
                       }}
-                      className="px-3.5 py-1.5 rounded-full text-xs font-bold text-[#A7B0C0] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-[#A7B0C0] dark:hover:text-white dark:hover:bg-white/10 transition-colors cursor-pointer"
                     >
                       Ghairi
                     </button>
@@ -811,7 +839,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                       className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                         commentText.trim()
                           ? 'bg-[#FF3040] hover:bg-[#E02635] text-white shadow-md'
-                          : 'bg-white/10 text-white/40 cursor-not-allowed'
+                          : 'bg-slate-200 text-slate-400 dark:bg-white/10 dark:text-white/40 cursor-not-allowed'
                       }`}
                     >
                       Toa Maoni
@@ -832,29 +860,29 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = createAvatarSvgDataUri(c.userName);
                       }}
-                      className="w-9 h-9 rounded-full object-cover shrink-0 ring-1 ring-white/10 bg-[#141824]"
+                      className="w-9 h-9 rounded-full object-cover shrink-0 ring-1 ring-slate-200 dark:ring-white/10 bg-slate-100 dark:bg-[#141824]"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-bold text-white text-xs">{c.userName}</span>
-                        <span className="text-[11px] text-[#A7B0C0]">
+                        <span className="font-bold text-slate-900 dark:text-white text-xs">{c.userName}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">
                           {formatRelativeTime(c.createdAt, language)}
                         </span>
                       </div>
-                      <p className="text-[#D1D7E0] leading-relaxed text-xs sm:text-sm">
+                      <p className="text-slate-700 dark:text-[#D1D7E0] leading-relaxed text-xs sm:text-sm">
                         {c.text}
                       </p>
 
-                      {/* Comment Interactions (Like, Dislike, Reply) */}
-                      <div className="flex items-center gap-3 mt-1.5 text-xs text-[#A7B0C0]">
-                        <button className="flex items-center gap-1 hover:text-white cursor-pointer">
+                      {/* Comment Interactions */}
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500 dark:text-[#A7B0C0]">
+                        <button className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white cursor-pointer">
                           <ThumbsUp className="w-3.5 h-3.5" />
                           <span>{c.likesCount || 0}</span>
                         </button>
-                        <button className="hover:text-white cursor-pointer">
+                        <button className="hover:text-slate-900 dark:hover:text-white cursor-pointer">
                           <ThumbsDown className="w-3.5 h-3.5" />
                         </button>
-                        <button className="font-semibold hover:text-white cursor-pointer">
+                        <button className="font-semibold hover:text-slate-900 dark:hover:text-white cursor-pointer">
                           Jibu
                         </button>
                       </div>
@@ -862,7 +890,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   </div>
                 ))
               ) : (
-                <div className="py-6 text-center text-xs text-[#A7B0C0]">
+                <div className="py-6 text-center text-xs text-slate-500 dark:text-[#A7B0C0]">
                   Hakuna maoni yaliyowekwa bado. Kuwa wa kwanza kutoa maoni!
                 </div>
               )}
@@ -874,7 +902,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
         </div>
 
-        {/* RIGHT SECONDARY COLUMN: Filter Chips & Suggested Videos List (Matching image_23505de7.png) */}
+        {/* RIGHT SECONDARY COLUMN: Filter Chips & Suggested Videos List */}
         <div className="w-full lg:w-[360px] xl:w-[400px] shrink-0 space-y-4 px-3 sm:px-0">
           
           {/* Horizontal Category Chips Bar */}
@@ -887,8 +915,8 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   onClick={() => setSelectedSidebarFilter(chip)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                     isActive 
-                      ? 'bg-white text-black shadow-sm' 
-                      : 'bg-white/10 hover:bg-white/15 text-white'
+                      ? 'bg-slate-900 text-white shadow-sm dark:bg-white dark:text-black' 
+                      : 'bg-slate-200/80 hover:bg-slate-300/80 text-slate-800 dark:bg-white/10 dark:hover:bg-white/15 dark:text-white'
                   }`}
                 >
                   {chip}
@@ -897,15 +925,15 @@ export const WatchPage: React.FC<WatchPageProps> = ({
             })}
           </div>
 
-          {/* List of Recommended Video Cards (Responsive: Full-width modern card on mobile, side-by-side on desktop) */}
+          {/* List of Recommended Video Cards */}
           <div className="space-y-4 sm:space-y-3">
             {filteredRecommendations.length > 0 ? (
               filteredRecommendations.map((item) => (
                 <div
                   key={item.id}
-                  className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 group cursor-pointer p-1.5 sm:p-1 rounded-2xl sm:rounded-xl hover:bg-white/5 transition-colors"
+                  className="flex flex-col sm:flex-row gap-2.5 sm:gap-3 group cursor-pointer p-1.5 sm:p-1 rounded-2xl sm:rounded-xl hover:bg-slate-200/50 dark:hover:bg-white/5 transition-colors"
                 >
-                  {/* YouTube-Style Video Thumbnail Preview */}
+                  {/* Video Thumbnail Preview */}
                   <div className="w-full sm:w-40 md:w-44 shrink-0">
                     <VideoThumbnailPreview
                       video={item}
@@ -918,7 +946,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                     />
                   </div>
 
-                  {/* Video Meta Info (Matching image_9d55dc60.png with Avatar + Title + Stats + 3-dots) */}
+                  {/* Video Meta Info */}
                   <div 
                     onClick={() => {
                       onSelectVideo(item);
@@ -926,26 +954,26 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                     }}
                     className="min-w-0 flex-1 flex items-start gap-2.5 sm:gap-0 sm:flex-col justify-start py-0.5 cursor-pointer"
                   >
-                    {/* Mobile Avatar (Visible only on mobile screen < sm, exact YouTube style from image_9d55dc60.png) */}
+                    {/* Mobile Avatar */}
                     <img
                       src={item.channelAvatar || createAvatarSvgDataUri(item.channelName)}
                       alt={item.channelName}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = createAvatarSvgDataUri(item.channelName);
                       }}
-                      className="w-9 h-9 rounded-full object-cover shrink-0 sm:hidden ring-1 ring-white/10 bg-[#141824] mt-0.5"
+                      className="w-9 h-9 rounded-full object-cover shrink-0 sm:hidden ring-1 ring-slate-200 dark:ring-white/10 bg-slate-100 dark:bg-[#141824] mt-0.5"
                     />
 
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-sm sm:text-xs md:text-sm font-semibold text-white line-clamp-2 leading-snug group-hover:text-[#FF3040] transition-colors">
+                      <h4 className="text-sm sm:text-xs md:text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#FF3040] transition-colors">
                         {item.title}
                       </h4>
                       
                       {/* Mobile stats row */}
-                      <div className="flex sm:hidden items-center flex-wrap gap-1 mt-1 text-xs text-[#A7B0C0]">
-                        <span className="truncate text-white/80 font-medium">{item.channelName}</span>
+                      <div className="flex sm:hidden items-center flex-wrap gap-1 mt-1 text-xs text-slate-600 dark:text-[#A7B0C0]">
+                        <span className="truncate text-slate-700 dark:text-white/80 font-medium">{item.channelName}</span>
                         {item.isChannelVerified && (
-                          <CheckCircle2 className="w-3 h-3 text-[#A7B0C0] shrink-0" />
+                          <CheckCircle2 className="w-3 h-3 text-slate-500 dark:text-[#A7B0C0] shrink-0" />
                         )}
                         <span>•</span>
                         <span>{formatViews(item.viewsCount, language)} views</span>
@@ -954,26 +982,26 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                       </div>
 
                       {/* Desktop stats rows */}
-                      <div className="hidden sm:flex items-center gap-1 mt-1 text-[11px] text-[#A7B0C0] hover:text-white transition-colors">
+                      <div className="hidden sm:flex items-center gap-1 mt-1 text-[11px] text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white transition-colors">
                         <span className="truncate">{item.channelName}</span>
                         {item.isChannelVerified && (
-                          <CheckCircle2 className="w-3 h-3 text-[#A7B0C0] shrink-0" />
+                          <CheckCircle2 className="w-3 h-3 text-slate-500 dark:text-[#A7B0C0] shrink-0" />
                         )}
                       </div>
-                      <div className="hidden sm:flex items-center gap-1 text-[11px] text-[#A7B0C0] mt-0.5">
+                      <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-500 dark:text-[#A7B0C0] mt-0.5">
                         <span>{formatViews(item.viewsCount, language)} views</span>
                         <span>•</span>
                         <span>{formatRelativeTime(item.createdAt, language)}</span>
                       </div>
                     </div>
 
-                    {/* 3-dots button on mobile (right side, like image_9d55dc60.png) */}
+                    {/* 3-dots button on mobile */}
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
                         setShowReportModal(true);
                       }}
-                      className="sm:hidden p-1.5 rounded-full text-[#A7B0C0] hover:text-white transition-colors cursor-pointer shrink-0"
+                      className="sm:hidden p-1.5 rounded-full text-slate-500 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white transition-colors cursor-pointer shrink-0"
                       title="Mengineyo"
                     >
                       <MoreVertical className="w-4 h-4" />
@@ -982,7 +1010,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 </div>
               ))
             ) : (
-              <div className="p-5 rounded-2xl bg-[#181C26] border border-[#262E3E] text-center text-xs text-[#A7B0C0]">
+              <div className="p-5 rounded-2xl bg-white dark:bg-[#181C26] border border-slate-200 dark:border-[#262E3E] text-center text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Hakuna video zilizopatikana katika kundi hili.
               </div>
             )}
@@ -992,25 +1020,25 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
       </div>
 
-      {/* 2. SHIRIKI (SHARE MODAL): WhatsApp, Facebook, Telegram, SMS, Copy Link */}
+      {/* 2. SHIRIKI (SHARE MODAL) */}
       {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-sm bg-[#191E29] border border-[#262E3E] rounded-3xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div className="flex items-center gap-2">
                 <Share2 className="w-5 h-5 text-[#FF3040]" />
-                <h3 className="text-sm font-bold text-white">Shiriki Video Hii</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Shiriki Video Hii</h3>
               </div>
               <button 
                 onClick={() => setShowShareModal(false)}
-                className="text-[#A7B0C0] hover:text-white p-1 cursor-pointer"
+                className="text-slate-500 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-[#A7B0C0]">
-              Tuma video ya <strong>{video.title}</strong> kwa marafiki kupitia:
+            <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
+              Tuma video ya <strong className="text-slate-900 dark:text-white">{video.title}</strong> kwa marafiki kupitia:
             </p>
 
             <div className="grid grid-cols-2 gap-2">
@@ -1019,7 +1047,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareMessage)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2.5 rounded-xl bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/30 text-[#25D366] text-xs font-bold transition-all"
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/30 text-emerald-700 dark:text-[#25D366] text-xs font-bold transition-all"
               >
                 <span className="w-2 h-2 rounded-full bg-[#25D366]" />
                 <span>WhatsApp</span>
@@ -1030,7 +1058,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 href={`https://t.me/share/url?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(video.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2.5 rounded-xl bg-[#0088cc]/15 hover:bg-[#0088cc]/25 border border-[#0088cc]/30 text-[#0088cc] text-xs font-bold transition-all"
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-[#0088cc]/15 hover:bg-[#0088cc]/25 border border-[#0088cc]/30 text-[#0077b5] dark:text-[#0088cc] text-xs font-bold transition-all"
               >
                 <span className="w-2 h-2 rounded-full bg-[#0088cc]" />
                 <span>Telegram</span>
@@ -1050,21 +1078,21 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               {/* SMS */}
               <a
                 href={`sms:?body=${encodeURIComponent(shareMessage)}`}
-                className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-bold transition-all"
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 dark:bg-amber-500/15 dark:hover:bg-amber-500/25 dark:border-amber-500/30 dark:text-amber-300 text-xs font-bold transition-all"
               >
-                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400" />
                 <span>SMS / Ujumbe</span>
               </a>
             </div>
 
             {/* Copy Link Direct Bar */}
-            <div className="pt-2 border-t border-[#262E3E]">
-              <div className="flex items-center gap-2 p-2 rounded-xl bg-[#10131B] border border-[#262E3E]">
+            <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]">
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-slate-100 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
                 <input
                   type="text"
                   readOnly
                   value={currentUrl}
-                  className="bg-transparent text-xs text-[#A7B0C0] font-mono flex-1 outline-none truncate"
+                  className="bg-transparent text-xs text-slate-600 dark:text-[#A7B0C0] font-mono flex-1 outline-none truncate"
                 />
                 <button
                   onClick={copyToClipboard}
@@ -1081,18 +1109,85 @@ export const WatchPage: React.FC<WatchPageProps> = ({
         </div>
       )}
 
+      {/* 4.5. TAZAMA AI SUMMARY & INSIGHTS MODAL */}
+      {showAiSummaryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-white dark:bg-[#181E29] border border-purple-200 dark:border-purple-500/30 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/20">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                    Uchambuzi wa Tazama AI
+                  </h3>
+                  <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">
+                    Muhtasari wa papo hapo na maarifa ya video hii
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowAiSummaryModal(false)}
+                className="text-slate-500 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white p-1 cursor-pointer rounded-full hover:bg-slate-100 dark:hover:bg-white/10"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3.5 max-h-[70vh] overflow-y-auto pr-1 text-xs">
+              {/* Summary card */}
+              <div className="p-3.5 rounded-2xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-500/20 space-y-2">
+                <div className="flex items-center gap-2 text-purple-800 dark:text-purple-300 font-bold uppercase tracking-wider text-[10px]">
+                  <span>💡 Muhtasari Mkuu</span>
+                </div>
+                <p className="text-slate-800 dark:text-[#E2E8F0] leading-relaxed">
+                  {liveVideo.description || `Video hii ya "${liveVideo.title}" inamulika maudhui ya kipekee ya ${liveVideo.category || 'burudani'}, ikieleza kwa kina matukio muhimu, mafunzo na burudani safi kwa watazamaji wote nchini Tanzania na Afrika Mashariki.`}
+                </p>
+              </div>
+
+              {/* Key points */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#121622] border border-slate-200 dark:border-white/10 space-y-2">
+                <div className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                  🔥 Mambo Muhimu Katika Video Hii
+                </div>
+                <ul className="space-y-1.5 text-slate-700 dark:text-[#D1D7E0] list-disc list-inside">
+                  <li>Uhuishaji wa hali ya juu na ubora wa HD 1080p uliotengenezwa kwa umakini.</li>
+                  <li>Uwasilishaji wa hisia halisi za simulizi inayomshika mtazamaji mwanzo hadi mwisho.</li>
+                  <li>Lugha na manukuu ya Kiswahili yanayopatikana kwa kubofya kitufe cha CC.</li>
+                  <li>Inaoana na hali ya kubana bando (Data Saver) kwa kutumia MBs chache.</li>
+                </ul>
+              </div>
+
+              {/* Tags & Channel */}
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-100 dark:bg-[#10131B] border border-slate-200 dark:border-white/5 text-[11px]">
+                <span className="text-slate-600 dark:text-[#A7B0C0]">Chaneli:</span>
+                <span className="font-bold text-slate-900 dark:text-white">@{creatorChannel?.handle || liveVideo.channelName}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowAiSummaryModal(false)}
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:brightness-110 text-white font-bold text-xs transition-all shadow-lg active:scale-95 cursor-pointer"
+            >
+              Nimeelewa (Funga)
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 5. ORODHA (SAVE TO PLAYLIST MODAL) */}
       {showAddToPlaylistModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-sm bg-[#191E29] border border-[#262E3E] rounded-3xl p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div className="flex items-center gap-2">
-                <Bookmark className="w-5 h-5 text-purple-400" />
-                <h3 className="text-sm font-bold text-white">Hifadhi kwenye Orodha (Playlist)</h3>
+                <Bookmark className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Hifadhi kwenye Orodha (Playlist)</h3>
               </div>
               <button 
                 onClick={() => setShowAddToPlaylistModal(false)}
-                className="text-[#A7B0C0] hover:text-white p-1 cursor-pointer"
+                className="text-slate-500 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white p-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -1114,13 +1209,13 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                     }}
                     className={`w-full flex items-center justify-between p-3 rounded-xl border text-left transition-colors cursor-pointer ${
                       isInList 
-                        ? 'bg-[#16C784]/10 border-[#16C784]/40 text-white' 
-                        : 'bg-[#10131B] hover:bg-[#232A39] border-[#262E3E] text-white'
+                        ? 'bg-emerald-50 border-emerald-300 text-slate-900 dark:bg-[#16C784]/10 dark:border-[#16C784]/40 dark:text-white' 
+                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-900 dark:bg-[#10131B] dark:hover:bg-[#232A39] dark:border-[#262E3E] dark:text-white'
                     }`}
                   >
                     <div>
                       <h4 className="text-xs font-bold">{pl.title}</h4>
-                      <p className="text-[10px] text-[#A7B0C0]">{pl.videoIds.length} video</p>
+                      <p className="text-[10px] text-slate-600 dark:text-[#A7B0C0]">{pl.videoIds.length} video</p>
                     </div>
                     {isInList ? (
                       <span className="text-[10px] bg-[#16C784] text-black font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1">
@@ -1128,7 +1223,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                         Imehifadhiwa
                       </span>
                     ) : (
-                      <span className="text-[11px] text-purple-400 font-bold">+ Weka</span>
+                      <span className="text-[11px] text-purple-600 dark:text-purple-400 font-bold">+ Weka</span>
                     )}
                   </button>
                 );
@@ -1136,7 +1231,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
             </div>
 
             {/* Create New Playlist Inline */}
-            <div className="pt-2 border-t border-[#262E3E]">
+            <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]">
               {isCreatingPlaylist ? (
                 <div className="space-y-2">
                   <input
@@ -1144,13 +1239,13 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                     value={newPlaylistTitle}
                     onChange={(e) => setNewPlaylistTitle(e.target.value)}
                     placeholder="Jina la orodha mpya..."
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-400"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-purple-500"
                     autoFocus
                   />
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setIsCreatingPlaylist(false)}
-                      className="px-3 py-1 rounded-lg text-xs text-[#A7B0C0]"
+                      className="px-3 py-1 rounded-lg text-xs text-slate-600 dark:text-[#A7B0C0]"
                     >
                       Ghairi
                     </button>
@@ -1163,7 +1258,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                           setIsCreatingPlaylist(false);
                         }
                       }}
-                      className="px-3 py-1 rounded-lg bg-purple-500 hover:bg-purple-600 text-white text-xs font-bold"
+                      className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold"
                     >
                       Tengeneza & Hifadhi
                     </button>
@@ -1172,7 +1267,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               ) : (
                 <button
                   onClick={() => setIsCreatingPlaylist(true)}
-                  className="w-full py-2 px-3 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-purple-300 border border-purple-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  className="w-full py-2 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 dark:bg-[#232A39] dark:hover:bg-[#2E3748] dark:text-purple-300 dark:border-purple-500/30 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>+ Orodha Mpya ya Kucheza</span>
@@ -1186,18 +1281,18 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
       {/* GUEST AUTH PROMPT MODAL */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="relative w-full max-w-sm bg-[#191E29] border border-[#262E3E] rounded-3xl p-6 text-center space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-sm bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-6 text-center space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="w-14 h-14 rounded-2xl bg-[#FF3040]/15 border border-[#FF3040]/30 flex items-center justify-center mx-auto text-[#FF3040]">
               <Lock className="w-7 h-7" />
             </div>
 
             <div className="space-y-1.5">
-              <h3 className="text-base font-extrabold text-white">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                 Ingia Kwenye Akaunti Yako
               </h3>
-              <p className="text-xs text-[#A7B0C0] leading-relaxed">
-                Kama mgeni unaweza kutazama video, kubadili kasi (1x), ubora, manukuu (CC), skrini nzima na kushiriki. Ili uweze <strong>{authModalAction}</strong>, tafadhali ingia au jisajili.
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0] leading-relaxed">
+                Kama mgeni unaweza kutazama video, kubadili kasi (1x), ubora, manukuu (CC), skrini nzima na kushiriki. Ili uweze <strong className="text-slate-900 dark:text-white">{authModalAction}</strong>, tafadhali ingia au jisajili.
               </p>
             </div>
 
@@ -1218,15 +1313,15 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                   setShowAuthModal(false);
                   if (onNavigate) onNavigate('register');
                 }}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-white border border-[#262E3E] text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all"
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 dark:bg-[#232A39] dark:hover:bg-[#2E3748] dark:text-white dark:border-[#262E3E] text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
-                <UserPlus className="w-4 h-4 text-[#16C784]" />
+                <UserPlus className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
                 <span>Jisajili Bure</span>
               </button>
 
               <button
                 onClick={() => setShowAuthModal(false)}
-                className="w-full py-1.5 text-xs text-[#A7B0C0] hover:text-white cursor-pointer"
+                className="w-full py-1.5 text-xs text-slate-500 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white cursor-pointer"
               >
                 Endelea Kutazama kama Mgeni
               </button>

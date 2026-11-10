@@ -70,6 +70,7 @@ import {
 } from '../types';
 import { AdminAdsManager } from '../components/admin/AdminAdsManager';
 import { CreateAdModal } from '../components/ads/CreateAdModal';
+import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
 
 export const AdminPage: React.FC = () => {
   const { 
@@ -551,22 +552,22 @@ export const AdminPage: React.FC = () => {
       )}
 
       {/* Header Banner with Real-time Status & RBAC Role Switcher */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-500/15 via-[#191E29] to-[#232A39] border border-amber-500/30 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+      <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-50 via-white to-amber-50/70 dark:from-amber-500/15 dark:via-[#191E29] dark:to-[#232A39] border border-amber-300/70 dark:border-amber-500/30 flex flex-wrap items-center justify-between gap-4 shadow-md dark:shadow-xl">
         <div className="flex items-center gap-4">
           <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-amber-500 flex items-center justify-center text-black font-extrabold shadow-lg shadow-amber-500/25 shrink-0">
             <ShieldCheck className="w-8 h-8" />
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-lg sm:text-2xl font-black text-white tracking-tight">
+              <h1 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 Jopo Kuu la Usimamizi (Enterprise Admin &amp; Governance)
               </h1>
-              <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2.5 py-0.5 rounded-full font-mono uppercase font-bold flex items-center gap-1">
+              <span className="text-[10px] bg-amber-500/15 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-400/50 dark:border-amber-500/40 px-2.5 py-0.5 rounded-full font-mono uppercase font-bold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#16C784] animate-pulse" />
                 Data Halisi ya Mfumo
               </span>
             </div>
-            <p className="text-xs text-[#A7B0C0] mt-0.5">
+            <p className="text-xs text-slate-600 dark:text-[#A7B0C0] mt-0.5">
               Muhtasari wa wakati halisi, usimamizi wa watumiaji, COSOTA hakimiliki, vifurushi vya premium, na fedha.
             </p>
           </div>
@@ -574,34 +575,34 @@ export const AdminPage: React.FC = () => {
 
         {/* Admin Info & Simulator */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="text-xs bg-[#10131B]/90 px-3.5 py-2 rounded-2xl border border-[#262E3E]">
-            <span className="text-[#A7B0C0] text-[10px] block">Msimamizi Aliyeingia:</span>
-            <div className="font-bold text-white flex items-center gap-1.5">
+          <div className="text-xs bg-slate-50 dark:bg-[#10131B]/90 px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-[#262E3E]">
+            <span className="text-slate-600 dark:text-[#A7B0C0] text-[10px] block">Msimamizi Aliyeingia:</span>
+            <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#16C784]" />
               <span className="font-mono text-xs">{profile?.email || 'amytzee@gmail.com'}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-[#10131B] border border-[#262E3E] rounded-2xl px-3 py-1.5 text-xs">
-            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-[11px] text-[#A7B0C0]">Nafasi:</span>
+          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-2xl px-3 py-1.5 text-xs">
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+            <span className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">Nafasi:</span>
             <select
               value={simulatedRole}
               onChange={(e) => setSimulatedRole(e.target.value as UserRole)}
-              className="bg-transparent text-white font-bold focus:outline-none cursor-pointer text-xs"
+              className="bg-transparent text-slate-900 dark:text-white font-bold focus:outline-none cursor-pointer text-xs"
             >
-              <option value="admin" className="bg-[#191E29]">Super Admin</option>
-              <option value="moderator" className="bg-[#191E29]">Content Moderator</option>
-              <option value="finance" className="bg-[#191E29]">Finance Officer</option>
-              <option value="copyright" className="bg-[#191E29]">Copyright Officer</option>
-              <option value="support" className="bg-[#191E29]">Customer Support</option>
+              <option value="admin" className="bg-white text-slate-900 dark:bg-[#191E29] dark:text-white">Super Admin</option>
+              <option value="moderator" className="bg-white text-slate-900 dark:bg-[#191E29] dark:text-white">Content Moderator</option>
+              <option value="finance" className="bg-white text-slate-900 dark:bg-[#191E29] dark:text-white">Finance Officer</option>
+              <option value="copyright" className="bg-white text-slate-900 dark:bg-[#191E29] dark:text-white">Copyright Officer</option>
+              <option value="support" className="bg-white text-slate-900 dark:bg-[#191E29] dark:text-white">Customer Support</option>
             </select>
           </div>
         </div>
       </div>
 
       {/* Main Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#262E3E] pb-2 overflow-x-auto no-scrollbar">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-[#262E3E] pb-2 overflow-x-auto no-scrollbar">
         {[
           { id: 'overview', label: 'Muhtasari (Live Dashboard)', icon: BarChart3 },
           { 
@@ -631,7 +632,7 @@ export const AdminPage: React.FC = () => {
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap relative shrink-0 ${
                 isActive 
                   ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/25' 
-                  : 'bg-[#191E29] text-[#A7B0C0] hover:text-white hover:bg-[#232A39]'
+                  : 'bg-white dark:bg-[#191E29] text-slate-600 dark:text-[#A7B0C0] border border-slate-200 dark:border-transparent hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#232A39]'
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
@@ -654,17 +655,17 @@ export const AdminPage: React.FC = () => {
           
           {/* Urgent Ad Approval Banner for Admin */}
           {pendingAdsCount > 0 && (
-            <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-950/70 via-[#191E29] to-red-950/50 border border-amber-500/60 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300">
+            <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-amber-50 via-white to-red-50 dark:from-amber-950/70 dark:via-[#191E29] dark:to-red-950/50 border border-amber-400 dark:border-amber-500/60 shadow-lg dark:shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300">
               <div className="flex items-center gap-3.5">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/50 text-amber-300 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/15 dark:bg-amber-500/20 border border-amber-400 dark:border-amber-500/50 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
                   <Megaphone className="w-6 h-6 animate-pulse" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="font-black text-white text-sm sm:text-base">Kuna Matangazo {pendingAdsCount} Yanayosubiri Idhini Yako!</h4>
+                    <h4 className="font-black text-slate-900 dark:text-white text-sm sm:text-base">Kuna Matangazo {pendingAdsCount} Yanayosubiri Idhini Yako!</h4>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-600 text-white animate-pulse">ACTION REQUIRED</span>
                   </div>
-                  <p className="text-xs text-[#A7B0C0] mt-0.5">
+                  <p className="text-xs text-slate-600 dark:text-[#A7B0C0] mt-0.5">
                     Matangazo haya yamelipiwa lakini hayataanza kuonekana kwa watazamaji hadi uyathibitishe (Confirm & Approve).
                   </p>
                 </div>
@@ -683,217 +684,217 @@ export const AdminPage: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             
             {/* 1. Total Registered Users */}
-            <div className="p-4 rounded-2xl bg-[#191E29] border border-[#262E3E] relative overflow-hidden">
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none relative overflow-hidden">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
                 <span>Watumiaji Waliosajiliwa</span>
-                <Users className="w-4 h-4 text-blue-400" />
+                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-white mt-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white mt-1.5">
                 {totalUsersCount.toLocaleString()}
               </div>
-              <div className="flex items-center gap-2 mt-1 text-[10px] text-[#A7B0C0]">
-                <span className="text-[#16C784]">● {users.filter(u => !u.isBlocked).length} Walio Hai</span>
-                <span className="text-red-400">● {users.filter(u => u.isBlocked).length} Waliozuiwa</span>
+              <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-600 dark:text-[#A7B0C0]">
+                <span className="text-emerald-700 dark:text-[#16C784]">● {users.filter(u => !u.isBlocked).length} Walio Hai</span>
+                <span className="text-red-600 dark:text-red-400">● {users.filter(u => u.isBlocked).length} Waliozuiwa</span>
               </div>
             </div>
 
             {/* 2. Online Users Right Now */}
-            <div className="p-4 rounded-2xl bg-[#191E29] border border-[#262E3E]">
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
                 <span>Waliopo Mtandaoni Sasa</span>
                 <span className="w-2.5 h-2.5 rounded-full bg-[#16C784] animate-ping" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-[#16C784] mt-1.5 flex items-center gap-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-emerald-700 dark:text-[#16C784] mt-1.5 flex items-center gap-1.5">
                 <span>{onlineUsersNow}</span>
-                <span className="text-xs font-normal text-[#A7B0C0]">watumiaji</span>
+                <span className="text-xs font-normal text-slate-600 dark:text-[#A7B0C0]">watumiaji</span>
               </div>
-              <p className="text-[10px] text-[#A7B0C0] mt-1">Uperuzi na uchezaji wa wakati halisi</p>
+              <p className="text-[10px] text-slate-600 dark:text-[#A7B0C0] mt-1">Uperuzi na uchezaji wa wakati halisi</p>
             </div>
 
             {/* 3. Total Creators */}
-            <div className="p-4 rounded-2xl bg-[#191E29] border border-[#262E3E]">
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
                 <span>Waumbaji wa Maudhui</span>
-                <Sparkles className="w-4 h-4 text-purple-400" />
+                <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-purple-300 mt-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-purple-700 dark:text-purple-300 mt-1.5">
                 {totalCreatorsCount.toLocaleString()}
               </div>
-              <p className="text-[10px] text-[#A7B0C0] mt-1">
+              <p className="text-[10px] text-slate-600 dark:text-[#A7B0C0] mt-1">
                 {channels.filter(c => c.isMonetized).length} wamewashwa Monetization
               </p>
             </div>
 
             {/* 4. Total Uploaded Videos */}
-            <div className="p-4 rounded-2xl bg-[#191E29] border border-[#262E3E]">
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
                 <span>Video Zilizopakiwa</span>
-                <Tv className="w-4 h-4 text-amber-400" />
+                <Tv className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-white mt-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-slate-900 dark:text-white mt-1.5">
                 {totalVideosCount.toLocaleString()}
               </div>
-              <p className="text-[10px] text-[#A7B0C0] mt-1">
+              <p className="text-[10px] text-slate-600 dark:text-[#A7B0C0] mt-1">
                 {videos.length} Standard | {shorts.length} Shorts
               </p>
             </div>
 
             {/* 5. Total Views & Real-time Viewers */}
-            <div className="p-4 rounded-2xl bg-[#191E29] border border-[#262E3E]">
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
                 <span>Watazamaji Wote (Views)</span>
-                <Eye className="w-4 h-4 text-emerald-400" />
+                <Eye className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-emerald-400 mt-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-emerald-700 dark:text-emerald-400 mt-1.5">
                 {formatViews(totalViewsCount, language)}
               </div>
-              <div className="flex items-center gap-1.5 mt-1 text-[10px] text-amber-400 font-semibold">
-                <Radio className="w-3 h-3 text-red-500 animate-pulse" />
+              <div className="flex items-center gap-1.5 mt-1 text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
+                <Radio className="w-3 h-3 text-red-600 dark:text-red-500 animate-pulse" />
                 <span>{realtimeViewersCount.toLocaleString()} watazamaji mubashara sasa</span>
               </div>
             </div>
 
             {/* 6. Total Platform Revenue */}
-            <div className="p-4 rounded-2xl bg-[#191E29] border border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-transparent">
-              <div className="flex items-center justify-between text-xs text-amber-300 font-bold">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-amber-300 dark:border-amber-500/30 bg-gradient-to-br from-amber-50/90 dark:from-amber-500/10 to-transparent shadow-sm dark:shadow-none">
+              <div className="flex items-center justify-between text-xs text-amber-800 dark:text-amber-300 font-bold">
                 <span>Mapato Yote ya Jukwaa</span>
-                <DollarSign className="w-4 h-4 text-amber-400" />
+                <DollarSign className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-amber-300 mt-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-amber-800 dark:text-amber-300 mt-1.5">
                 {formatTZS(totalPlatformGrossTZS)}
               </div>
-              <p className="text-[10px] text-[#A7B0C0] mt-1">Kutoka matangazo, premium &amp; zawadi</p>
+              <p className="text-[10px] text-slate-600 dark:text-[#A7B0C0] mt-1">Kutoka matangazo, premium &amp; zawadi</p>
             </div>
 
             {/* 7. Premium Revenue */}
-            <div className="p-4 rounded-2xl bg-[#191E29] border border-[#262E3E]">
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
                 <span>Mapato ya Premium (MRR)</span>
-                <Crown className="w-4 h-4 text-amber-400" />
+                <Crown className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-amber-400 mt-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-amber-700 dark:text-amber-400 mt-1.5">
                 {formatTZS(premiumRevenueTZS)}
               </div>
-              <p className="text-[10px] text-[#A7B0C0] mt-1">
+              <p className="text-[10px] text-slate-600 dark:text-[#A7B0C0] mt-1">
                 {premiumPlans.reduce((s, p) => s + (p.subscribersCount || 0), 0).toLocaleString()} wanachama wanaolipia
               </p>
             </div>
 
             {/* 8. Ad Revenue */}
-            <div className="p-4 rounded-2xl bg-[#191E29] border border-[#262E3E]">
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
                 <span>Mapato ya Matangazo</span>
-                <BarChart3 className="w-4 h-4 text-cyan-400" />
+                <BarChart3 className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-cyan-300 mt-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-cyan-700 dark:text-cyan-300 mt-1.5">
                 {formatTZS(adRevenueTZS)}
               </div>
-              <p className="text-[10px] text-[#A7B0C0] mt-1">{adCampaigns.length} kampeni hai za matangazo</p>
+              <p className="text-[10px] text-slate-600 dark:text-[#A7B0C0] mt-1">{adCampaigns.length} kampeni hai za matangazo</p>
             </div>
 
             {/* 9. Pending Payouts */}
             <div 
               onClick={() => { setActiveTab('payouts'); setPayoutsSubTab('pending'); }}
-              className="p-4 rounded-2xl bg-[#191E29] border border-[#262E3E] hover:border-amber-500/50 cursor-pointer transition-all"
+              className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] hover:border-amber-500/60 dark:hover:border-amber-500/50 cursor-pointer transition-all shadow-sm dark:shadow-none"
             >
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
                 <span>Malipo Yanayosubiri</span>
-                <CreditCard className="w-4 h-4 text-orange-400" />
+                <CreditCard className="w-4 h-4 text-orange-600 dark:text-orange-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-orange-400 mt-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-orange-600 dark:text-orange-400 mt-1.5">
                 {formatTZS(pendingPayoutsAmountTZS)}
               </div>
-              <p className="text-[10px] text-[#A7B0C0] mt-1">{pendingPayoutsList.length} maombi yanayosubiri idhini</p>
+              <p className="text-[10px] text-slate-600 dark:text-[#A7B0C0] mt-1">{pendingPayoutsList.length} maombi yanayosubiri idhini</p>
             </div>
 
             {/* 10. Pending Copyright Claims */}
             <div 
               onClick={() => { setActiveTab('copyright'); }}
-              className="p-4 rounded-2xl bg-[#191E29] border border-[#262E3E] hover:border-red-500/50 cursor-pointer transition-all"
+              className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] hover:border-red-500/60 dark:hover:border-red-500/50 cursor-pointer transition-all shadow-sm dark:shadow-none"
             >
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
                 <span>Madai ya Hakimiliki (COSOTA)</span>
-                <ShieldAlert className="w-4 h-4 text-red-400" />
+                <ShieldAlert className="w-4 h-4 text-red-600 dark:text-red-400" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-red-400 mt-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-red-600 dark:text-red-400 mt-1.5">
                 {pendingCopyrightClaimsCount}
               </div>
-              <p className="text-[10px] text-[#A7B0C0] mt-1">Madai yanayohitaji uchunguzi wa hakimiliki</p>
+              <p className="text-[10px] text-slate-600 dark:text-[#A7B0C0] mt-1">Madai yanayohitaji uchunguzi wa hakimiliki</p>
             </div>
 
             {/* 11. Content & Account Reports */}
             <div 
               onClick={() => { setActiveTab('videos'); setContentSubTab('moderation'); }}
-              className="p-4 rounded-2xl bg-[#191E29] border border-[#262E3E] hover:border-amber-500/50 cursor-pointer transition-all"
+              className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] hover:border-amber-500/60 dark:hover:border-amber-500/50 cursor-pointer transition-all shadow-sm dark:shadow-none"
             >
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
                 <span>Ripoti Zinazohitaji Hatua</span>
-                <Flag className="w-4 h-4 text-red-500" />
+                <Flag className="w-4 h-4 text-red-600 dark:text-red-500" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-red-400 mt-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-red-600 dark:text-red-400 mt-1.5">
                 {pendingReportsCount}
               </div>
-              <p className="text-[10px] text-[#A7B0C0] mt-1">Video au akaunti zilizoripotiwa na watumiaji</p>
+              <p className="text-[10px] text-slate-600 dark:text-[#A7B0C0] mt-1">Video au akaunti zilizoripotiwa na watumiaji</p>
             </div>
 
             {/* 12. Security & Compliance Health */}
             <div 
               onClick={() => { setActiveTab('security'); }}
-              className="p-4 rounded-2xl bg-[#191E29] border border-[#262E3E] hover:border-blue-500/50 cursor-pointer transition-all"
+              className="p-4 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] hover:border-blue-500/60 dark:hover:border-blue-500/50 cursor-pointer transition-all shadow-sm dark:shadow-none"
             >
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
                 <span>Hali ya Mfumo &amp; Usalama</span>
-                <Activity className="w-4 h-4 text-[#16C784]" />
+                <Activity className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
               </div>
-              <div className="text-xl sm:text-2xl font-black font-mono text-[#16C784] mt-1.5">
+              <div className="text-xl sm:text-2xl font-black font-mono text-emerald-700 dark:text-[#16C784] mt-1.5">
                 100% Salama
               </div>
-              <p className="text-[10px] text-[#A7B0C0] mt-1">{auditLogs.length} matukio yaliyorekodiwa</p>
+              <p className="text-[10px] text-slate-600 dark:text-[#A7B0C0] mt-1">{auditLogs.length} matukio yaliyorekodiwa</p>
             </div>
 
           </div>
 
           {/* Interactive Dynamic Growth Graph (Views, Users, Revenue) */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-[#262E3E] space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#262E3E]">
+          <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div>
-                <h3 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-amber-400" />
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   Mwelekeo wa Ukuaji wa Biashara (Dynamic Analytics &amp; Trends)
                 </h3>
-                <p className="text-xs text-[#A7B0C0]">Takwimu zikilinganishwa kwa muda wa mfumo halisi</p>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Takwimu zikilinganishwa kwa muda wa mfumo halisi</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
                 {/* Metric toggle */}
-                <div className="flex bg-[#10131B] p-1 rounded-xl border border-[#262E3E] text-xs">
+                <div className="flex bg-slate-100 dark:bg-[#10131B] p-1 rounded-xl border border-slate-200 dark:border-[#262E3E] text-xs">
                   <button
                     onClick={() => setChartMetric('revenue')}
-                    className={`px-3 py-1 rounded-lg font-bold transition-all ${chartMetric === 'revenue' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                    className={`px-3 py-1 rounded-lg font-bold transition-all ${chartMetric === 'revenue' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
                   >
                     Mapato (TZS)
                   </button>
                   <button
                     onClick={() => setChartMetric('views')}
-                    className={`px-3 py-1 rounded-lg font-bold transition-all ${chartMetric === 'views' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                    className={`px-3 py-1 rounded-lg font-bold transition-all ${chartMetric === 'views' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
                   >
                     Watazamaji (Views)
                   </button>
                   <button
                     onClick={() => setChartMetric('users')}
-                    className={`px-3 py-1 rounded-lg font-bold transition-all ${chartMetric === 'users' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                    className={`px-3 py-1 rounded-lg font-bold transition-all ${chartMetric === 'users' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
                   >
                     Watumiaji (Users)
                   </button>
                 </div>
 
                 {/* Timeframe toggle */}
-                <div className="flex bg-[#10131B] p-1 rounded-xl border border-[#262E3E] text-xs">
+                <div className="flex bg-slate-100 dark:bg-[#10131B] p-1 rounded-xl border border-slate-200 dark:border-[#262E3E] text-xs">
                   {(['7d', '30d', '1y'] as const).map(tf => (
                     <button
                       key={tf}
                       onClick={() => setOverviewTimeframe(tf)}
-                      className={`px-2.5 py-1 rounded-lg font-bold uppercase transition-all ${overviewTimeframe === tf ? 'bg-white text-black' : 'text-[#A7B0C0]'}`}
+                      className={`px-2.5 py-1 rounded-lg font-bold uppercase transition-all ${overviewTimeframe === tf ? 'bg-slate-900 text-white dark:bg-white dark:text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
                     >
                       {tf === '7d' ? 'Siku 7' : tf === '30d' ? 'Mwezi 1' : 'Mwaka 1'}
                     </button>
@@ -904,7 +905,7 @@ export const AdminPage: React.FC = () => {
 
             {/* Dynamic Visual Bars */}
             <div className="space-y-3 pt-2">
-              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 items-end h-44 sm:h-52 bg-[#10131B] p-4 rounded-2xl border border-[#262E3E]">
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 items-end h-44 sm:h-52 bg-slate-50 dark:bg-[#10131B] p-4 rounded-2xl border border-slate-200 dark:border-[#262E3E]">
                 {dynamicChartData.map((d, idx) => {
                   const val = chartMetric === 'revenue' ? d.revenue : chartMetric === 'views' ? d.views : d.users;
                   const maxVal = Math.max(...dynamicChartData.map(item => chartMetric === 'revenue' ? item.revenue : chartMetric === 'views' ? item.views : item.users));
@@ -912,23 +913,23 @@ export const AdminPage: React.FC = () => {
 
                   return (
                     <div key={idx} className="flex flex-col items-center gap-2 h-full justify-end group">
-                      <div className="text-[10px] text-[#A7B0C0] opacity-0 group-hover:opacity-100 transition-opacity font-mono whitespace-nowrap">
+                      <div className="text-[10px] text-slate-600 dark:text-[#A7B0C0] opacity-0 group-hover:opacity-100 transition-opacity font-mono whitespace-nowrap">
                         {chartMetric === 'revenue' ? formatTZS(val) : val.toLocaleString()}
                       </div>
                       <div 
                         className="w-full max-w-[48px] rounded-t-xl bg-gradient-to-t from-amber-600 to-amber-400 group-hover:from-amber-500 group-hover:to-amber-300 transition-all duration-300 relative shadow-md"
                         style={{ height: `${heightPercent}%` }}
                       >
-                        <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 rounded-t-xl transition-opacity" />
+                        <div className="absolute inset-0 bg-white/20 dark:bg-white/10 opacity-0 group-hover:opacity-100 rounded-t-xl transition-opacity" />
                       </div>
-                      <span className="text-[11px] font-semibold text-[#A7B0C0] text-center truncate w-full">{d.label}</span>
+                      <span className="text-[11px] font-semibold text-slate-600 dark:text-[#A7B0C0] text-center truncate w-full">{d.label}</span>
                     </div>
                   );
                 })}
               </div>
-              <div className="flex flex-wrap items-center justify-between text-xs text-[#A7B0C0] px-2">
+              <div className="flex flex-wrap items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0] px-2">
                 <span>Thamani ya kilele: {chartMetric === 'revenue' ? formatTZS(Math.max(...dynamicChartData.map(d => d.revenue))) : Math.max(...dynamicChartData.map(d => chartMetric === 'views' ? d.views : d.users)).toLocaleString()}</span>
-                <span className="text-[#16C784] font-semibold flex items-center gap-1">
+                <span className="text-emerald-700 dark:text-[#16C784] font-semibold flex items-center gap-1">
                   <ArrowUpRight className="w-4 h-4" /> Ukuaji mzuri wa +18.4% ikilinganishwa na mwezi uliopita
                 </span>
               </div>
@@ -938,35 +939,35 @@ export const AdminPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
               <button
                 onClick={() => { setActiveTab('copyright'); }}
-                className="p-3.5 rounded-2xl bg-[#10131B] hover:bg-[#232A39] border border-[#262E3E] text-left transition-all flex items-center justify-between group"
+                className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] hover:bg-slate-100 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-left transition-all flex items-center justify-between group"
               >
                 <div>
-                  <h4 className="text-xs font-bold text-white group-hover:text-amber-400">Madai ya Hakimiliki</h4>
-                  <p className="text-[11px] text-[#A7B0C0]">{pendingCopyrightClaimsCount} yanasubiri uamuzi wako</p>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400">Madai ya Hakimiliki</h4>
+                  <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">{pendingCopyrightClaimsCount} yanasubiri uamuzi wako</p>
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-[#A7B0C0] group-hover:text-amber-400" />
+                <ArrowUpRight className="w-4 h-4 text-slate-500 dark:text-[#A7B0C0] group-hover:text-amber-600 dark:group-hover:text-amber-400" />
               </button>
 
               <button
                 onClick={() => { setActiveTab('payouts'); setPayoutsSubTab('pending'); }}
-                className="p-3.5 rounded-2xl bg-[#10131B] hover:bg-[#232A39] border border-[#262E3E] text-left transition-all flex items-center justify-between group"
+                className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] hover:bg-slate-100 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-left transition-all flex items-center justify-between group"
               >
                 <div>
-                  <h4 className="text-xs font-bold text-white group-hover:text-amber-400">Idhinisha Malipo</h4>
-                  <p className="text-[11px] text-[#A7B0C0]">{pendingPayoutsList.length} maombi ya kutoa fedha</p>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400">Idhinisha Malipo</h4>
+                  <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">{pendingPayoutsList.length} maombi ya kutoa fedha</p>
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-[#A7B0C0] group-hover:text-amber-400" />
+                <ArrowUpRight className="w-4 h-4 text-slate-500 dark:text-[#A7B0C0] group-hover:text-amber-600 dark:group-hover:text-amber-400" />
               </button>
 
               <button
                 onClick={() => { setActiveTab('users'); setUsersSubTab('verification'); }}
-                className="p-3.5 rounded-2xl bg-[#10131B] hover:bg-[#232A39] border border-[#262E3E] text-left transition-all flex items-center justify-between group"
+                className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] hover:bg-slate-100 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-left transition-all flex items-center justify-between group"
               >
                 <div>
-                  <h4 className="text-xs font-bold text-white group-hover:text-amber-400">Hakiki Waumbaji (Verification)</h4>
-                  <p className="text-[11px] text-[#A7B0C0]">{verificationRequests.filter(v => v.status === 'pending').length} maombi mapya ya beji</p>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400">Hakiki Waumbaji (Verification)</h4>
+                  <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">{verificationRequests.filter(v => v.status === 'pending').length} maombi mapya ya beji</p>
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-[#A7B0C0] group-hover:text-amber-400" />
+                <ArrowUpRight className="w-4 h-4 text-slate-500 dark:text-[#A7B0C0] group-hover:text-amber-600 dark:group-hover:text-amber-400" />
               </button>
             </div>
 
@@ -979,14 +980,14 @@ export const AdminPage: React.FC = () => {
       {/* TAB: MATANGAZO YA BIASHARA & IDHINI (ADS APPROVAL & HUB)       */}
       {/* ============================================================== */}
       {activeTab === 'ads' && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-[#262E3E] space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262E3E]">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#262E3E]">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Megaphone className="w-5 h-5 text-amber-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Megaphone className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 Usimamizi na Idhini ya Matangazo (Ads Management &amp; Approvals)
               </h3>
-              <p className="text-xs text-[#A7B0C0] mt-0.5">
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0] mt-0.5">
                 Kagua, idhinisha au kataa kampeni za matangazo zilizolipwa na watumiaji kabla ya kuanza kuonekana jukwaani.
               </p>
             </div>
@@ -1008,22 +1009,22 @@ export const AdminPage: React.FC = () => {
       {/* 2. TAB: WATUMIAJI & WAUMBAJI (USERS & CREATORS MANAGEMENT)     */}
       {/* ============================================================== */}
       {activeTab === 'users' && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-[#262E3E] space-y-5">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-5">
           
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262E3E]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#262E3E]">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Users className="w-5 h-5 text-amber-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Users className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 Usimamizi wa Watumiaji na Waumbaji (Users &amp; Creators Hub)
               </h3>
-              <p className="text-xs text-[#A7B0C0]">
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Thibitisha waumbaji, simamia monetization, badili majukumu ya kiutawala, na kagua rufaa.
               </p>
             </div>
             
             {/* Sub-tabs pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar bg-[#10131B] p-1 rounded-2xl border border-[#262E3E]">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar bg-slate-100 dark:bg-[#10131B] p-1 rounded-2xl border border-slate-200 dark:border-[#262E3E]">
               {[
                 { id: 'all', label: `Wote (${users.length})` },
                 { id: 'creators', label: `Waumbaji (${channels.length})` },
@@ -1037,7 +1038,7 @@ export const AdminPage: React.FC = () => {
                   key={st.id}
                   onClick={() => setUsersSubTab(st.id as any)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                    usersSubTab === st.id ? 'bg-amber-500 text-black shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                    usersSubTab === st.id ? 'bg-amber-500 text-black shadow-md' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {st.label}
@@ -1051,13 +1052,13 @@ export const AdminPage: React.FC = () => {
             <div className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="relative flex-1 max-w-md">
-                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-[#A7B0C0]" />
+                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400 dark:text-[#A7B0C0]" />
                   <input
                     type="text"
                     value={userSearch}
                     onChange={(e) => setUserSearch(e.target.value)}
                     placeholder="Tafuta kwa jina, barua pepe, au ID..."
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-full py-1.5 pl-9 pr-4 text-xs text-white placeholder-[#A7B0C0] focus:outline-none focus:border-amber-400"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-full py-1.5 pl-9 pr-4 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0] focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                   />
                 </div>
 
@@ -1065,21 +1066,21 @@ export const AdminPage: React.FC = () => {
                   <select
                     value={userRoleFilter}
                     onChange={(e) => setUserRoleFilter(e.target.value)}
-                    className="bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none"
+                    className="bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none"
                   >
-                    <option value="all">Nafasi Zote (Roles)</option>
-                    <option value="viewer">Watazamaji (Viewer)</option>
-                    <option value="creator">Waumbaji (Creator)</option>
-                    <option value="moderator">Wasimamizi (Moderator)</option>
-                    <option value="admin">Mkuu (Admin)</option>
+                    <option value="all" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Nafasi Zote (Roles)</option>
+                    <option value="viewer" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Watazamaji (Viewer)</option>
+                    <option value="creator" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Waumbaji (Creator)</option>
+                    <option value="moderator" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Wasimamizi (Moderator)</option>
+                    <option value="admin" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Mkuu (Admin)</option>
                   </select>
                 </div>
               </div>
 
               {/* Users Table */}
-              <div className="overflow-x-auto rounded-2xl border border-[#262E3E]">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-[#262E3E]">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#10131B] text-[#A7B0C0] uppercase text-[10px] tracking-wider border-b border-[#262E3E]">
+                  <thead className="bg-slate-50 dark:bg-[#10131B] text-slate-600 dark:text-[#A7B0C0] uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-[#262E3E]">
                     <tr>
                       <th className="py-3 px-4">Mtumiaji</th>
                       <th className="py-3 px-3">Jukumu (Role)</th>
@@ -1089,21 +1090,25 @@ export const AdminPage: React.FC = () => {
                       <th className="py-3 px-4 text-right">Vitendo vya Utawala</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#262E3E]/60 text-white">
+                  <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/60 text-slate-900 dark:text-white">
                     {filteredUsers.map((u) => (
-                      <tr key={u.uid} className="hover:bg-[#232A39]/50 transition-colors">
+                      <tr key={u.uid} className="hover:bg-slate-50 dark:hover:bg-[#232A39]/50 transition-colors">
                         <td className="py-3 px-4 flex items-center gap-3">
                           <img 
-                            src={u.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'} 
+                            src={u.photoURL || createAvatarSvgDataUri(u.displayName)} 
                             alt={u.displayName}
-                            className="w-8 h-8 rounded-full object-cover border border-[#262E3E]" 
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = createAvatarSvgDataUri(u.displayName);
+                            }}
+                            className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-[#262E3E] bg-slate-100 dark:bg-[#141824]" 
                           />
                           <div>
                             <div className="font-bold flex items-center gap-1.5">
                               <span>{u.displayName}</span>
-                              {u.isBlocked && <span className="text-[9px] bg-red-600/30 text-red-400 px-1.5 py-0.2 rounded font-mono font-bold">BLOCKED</span>}
+                              {u.isBlocked && <span className="text-[9px] bg-red-500/15 dark:bg-red-600/30 text-red-700 dark:text-red-400 px-1.5 py-0.2 rounded font-mono font-bold">BLOCKED</span>}
                             </div>
-                            <span className="text-[11px] text-[#A7B0C0] font-mono">{u.email}</span>
+                            <span className="text-[11px] text-slate-600 dark:text-[#A7B0C0] font-mono">{u.email}</span>
                           </div>
                         </td>
                         <td className="py-3 px-3">
@@ -1113,29 +1118,29 @@ export const AdminPage: React.FC = () => {
                               updateUserRole(u.uid, e.target.value as UserRole);
                               showToast(`Jukumu la ${u.displayName} limebadilishwa kuwa ${e.target.value}.`, 'success');
                             }}
-                            className="bg-[#10131B] border border-[#262E3E] text-white rounded-lg px-2 py-1 text-[11px] font-semibold capitalize cursor-pointer"
+                            className="bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white rounded-lg px-2 py-1 text-[11px] font-semibold capitalize cursor-pointer"
                           >
-                            <option value="viewer">Viewer</option>
-                            <option value="creator">Creator</option>
-                            <option value="moderator">Moderator</option>
-                            <option value="admin">Admin</option>
+                            <option value="viewer" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Viewer</option>
+                            <option value="creator" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Creator</option>
+                            <option value="moderator" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Moderator</option>
+                            <option value="admin" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Admin</option>
                           </select>
                         </td>
-                        <td className="py-3 px-3 font-mono font-bold text-[#16C784]">
+                        <td className="py-3 px-3 font-mono font-bold text-emerald-700 dark:text-[#16C784]">
                           {formatTZS(u.balanceTZS || 0)}
                         </td>
                         <td className="py-3 px-3">
                           {u.isBlocked ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-500/30">
                               <XCircle className="w-3 h-3" /> Imefungwa
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#16C784]/20 text-[#16C784] border border-[#16C784]/30">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784] border border-emerald-300 dark:border-[#16C784]/30">
                               <CheckCircle className="w-3 h-3" /> Hai (Active)
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-3 text-[11px] text-[#A7B0C0] font-mono">
+                        <td className="py-3 px-3 text-[11px] text-slate-600 dark:text-[#A7B0C0] font-mono">
                           {new Date(u.createdAt).toLocaleDateString()}
                         </td>
                         <td className="py-3 px-4 text-right space-x-1.5">
@@ -1144,7 +1149,7 @@ export const AdminPage: React.FC = () => {
                               setUserToEditBalance(u);
                               setBalanceAdjustmentInput('10000');
                             }}
-                            className="p-1.5 rounded-lg bg-[#10131B] hover:bg-[#232A39] text-[#16C784] border border-[#262E3E]"
+                            className="p-1.5 rounded-lg bg-slate-50 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#232A39] text-emerald-700 dark:text-[#16C784] border border-slate-200 dark:border-[#262E3E]"
                             title="Rekebisha Salio (Top Up / Deduct)"
                           >
                             <DollarSign className="w-3.5 h-3.5" />
@@ -1153,8 +1158,8 @@ export const AdminPage: React.FC = () => {
                             onClick={() => setUserToBlock(u)}
                             className={`p-1.5 rounded-lg border ${
                               u.isBlocked 
-                                ? 'bg-[#16C784]/20 text-[#16C784] border-[#16C784]/40 hover:bg-[#16C784]/30' 
-                                : 'bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30'
+                                ? 'bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784] border-emerald-300 dark:border-[#16C784]/40 hover:bg-emerald-500/25 dark:hover:bg-[#16C784]/30' 
+                                : 'bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/40 hover:bg-red-500/25 dark:hover:bg-red-500/30'
                             }`}
                             title={u.isBlocked ? 'Fungua Akaunti (Unblock)' : 'Funga Akaunti (Block)'}
                           >
@@ -1162,7 +1167,7 @@ export const AdminPage: React.FC = () => {
                           </button>
                           <button
                             onClick={() => setUserToDelete(u)}
-                            className="p-1.5 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/40 border border-red-500/30"
+                            className="p-1.5 rounded-lg bg-red-500/15 dark:bg-red-600/20 text-red-700 dark:text-red-400 hover:bg-red-500/25 dark:hover:bg-red-600/40 border border-red-300 dark:border-red-500/30"
                             title="Futa Mtumiaji Kabisa"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1181,33 +1186,41 @@ export const AdminPage: React.FC = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
                 {channels.map((ch) => (
-                  <div key={ch.id} className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-3">
+                  <div key={ch.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-3">
                     <div className="flex items-center gap-3">
-                      <img src={ch.avatarUrl} alt={ch.name} className="w-12 h-12 rounded-full object-cover border border-[#262E3E]" />
+                      <img
+                        src={ch.avatarUrl || createAvatarSvgDataUri(ch.name)}
+                        alt={ch.name}
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = createAvatarSvgDataUri(ch.name);
+                        }}
+                        className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-[#262E3E]"
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <h4 className="font-bold text-white text-xs truncate">{ch.name}</h4>
-                          {ch.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />}
+                          <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate">{ch.name}</h4>
+                          {ch.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />}
                         </div>
-                        <p className="text-[11px] text-[#A7B0C0] font-mono">{ch.handle}</p>
+                        <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0] font-mono">{ch.handle}</p>
                       </div>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${ch.isMonetized ? 'bg-[#16C784]/20 text-[#16C784]' : 'bg-gray-500/20 text-gray-400'}`}>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${ch.isMonetized ? 'bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]' : 'bg-slate-200 dark:bg-gray-500/20 text-slate-600 dark:text-gray-400'}`}>
                         {ch.isMonetized ? 'Monetized' : 'Hajawashwa'}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 py-2 border-y border-[#262E3E] text-center text-xs">
+                    <div className="grid grid-cols-3 gap-2 py-2 border-y border-slate-200 dark:border-[#262E3E] text-center text-xs">
                       <div>
-                        <span className="text-[10px] text-[#A7B0C0] block">Subscribers</span>
-                        <span className="font-bold font-mono text-white">{formatViews(ch.subscriberCount, language)}</span>
+                        <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0] block">Subscribers</span>
+                        <span className="font-bold font-mono text-slate-900 dark:text-white">{formatViews(ch.subscriberCount, language)}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-[#A7B0C0] block">Video</span>
-                        <span className="font-bold font-mono text-white">{ch.videoCount}</span>
+                        <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0] block">Video</span>
+                        <span className="font-bold font-mono text-slate-900 dark:text-white">{ch.videoCount}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-[#A7B0C0] block">Views</span>
-                        <span className="font-bold font-mono text-white">{formatViews(ch.totalViews, language)}</span>
+                        <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0] block">Views</span>
+                        <span className="font-bold font-mono text-slate-900 dark:text-white">{formatViews(ch.totalViews, language)}</span>
                       </div>
                     </div>
 
@@ -1225,7 +1238,7 @@ export const AdminPage: React.FC = () => {
                           showToast(`Alama ya uthibitisho kwa ${ch.name} imesasishwa.`, 'success');
                         }}
                         className={`p-1.5 rounded-lg border text-xs font-semibold ${
-                          ch.isVerified ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : 'bg-[#232A39] text-[#A7B0C0] hover:text-white'
+                          ch.isVerified ? 'bg-blue-500/15 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-500/30' : 'bg-slate-200 dark:bg-[#232A39] text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white border-slate-300 dark:border-[#262E3E]'
                         }`}
                         title={ch.isVerified ? 'Ondoa Beji ya Uthibitisho' : 'Mpe Beji ya Uthibitisho (Verify)'}
                       >
@@ -1241,13 +1254,13 @@ export const AdminPage: React.FC = () => {
           {/* Subtab 3: Creator Verification Requests */}
           {usersSubTab === 'verification' && (
             <div className="space-y-4">
-              <div className="p-3.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-xs text-[#A7B0C0]">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Waumbaji wanaoomba beji rasmi ya uthibitisho (Verification Badge) kupitia NIDA, Passport au Leseni ya Biashara ya BRELA.
               </div>
 
-              <div className="overflow-x-auto rounded-2xl border border-[#262E3E]">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-[#262E3E]">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#10131B] text-[#A7B0C0] uppercase text-[10px] border-b border-[#262E3E]">
+                  <thead className="bg-slate-50 dark:bg-[#10131B] text-slate-600 dark:text-[#A7B0C0] uppercase text-[10px] border-b border-slate-200 dark:border-[#262E3E]">
                     <tr>
                       <th className="py-3 px-4">Kituo / Mwombaji</th>
                       <th className="py-3 px-3">Subscribers</th>
@@ -1257,22 +1270,30 @@ export const AdminPage: React.FC = () => {
                       <th className="py-3 px-4 text-right">Hatua za Admin</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#262E3E]/60 text-white">
+                  <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/60 text-slate-900 dark:text-white">
                     {verificationRequests.map(v => (
-                      <tr key={v.id} className="hover:bg-[#232A39]/50">
+                      <tr key={v.id} className="hover:bg-slate-50 dark:hover:bg-[#232A39]/50">
                         <td className="py-3 px-4 flex items-center gap-3">
-                          <img src={v.userAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'} className="w-8 h-8 rounded-full object-cover" />
+                          <img
+                            src={v.userAvatar || createAvatarSvgDataUri(v.userName || v.channelName)}
+                            alt={v.channelName}
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = createAvatarSvgDataUri(v.userName || v.channelName);
+                            }}
+                            className="w-8 h-8 rounded-full object-cover"
+                          />
                           <div>
                             <span className="font-bold block">{v.channelName}</span>
-                            <span className="text-[11px] text-[#A7B0C0] font-mono">{v.userName}</span>
+                            <span className="text-[11px] text-slate-600 dark:text-[#A7B0C0] font-mono">{v.userName}</span>
                           </div>
                         </td>
-                        <td className="py-3 px-3 font-mono font-bold text-white">{v.subscriberCount.toLocaleString()}</td>
-                        <td className="py-3 px-3 font-semibold text-amber-400">{v.documentType}</td>
-                        <td className="py-3 px-3 font-mono text-[11px] text-[#A7B0C0]">{v.documentNumber}</td>
+                        <td className="py-3 px-3 font-mono font-bold text-slate-900 dark:text-white">{v.subscriberCount.toLocaleString()}</td>
+                        <td className="py-3 px-3 font-semibold text-amber-700 dark:text-amber-400">{v.documentType}</td>
+                        <td className="py-3 px-3 font-mono text-[11px] text-slate-600 dark:text-[#A7B0C0]">{v.documentNumber}</td>
                         <td className="py-3 px-3">
                           <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                            v.status === 'approved' ? 'bg-[#16C784]/20 text-[#16C784]' : v.status === 'rejected' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'
+                            v.status === 'approved' ? 'bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]' : v.status === 'rejected' ? 'bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400' : 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
                           }`}>
                             {v.status === 'approved' ? 'Imeidhinishwa' : v.status === 'rejected' ? 'Imekataliwa' : 'Inasubiri'}
                           </span>
@@ -1288,13 +1309,13 @@ export const AdminPage: React.FC = () => {
                               </button>
                               <button
                                 onClick={() => updateVerificationRequest(v.id, 'rejected')}
-                                className="px-3 py-1 rounded-lg bg-red-600/20 hover:bg-red-600/40 text-red-400 font-bold text-[11px] border border-red-500/30"
+                                className="px-3 py-1 rounded-lg bg-red-500/15 dark:bg-red-600/20 hover:bg-red-500/25 dark:hover:bg-red-600/40 text-red-700 dark:text-red-400 font-bold text-[11px] border border-red-300 dark:border-red-500/30"
                               >
                                 Kataa
                               </button>
                             </>
                           )}
-                          {v.status !== 'pending' && <span className="text-[11px] text-[#A7B0C0]">Imekamilika</span>}
+                          {v.status !== 'pending' && <span className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">Imekamilika</span>}
                         </td>
                       </tr>
                     ))}
@@ -1307,23 +1328,31 @@ export const AdminPage: React.FC = () => {
           {/* Subtab 4: Suspended / Blocked Accounts */}
           {usersSubTab === 'suspended' && (
             <div className="space-y-4">
-              <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-xs text-red-300">
+              <div className="p-3.5 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-xs text-red-700 dark:text-red-300">
                 Akaunti zote zilizofungiwa au kusimamishwa kwa kukiuka sera za Tazama, COSOTA, au usalama.
               </div>
 
-              <div className="divide-y divide-[#262E3E] rounded-2xl border border-[#262E3E] bg-[#10131B] overflow-hidden">
+              <div className="divide-y divide-slate-200 dark:divide-[#262E3E] rounded-2xl border border-slate-200 dark:border-[#262E3E] bg-slate-50 dark:bg-[#10131B] overflow-hidden">
                 {users.filter(u => u.isBlocked).length === 0 ? (
-                  <div className="p-8 text-center text-xs text-[#A7B0C0]">
+                  <div className="p-8 text-center text-xs text-slate-600 dark:text-[#A7B0C0]">
                     Hakuna akaunti yoyote iliyofungiwa kwa sasa.
                   </div>
                 ) : (
                   users.filter(u => u.isBlocked).map(u => (
-                    <div key={u.uid} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#191E29] transition-colors">
+                    <div key={u.uid} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-100 dark:hover:bg-[#191E29] transition-colors">
                       <div className="flex items-center gap-3">
-                        <img src={u.photoURL || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'} className="w-10 h-10 rounded-full object-cover border border-red-500/40" />
+                        <img
+                          src={u.photoURL || createAvatarSvgDataUri(u.displayName)}
+                          alt={u.displayName}
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = createAvatarSvgDataUri(u.displayName);
+                          }}
+                          className="w-10 h-10 rounded-full object-cover border border-red-400 dark:border-red-500/40"
+                        />
                         <div>
-                          <h4 className="font-bold text-white text-xs">{u.displayName} ({u.email})</h4>
-                          <p className="text-[11px] text-red-400 mt-0.5">Sababu: {u.blockReason || 'Ukiukaji wa miongozo ya jumuiya'}</p>
+                          <h4 className="font-bold text-slate-900 dark:text-white text-xs">{u.displayName} ({u.email})</h4>
+                          <p className="text-[11px] text-red-600 dark:text-red-400 mt-0.5">Sababu: {u.blockReason || 'Ukiukaji wa miongozo ya jumuiya'}</p>
                         </div>
                       </div>
 
@@ -1348,25 +1377,33 @@ export const AdminPage: React.FC = () => {
           {/* Subtab 5: Monetization Eligibility & Applications */}
           {usersSubTab === 'monetization' && (
             <div className="space-y-4">
-              <div className="p-3.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-xs text-[#A7B0C0] flex items-center justify-between">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-xs text-slate-600 dark:text-[#A7B0C0] flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-white block">Vigezo vya Kuanza Kulipwa (Monetization Criteria):</span>
+                  <span className="font-bold text-slate-900 dark:text-white block">Vigezo vya Kuanza Kulipwa (Monetization Criteria):</span>
                   <span>Subscribers &gt;= 1,000 | Saa za Kutazamwa (Watch Hours) &gt;= 4,000 | Strikes: 0 | Njia ya malipo imehakikiwa.</span>
                 </div>
               </div>
 
               <div className="space-y-3">
                 {monetizationApplications.map(m => (
-                  <div key={m.id} className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div key={m.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3.5">
-                      <img src={m.userAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'} className="w-11 h-11 rounded-full object-cover border border-[#262E3E]" />
+                      <img
+                        src={m.userAvatar || createAvatarSvgDataUri(m.channelName)}
+                        alt={m.channelName}
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = createAvatarSvgDataUri(m.channelName);
+                        }}
+                        className="w-11 h-11 rounded-full object-cover border border-slate-200 dark:border-[#262E3E]"
+                      />
                       <div>
-                        <h4 className="font-extrabold text-white text-xs">{m.channelName}</h4>
-                        <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px] text-[#A7B0C0]">
-                          <span>Subscribers: <strong className="text-white">{m.subscriberCount.toLocaleString()}</strong></span>
-                          <span>Watch Hours: <strong className="text-white">{m.watchHours.toLocaleString()}</strong></span>
-                          <span>Views: <strong className="text-white">{formatViews(m.totalViews, language)}</strong></span>
-                          <span className={m.strikesCount === 0 ? 'text-[#16C784]' : 'text-red-400 font-bold'}>Strikes: {m.strikesCount}</span>
+                        <h4 className="font-extrabold text-slate-900 dark:text-white text-xs">{m.channelName}</h4>
+                        <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px] text-slate-600 dark:text-[#A7B0C0]">
+                          <span>Subscribers: <strong className="text-slate-900 dark:text-white">{m.subscriberCount.toLocaleString()}</strong></span>
+                          <span>Watch Hours: <strong className="text-slate-900 dark:text-white">{m.watchHours.toLocaleString()}</strong></span>
+                          <span>Views: <strong className="text-slate-900 dark:text-white">{formatViews(m.totalViews, language)}</strong></span>
+                          <span className={m.strikesCount === 0 ? 'text-emerald-700 dark:text-[#16C784]' : 'text-red-600 dark:text-red-400 font-bold'}>Strikes: {m.strikesCount}</span>
                         </div>
                       </div>
                     </div>
@@ -1382,13 +1419,13 @@ export const AdminPage: React.FC = () => {
                           </button>
                           <button
                             onClick={() => updateMonetizationApplication(m.id, 'rejected', 'Hajafikisha vigezo vya uhalisi')}
-                            className="px-3.5 py-1.5 rounded-xl bg-red-600/20 text-red-400 hover:bg-red-600/40 border border-red-500/30 font-bold text-xs"
+                            className="px-3.5 py-1.5 rounded-xl bg-red-500/15 dark:bg-red-600/20 text-red-700 dark:text-red-400 hover:bg-red-500/25 dark:hover:bg-red-600/40 border border-red-300 dark:border-red-500/30 font-bold text-xs"
                           >
                             Kataa
                           </button>
                         </>
                       ) : (
-                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${m.status === 'approved' ? 'bg-[#16C784]/20 text-[#16C784]' : 'bg-red-500/20 text-red-400'}`}>
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${m.status === 'approved' ? 'bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]' : 'bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400'}`}>
                           {m.status === 'approved' ? 'Imeidhinishwa' : 'Imekataliwa'}
                         </span>
                       )}
@@ -1402,26 +1439,26 @@ export const AdminPage: React.FC = () => {
           {/* Subtab 6: User Appeals & Recovery */}
           {usersSubTab === 'appeals' && (
             <div className="space-y-4">
-              <div className="p-3.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-xs text-[#A7B0C0]">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Watumiaji na waumbaji waliokata rufaa dhidi ya kufungiwa au kuadhibiwa kwa video zao.
               </div>
 
               <div className="space-y-3">
                 {userAppeals.map(a => (
-                  <div key={a.id} className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-3">
+                  <div key={a.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
-                        <h4 className="font-bold text-white text-xs">{a.userName} ({a.userEmail})</h4>
-                        <span className="text-[11px] text-amber-400 font-semibold">Hatua iliyolalamikiwa: {a.penalizedAction}</span>
+                        <h4 className="font-bold text-slate-900 dark:text-white text-xs">{a.userName} ({a.userEmail})</h4>
+                        <span className="text-[11px] text-amber-700 dark:text-amber-400 font-semibold">Hatua iliyolalamikiwa: {a.penalizedAction}</span>
                       </div>
                       <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
-                        a.status === 'approved' ? 'bg-[#16C784]/20 text-[#16C784]' : a.status === 'rejected' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'
+                        a.status === 'approved' ? 'bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]' : a.status === 'rejected' ? 'bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400' : 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
                       }`}>
                         {a.status === 'approved' ? 'Imekubaliwa' : a.status === 'rejected' ? 'Imekataliwa' : 'Inasubiri Uamuzi'}
                       </span>
                     </div>
 
-                    <p className="text-xs text-[#A7B0C0] bg-[#191E29] p-3 rounded-xl border border-[#262E3E]">
+                    <p className="text-xs text-slate-700 dark:text-[#A7B0C0] bg-white dark:bg-[#191E29] p-3 rounded-xl border border-slate-200 dark:border-[#262E3E]">
                       <strong>Maelezo ya Rufaa:</strong> &ldquo;{a.explanation}&rdquo;
                     </p>
 
@@ -1435,7 +1472,7 @@ export const AdminPage: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleResolveAppeal(a.id, 'rejected')}
-                          className="px-3.5 py-1.5 rounded-xl bg-red-600/20 text-red-400 hover:bg-red-600/40 border border-red-500/30 text-xs font-bold"
+                          className="px-3.5 py-1.5 rounded-xl bg-red-500/15 dark:bg-red-600/20 text-red-700 dark:text-red-400 hover:bg-red-500/25 dark:hover:bg-red-600/40 border border-red-300 dark:border-red-500/30 text-xs font-bold"
                         >
                           Kataa Rufaa
                         </button>
@@ -1450,32 +1487,32 @@ export const AdminPage: React.FC = () => {
           {/* Subtab 7: Roles & RBAC Permissions */}
           {usersSubTab === 'roles' && (
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-2 text-xs">
-                <h4 className="font-bold text-white text-sm">Mfumo wa Idhini za Majukumu (Role-Based Access Control):</h4>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-2 text-xs">
+                <h4 className="font-bold text-slate-900 dark:text-white text-sm">Mfumo wa Idhini za Majukumu (Role-Based Access Control):</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2 text-[11px]">
-                  <div className="p-3 rounded-xl bg-[#191E29] border border-[#262E3E]">
-                    <span className="font-bold text-amber-400 block text-xs">Super Admin</span>
-                    <span className="text-[#A7B0C0]">Usimamizi kamili wa mfumo, watumiaji, mapato, kanuni na mipangilio.</span>
+                  <div className="p-3 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E]">
+                    <span className="font-bold text-amber-700 dark:text-amber-400 block text-xs">Super Admin</span>
+                    <span className="text-slate-600 dark:text-[#A7B0C0]">Usimamizi kamili wa mfumo, watumiaji, mapato, kanuni na mipangilio.</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#191E29] border border-[#262E3E]">
-                    <span className="font-bold text-blue-400 block text-xs">Content Moderator</span>
-                    <span className="text-[#A7B0C0]">Kukagua video, maoni, kushughulikia ripoti za ukiukaji na kupendekeza maudhui.</span>
+                  <div className="p-3 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E]">
+                    <span className="font-bold text-blue-700 dark:text-blue-400 block text-xs">Content Moderator</span>
+                    <span className="text-slate-600 dark:text-[#A7B0C0]">Kukagua video, maoni, kushughulikia ripoti za ukiukaji na kupendekeza maudhui.</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#191E29] border border-[#262E3E]">
-                    <span className="font-bold text-[#16C784] block text-xs">Finance Officer</span>
-                    <span className="text-[#A7B0C0]">Kukagua na kuidhinisha maombi ya malipo, kodi na ripoti za mapato ya benki/simu.</span>
+                  <div className="p-3 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E]">
+                    <span className="font-bold text-emerald-700 dark:text-[#16C784] block text-xs">Finance Officer</span>
+                    <span className="text-slate-600 dark:text-[#A7B0C0]">Kukagua na kuidhinisha maombi ya malipo, kodi na ripoti za mapato ya benki/simu.</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#191E29] border border-[#262E3E]">
-                    <span className="font-bold text-red-400 block text-xs">Copyright Officer</span>
-                    <span className="text-[#A7B0C0]">Kushughulikia madai ya COSOTA, Content Match, strikes na barua za madai.</span>
+                  <div className="p-3 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E]">
+                    <span className="font-bold text-red-700 dark:text-red-400 block text-xs">Copyright Officer</span>
+                    <span className="text-slate-600 dark:text-[#A7B0C0]">Kushughulikia madai ya COSOTA, Content Match, strikes na barua za madai.</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#191E29] border border-[#262E3E]">
-                    <span className="font-bold text-purple-400 block text-xs">Ads Manager</span>
-                    <span className="text-[#A7B0C0]">Kusimamia kampeni za matangazo, watangazaji na bajeti za matangazo.</span>
+                  <div className="p-3 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E]">
+                    <span className="font-bold text-purple-700 dark:text-purple-400 block text-xs">Ads Manager</span>
+                    <span className="text-slate-600 dark:text-[#A7B0C0]">Kusimamia kampeni za matangazo, watangazaji na bajeti za matangazo.</span>
                   </div>
-                  <div className="p-3 rounded-xl bg-[#191E29] border border-[#262E3E]">
-                    <span className="font-bold text-cyan-400 block text-xs">Customer Support</span>
-                    <span className="text-[#A7B0C0]">Kushughulikia matatizo ya watumiaji na kutoa msaada wa kiufundi.</span>
+                  <div className="p-3 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E]">
+                    <span className="font-bold text-cyan-700 dark:text-cyan-400 block text-xs">Customer Support</span>
+                    <span className="text-slate-600 dark:text-[#A7B0C0]">Kushughulikia matatizo ya watumiaji na kutoa msaada wa kiufundi.</span>
                   </div>
                 </div>
               </div>
@@ -1489,35 +1526,35 @@ export const AdminPage: React.FC = () => {
       {/* 3. TAB: VIFURUSHI VYA PREMIUM (SUBSCRIPTIONS & PROMOS)          */}
       {/* ============================================================== */}
       {activeTab === 'premium' && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-[#262E3E] space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262E3E]">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#262E3E]">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Crown className="w-5 h-5 text-amber-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Crown className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 Usimamizi wa Vifurushi vya Tazama Premium &amp; Punguzo
               </h3>
-              <p className="text-xs text-[#A7B0C0]">
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Tenganisha usajili wa watazamaji na waumbaji, dhibiti bei, promo codes, na muda wa majaribio (free trial).
               </p>
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="flex bg-[#10131B] p-1 rounded-2xl border border-[#262E3E] text-xs">
+              <div className="flex bg-slate-100 dark:bg-[#10131B] p-1 rounded-2xl border border-slate-200 dark:border-[#262E3E] text-xs">
                 <button
                   onClick={() => setPremiumSubTab('plans')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${premiumSubTab === 'plans' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${premiumSubTab === 'plans' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
                 >
                   Vifurushi ({premiumPlans.length})
                 </button>
                 <button
                   onClick={() => setPremiumSubTab('promos')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${premiumSubTab === 'promos' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${premiumSubTab === 'promos' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
                 >
                   Promo Codes ({promoCodes.length})
                 </button>
                 <button
                   onClick={() => setPremiumSubTab('subscribers')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${premiumSubTab === 'subscribers' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${premiumSubTab === 'subscribers' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
                 >
                   Wanaolipia
                 </button>
@@ -1552,47 +1589,45 @@ export const AdminPage: React.FC = () => {
                 <div 
                   key={plan.id}
                   className={`p-5 rounded-3xl border transition-all flex flex-col justify-between ${
-                    plan.isActive ? 'bg-[#10131B] border-[#262E3E]' : 'bg-[#10131B]/40 border-dashed border-[#262E3E] opacity-60'
+                    plan.isActive ? 'bg-slate-50 dark:bg-[#10131B] border-slate-200 dark:border-[#262E3E]' : 'bg-slate-50/50 dark:bg-[#10131B]/40 border-dashed border-slate-300 dark:border-[#262E3E] opacity-60'
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2">
-                      <span 
-                        className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase font-mono tracking-wider"
-                        style={{ backgroundColor: `${plan.badgeColor}25`, color: plan.badgeColor, border: `1px solid ${plan.badgeColor}40` }}
-                      >
-                        {plan.badgeLabel}
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase font-mono tracking-wider bg-white dark:bg-[#191E29] text-slate-900 dark:text-white border border-slate-200 dark:border-[#262E3E] shadow-xs dark:shadow-none">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: plan.badgeColor }} />
+                        <span>{plan.badgeLabel}</span>
                       </span>
-                      <span className="text-[10px] font-bold uppercase text-[#A7B0C0]">
+                      <span className="text-[10px] font-bold uppercase text-slate-600 dark:text-[#A7B0C0]">
                         Kwa {plan.target === 'viewer' ? 'Watazamaji' : 'Waumbaji (Pro)'}
                       </span>
                     </div>
 
-                    <h4 className="text-base font-extrabold text-white mt-2">{plan.name}</h4>
-                    <p className="text-xs text-[#A7B0C0] mt-1 line-clamp-2">{plan.description}</p>
+                    <h4 className="text-base font-extrabold text-slate-900 dark:text-white mt-2">{plan.name}</h4>
+                    <p className="text-xs text-slate-600 dark:text-[#A7B0C0] mt-1 line-clamp-2">{plan.description}</p>
 
-                    <div className="mt-3 text-2xl font-black font-mono text-white flex items-baseline gap-1">
+                    <div className="mt-3 text-2xl font-black font-mono text-slate-900 dark:text-white flex items-baseline gap-1">
                       {formatTZS(plan.priceTZS)}
-                      <span className="text-xs font-normal text-[#A7B0C0]">/{plan.billingPeriod === 'year' ? 'mwaka' : 'mwezi'}</span>
+                      <span className="text-xs font-normal text-slate-600 dark:text-[#A7B0C0]">/{plan.billingPeriod === 'year' ? 'mwaka' : 'mwezi'}</span>
                     </div>
 
-                    <ul className="mt-3.5 space-y-1.5 text-xs text-[#A7B0C0]">
+                    <ul className="mt-3.5 space-y-1.5 text-xs text-slate-700 dark:text-[#A7B0C0]">
                       {plan.perks.map((pk, i) => (
                         <li key={i} className="flex items-center gap-2">
-                          <Check className="w-3.5 h-3.5 text-[#16C784] shrink-0" />
+                          <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784] shrink-0" />
                           <span className="truncate">{pk}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-[#262E3E] flex items-center justify-between text-xs">
-                    <span className="text-[11px] font-mono text-[#A7B0C0]">
+                  <div className="mt-4 pt-3 border-t border-slate-200 dark:border-[#262E3E] flex items-center justify-between text-xs">
+                    <span className="text-[11px] font-mono text-slate-600 dark:text-[#A7B0C0]">
                       {plan.subscribersCount?.toLocaleString() || 0} wanachama
                     </span>
                     <button
                       onClick={() => handleOpenEditPlan(plan)}
-                      className="px-3 py-1.5 rounded-xl bg-[#232A39] hover:bg-amber-500 hover:text-black text-white font-bold transition-all flex items-center gap-1.5"
+                      className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-[#232A39] hover:bg-amber-500 hover:text-black text-slate-900 dark:text-white font-bold transition-all flex items-center gap-1.5"
                     >
                       <Edit3 className="w-3.5 h-3.5" /> Hariri Kifurushi
                     </button>
@@ -1607,27 +1642,27 @@ export const AdminPage: React.FC = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                 {promoCodes.map(pr => (
-                  <div key={pr.id} className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-2.5">
+                  <div key={pr.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-base font-black text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-lg border border-amber-400/20">
+                      <span className="font-mono text-base font-black text-amber-700 dark:text-amber-400 bg-amber-500/15 dark:bg-amber-400/10 px-2.5 py-0.5 rounded-lg border border-amber-400/30 dark:border-amber-400/20">
                         {pr.code}
                       </span>
-                      <span className="text-xs font-bold font-mono text-[#16C784]">{pr.discountPercent}% OFF</span>
+                      <span className="text-xs font-bold font-mono text-emerald-700 dark:text-[#16C784]">{pr.discountPercent}% OFF</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs text-[#A7B0C0] pt-1">
+                    <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0] pt-1">
                       <span>Imetumika: <strong>{pr.usedCount}/{pr.maxUses}</strong></span>
                       <span>Mwisho: {pr.validUntil}</span>
                     </div>
-                    <div className="flex items-center justify-between pt-2 border-t border-[#262E3E]">
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-[#262E3E]">
                       <button
                         onClick={() => togglePromoCode(pr.id)}
-                        className={`text-[11px] font-bold px-2.5 py-1 rounded-lg ${pr.isActive ? 'bg-[#16C784]/20 text-[#16C784]' : 'bg-gray-500/20 text-gray-400'}`}
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-lg ${pr.isActive ? 'bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]' : 'bg-slate-200 dark:bg-gray-500/20 text-slate-600 dark:text-gray-400'}`}
                       >
                         {pr.isActive ? 'Inatumika (Active)' : 'Imesitishwa'}
                       </button>
                       <button
                         onClick={() => deletePromoCode(pr.id)}
-                        className="p-1 rounded text-red-400 hover:text-red-300"
+                        className="p-1 rounded text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -1641,9 +1676,9 @@ export const AdminPage: React.FC = () => {
           {/* Subtab 3: Active Subscribers */}
           {premiumSubTab === 'subscribers' && (
             <div className="space-y-4">
-              <div className="overflow-x-auto rounded-2xl border border-[#262E3E]">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-[#262E3E]">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#10131B] text-[#A7B0C0] uppercase text-[10px]">
+                  <thead className="bg-slate-50 dark:bg-[#10131B] text-slate-600 dark:text-[#A7B0C0] uppercase text-[10px]">
                     <tr>
                       <th className="py-3 px-4">Mtumiaji</th>
                       <th className="py-3 px-3">Kifurushi</th>
@@ -1652,15 +1687,15 @@ export const AdminPage: React.FC = () => {
                       <th className="py-3 px-3">Hali</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#262E3E]/60 text-white">
+                  <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/60 text-slate-900 dark:text-white">
                     {users.filter(u => u.premiumPlanId || u.creatorPlanId).map(u => (
-                      <tr key={u.uid} className="hover:bg-[#232A39]/50">
+                      <tr key={u.uid} className="hover:bg-slate-50 dark:hover:bg-[#232A39]/50">
                         <td className="py-3 px-4 font-bold">{u.displayName} ({u.email})</td>
-                        <td className="py-3 px-3 text-amber-400 font-semibold">{u.premiumPlanId ? 'Tazama VIP Mwezi' : 'Creator Pro'}</td>
-                        <td className="py-3 px-3 font-mono text-[#16C784]">TZS 4,900</td>
-                        <td className="py-3 px-3 font-mono text-[#A7B0C0]">2026-10-01</td>
+                        <td className="py-3 px-3 text-amber-700 dark:text-amber-400 font-semibold">{u.premiumPlanId ? 'Tazama VIP Mwezi' : 'Creator Pro'}</td>
+                        <td className="py-3 px-3 font-mono text-emerald-700 dark:text-[#16C784]">TZS 4,900</td>
+                        <td className="py-3 px-3 font-mono text-slate-600 dark:text-[#A7B0C0]">2026-10-01</td>
                         <td className="py-3 px-3">
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#16C784]/20 text-[#16C784] font-bold">Inatumika</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784] font-bold">Inatumika</span>
                         </td>
                       </tr>
                     ))}
@@ -1677,19 +1712,19 @@ export const AdminPage: React.FC = () => {
       {/* 4. TAB: MAUDHUI & VIDEO (CONTENT MODERATION & CURATION)        */}
       {/* ============================================================== */}
       {activeTab === 'videos' && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-[#262E3E] space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262E3E]">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#262E3E]">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Tv className="w-5 h-5 text-amber-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Tv className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 Kituo cha Ukaguzi na Usimamizi wa Maudhui (Content Moderation Center)
               </h3>
-              <p className="text-xs text-[#A7B0C0]">
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Chunguza video zilizoripotiwa, panga ukurasa wa mwanzo (Featured), fuatilia ubora wa CDN, na kagua maoni.
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar bg-[#10131B] p-1 rounded-2xl border border-[#262E3E]">
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar bg-slate-100 dark:bg-[#10131B] p-1 rounded-2xl border border-slate-200 dark:border-[#262E3E]">
               {[
                 { id: 'moderation', label: `Ripoti (${reports.filter(r => r.status === 'pending').length})` },
                 { id: 'videos', label: `Video Zote (${allVideos.length})` },
@@ -1701,7 +1736,7 @@ export const AdminPage: React.FC = () => {
                   key={st.id}
                   onClick={() => setContentSubTab(st.id as any)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-                    contentSubTab === st.id ? 'bg-amber-500 text-black shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                    contentSubTab === st.id ? 'bg-amber-500 text-black shadow-md' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {st.label}
@@ -1714,24 +1749,24 @@ export const AdminPage: React.FC = () => {
           {contentSubTab === 'moderation' && (
             <div className="space-y-3">
               {reports.map((rep) => (
-                <div key={rep.id} className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-3">
+                <div key={rep.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <span className="text-[10px] bg-red-600/20 text-red-400 font-bold px-2 py-0.5 rounded-full uppercase">
+                      <span className="text-[10px] bg-red-500/15 dark:bg-red-600/20 text-red-700 dark:text-red-400 font-bold px-2 py-0.5 rounded-full uppercase">
                         Ripoti ya {rep.targetType}
                       </span>
-                      <h4 className="text-xs sm:text-sm font-bold text-white mt-1">{rep.targetTitle}</h4>
-                      <p className="text-[11px] text-amber-400 font-semibold">Sababu: {rep.reason}</p>
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-1">{rep.targetTitle}</h4>
+                      <p className="text-[11px] text-amber-700 dark:text-amber-400 font-semibold">Sababu: {rep.reason}</p>
                     </div>
 
                     <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
-                      rep.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-emerald-500/20 text-emerald-400'
+                      rep.status === 'pending' ? 'bg-yellow-500/15 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400' : 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
                     }`}>
                       {rep.status === 'pending' ? 'Inasubiri Hatua' : rep.status}
                     </span>
                   </div>
 
-                  <p className="text-xs text-[#A7B0C0] bg-[#191E29] p-3 rounded-xl border border-[#262E3E]">
+                  <p className="text-xs text-slate-700 dark:text-[#A7B0C0] bg-white dark:bg-[#191E29] p-3 rounded-xl border border-slate-200 dark:border-[#262E3E]">
                     &ldquo;{rep.details}&rdquo;
                   </p>
 
@@ -1750,7 +1785,7 @@ export const AdminPage: React.FC = () => {
                         updateReportStatus(rep.id, 'dismissed');
                         showToast(`Ripoti #${rep.id} imetupiliwa mbali (Hakuna kosa).`, 'info');
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-white font-semibold text-xs"
+                      className="px-3 py-1.5 rounded-xl bg-slate-200 dark:bg-[#232A39] hover:bg-slate-300 dark:hover:bg-[#2E3748] text-slate-900 dark:text-white font-semibold text-xs"
                     >
                       Kataa Ripoti (Dismiss)
                     </button>
@@ -1769,26 +1804,26 @@ export const AdminPage: React.FC = () => {
                   value={videoSearch}
                   onChange={(e) => setVideoSearch(e.target.value)}
                   placeholder="Tafuta jina la video au kituo..."
-                  className="bg-[#10131B] border border-[#262E3E] rounded-full px-4 py-1.5 text-xs text-white max-w-sm focus:outline-none focus:border-amber-400"
+                  className="bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-full px-4 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0] max-w-sm focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                 />
 
                 <select
                   value={videoCategoryFilter}
                   onChange={(e) => setVideoCategoryFilter(e.target.value)}
-                  className="bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-1.5 text-xs text-white"
+                  className="bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none"
                 >
-                  <option value="all">Makundi Yote</option>
-                  <option value="Muziki">Muziki</option>
-                  <option value="Habari">Habari</option>
-                  <option value="Michezo">Michezo</option>
-                  <option value="Vichekesho">Vichekesho</option>
-                  <option value="Elimu">Elimu</option>
+                  <option value="all" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Makundi Yote</option>
+                  <option value="Muziki" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Muziki</option>
+                  <option value="Habari" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Habari</option>
+                  <option value="Michezo" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Michezo</option>
+                  <option value="Vichekesho" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Vichekesho</option>
+                  <option value="Elimu" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Elimu</option>
                 </select>
               </div>
 
-              <div className="overflow-x-auto rounded-2xl border border-[#262E3E]">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-[#262E3E]">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#10131B] text-[#A7B0C0] uppercase text-[10px]">
+                  <thead className="bg-slate-50 dark:bg-[#10131B] text-slate-600 dark:text-[#A7B0C0] uppercase text-[10px] border-b border-slate-200 dark:border-[#262E3E]">
                     <tr>
                       <th className="py-3 px-4">Video</th>
                       <th className="py-3 px-3">Kundi</th>
@@ -1797,23 +1832,31 @@ export const AdminPage: React.FC = () => {
                       <th className="py-3 px-4 text-right">Vitendo</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#262E3E]/60 text-white">
+                  <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/60 text-slate-900 dark:text-white">
                     {filteredVideos.map(v => (
-                      <tr key={v.id} className="hover:bg-[#232A39]/50">
+                      <tr key={v.id} className="hover:bg-slate-50 dark:hover:bg-[#232A39]/50">
                         <td className="py-3 px-4 flex items-center gap-3">
-                          <img src={v.thumbnailUrl} className="w-14 h-9 object-cover rounded-lg shrink-0 border border-[#262E3E]" />
+                          <img
+                            src={v.thumbnailUrl || createThumbnailSvgDataUri(v.title, v.category)}
+                            alt={v.title}
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = createThumbnailSvgDataUri(v.title, v.category);
+                            }}
+                            className="w-14 h-9 object-cover rounded-lg shrink-0 border border-slate-200 dark:border-[#262E3E]"
+                          />
                           <div className="min-w-0 max-w-xs">
                             <span className="font-bold block truncate">{v.title}</span>
-                            <span className="text-[11px] text-[#A7B0C0] truncate block">{v.channelName}</span>
+                            <span className="text-[11px] text-slate-600 dark:text-[#A7B0C0] truncate block">{v.channelName}</span>
                           </div>
                         </td>
-                        <td className="py-3 px-3 font-semibold text-amber-400">{v.category}</td>
+                        <td className="py-3 px-3 font-semibold text-amber-700 dark:text-amber-400">{v.category}</td>
                         <td className="py-3 px-3 font-mono">{formatViews(v.viewsCount, language)}</td>
                         <td className="py-3 px-3">
                           <button
                             onClick={() => toggleFeaturedVideo(v.id)}
                             className={`p-1.5 rounded-lg border text-xs font-bold ${
-                              featuredVideoIds.includes(v.id) ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-[#10131B] text-[#A7B0C0] border-[#262E3E]'
+                              featuredVideoIds.includes(v.id) ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-400 dark:border-amber-500/40' : 'bg-slate-50 dark:bg-[#10131B] text-slate-500 dark:text-[#A7B0C0] border-slate-200 dark:border-[#262E3E]'
                             }`}
                             title={featuredVideoIds.includes(v.id) ? 'Ondoa Featured' : 'Weka Featured Ukurasa wa Mwanzo'}
                           >
@@ -1823,7 +1866,7 @@ export const AdminPage: React.FC = () => {
                         <td className="py-3 px-4 text-right space-x-2">
                           <button
                             onClick={() => setVideoToDelete(v)}
-                            className="p-1.5 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/40 border border-red-500/30"
+                            className="p-1.5 rounded-lg bg-red-500/15 dark:bg-red-600/20 text-red-700 dark:text-red-400 hover:bg-red-500/25 dark:hover:bg-red-600/40 border border-red-300 dark:border-red-500/30"
                             title="Futa Video"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1840,19 +1883,27 @@ export const AdminPage: React.FC = () => {
           {/* Subtab 3: Featured Videos */}
           {contentSubTab === 'featured' && (
             <div className="space-y-4">
-              <div className="p-3.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-xs text-[#A7B0C0]">
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Video zilizochaguliwa na admin kuangaziwa kwenye ukurasa wa mwanzo (Homepage Curation).
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {allVideos.filter(v => Boolean(v && v.id && featuredVideoIds.includes(v.id))).map(v => (
-                  <div key={v.id} className="p-3 rounded-2xl bg-[#10131B] border border-amber-500/30 space-y-2">
-                    <img src={v.thumbnailUrl} className="w-full h-32 object-cover rounded-xl" />
-                    <h4 className="font-bold text-white text-xs truncate">{v.title}</h4>
-                    <div className="flex items-center justify-between text-[11px] text-[#A7B0C0]">
+                  <div key={v.id} className="p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-amber-300 dark:border-amber-500/30 space-y-2">
+                    <img
+                      src={v.thumbnailUrl || createThumbnailSvgDataUri(v.title, v.category)}
+                      alt={v.title}
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = createThumbnailSvgDataUri(v.title, v.category);
+                      }}
+                      className="w-full h-32 object-cover rounded-xl"
+                    />
+                    <h4 className="font-bold text-slate-900 dark:text-white text-xs truncate">{v.title}</h4>
+                    <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-[#A7B0C0]">
                       <span>{v.channelName}</span>
                       <button 
                         onClick={() => toggleFeaturedVideo(v.id)}
-                        className="text-red-400 font-bold hover:underline"
+                        className="text-red-600 dark:text-red-400 font-bold hover:underline"
                       >
                         Ondoa
                       </button>
@@ -1866,25 +1917,25 @@ export const AdminPage: React.FC = () => {
           {/* Subtab 4: Quality & CDN Bandwidth */}
           {contentSubTab === 'quality' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-              <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-                <span className="text-[#A7B0C0] block">Hifadhi Iliyotumika (Storage)</span>
-                <span className="text-xl font-black font-mono text-white mt-1 block">142.8 GB</span>
-                <span className="text-[10px] text-[#16C784]">Cloudflare R2 &amp; Cloudinary</span>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                <span className="text-slate-600 dark:text-[#A7B0C0] block">Hifadhi Iliyotumika (Storage)</span>
+                <span className="text-xl font-black font-mono text-slate-900 dark:text-white mt-1 block">142.8 GB</span>
+                <span className="text-[10px] text-emerald-700 dark:text-[#16C784]">Cloudflare R2 &amp; Cloudinary</span>
               </div>
-              <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-                <span className="text-[#A7B0C0] block">Bandwidth Mwezi Huu</span>
-                <span className="text-xl font-black font-mono text-white mt-1 block">1.84 TB</span>
-                <span className="text-[10px] text-blue-400">CDN Cache Hit Ratio: 97.4%</span>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                <span className="text-slate-600 dark:text-[#A7B0C0] block">Bandwidth Mwezi Huu</span>
+                <span className="text-xl font-black font-mono text-slate-900 dark:text-white mt-1 block">1.84 TB</span>
+                <span className="text-[10px] text-blue-700 dark:text-blue-400">CDN Cache Hit Ratio: 97.4%</span>
               </div>
-              <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-                <span className="text-[#A7B0C0] block">Transcoding Status</span>
-                <span className="text-xl font-black font-mono text-[#16C784] mt-1 block">100% Ready</span>
-                <span className="text-[10px] text-[#A7B0C0]">1080p, 720p, 480p, 360p</span>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                <span className="text-slate-600 dark:text-[#A7B0C0] block">Transcoding Status</span>
+                <span className="text-xl font-black font-mono text-emerald-700 dark:text-[#16C784] mt-1 block">100% Ready</span>
+                <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0]">1080p, 720p, 480p, 360p</span>
               </div>
-              <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-                <span className="text-[#A7B0C0] block">Gharama za CDN (Makadirio)</span>
-                <span className="text-xl font-black font-mono text-amber-400 mt-1 block">TZS 185,000</span>
-                <span className="text-[10px] text-[#A7B0C0]">Imeokolewa kwa data saver</span>
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                <span className="text-slate-600 dark:text-[#A7B0C0] block">Gharama za CDN (Makadirio)</span>
+                <span className="text-xl font-black font-mono text-amber-700 dark:text-amber-400 mt-1 block">TZS 185,000</span>
+                <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0]">Imeokolewa kwa data saver</span>
               </div>
             </div>
           )}
@@ -1893,9 +1944,9 @@ export const AdminPage: React.FC = () => {
           {contentSubTab === 'categories' && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {['Muziki', 'Vichekesho', 'Habari', 'Elimu', 'Michezo', 'Teknolojia', 'Burudani', 'Zanzibar'].map(cat => (
-                <div key={cat} className="p-3.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-xs flex items-center justify-between">
-                  <span className="font-bold text-white">{cat}</span>
-                  <span className="text-[10px] text-[#A7B0C0] font-mono">{allVideos.filter(v => v.category === cat).length} video</span>
+                <div key={cat} className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-xs flex items-center justify-between">
+                  <span className="font-bold text-slate-900 dark:text-white">{cat}</span>
+                  <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0] font-mono">{allVideos.filter(v => v.category === cat).length} video</span>
                 </div>
               ))}
             </div>
@@ -1908,34 +1959,34 @@ export const AdminPage: React.FC = () => {
       {/* 5. TAB: MAOMBI YA MALIPO (PAYOUTS & FINANCIAL GOVERNANCE)      */}
       {/* ============================================================== */}
       {activeTab === 'payouts' && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-[#262E3E] space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262E3E]">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#262E3E]">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-amber-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 Usimamizi wa Fedha na Malipo ya Waumbaji (Payout Governance)
               </h3>
-              <p className="text-xs text-[#A7B0C0]">
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Idhinisha malipo ya M-Pesa, Tigo Pesa, Airtel Money, Halopesa na Benki kwa watayarishaji.
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-[#10131B] p-1 rounded-2xl border border-[#262E3E] text-xs">
+            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#10131B] p-1 rounded-2xl border border-slate-200 dark:border-[#262E3E] text-xs">
               <button
                 onClick={() => setPayoutsSubTab('pending')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${payoutsSubTab === 'pending' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${payoutsSubTab === 'pending' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
               >
                 Inayosubiri ({pendingPayoutsList.length})
               </button>
               <button
                 onClick={() => setPayoutsSubTab('approved')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${payoutsSubTab === 'approved' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${payoutsSubTab === 'approved' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
               >
                 Yaliyoidhinishwa
               </button>
               <button
                 onClick={() => setPayoutsSubTab('balances')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${payoutsSubTab === 'balances' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${payoutsSubTab === 'balances' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
               >
                 Salio la Waumbaji
               </button>
@@ -1946,33 +1997,33 @@ export const AdminPage: React.FC = () => {
           {payoutsSubTab === 'pending' && (
             <div className="space-y-3">
               {pendingPayoutsList.length === 0 ? (
-                <div className="p-12 text-center text-xs text-[#A7B0C0]">
+                <div className="p-12 text-center text-xs text-slate-600 dark:text-[#A7B0C0]">
                   Hakuna maombi yoyote ya malipo yanayosubiri kwa sasa.
                 </div>
               ) : (
                 pendingPayoutsList.map(pay => (
-                  <div key={pay.id} className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div key={pay.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-base font-extrabold text-white">{pay.channelName}</span>
-                        <span className="text-[10px] bg-blue-500/20 text-blue-400 font-bold px-2 py-0.5 rounded-full">
+                        <span className="text-base font-extrabold text-slate-900 dark:text-white">{pay.channelName}</span>
+                        <span className="text-[10px] bg-blue-500/15 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 font-bold px-2 py-0.5 rounded-full">
                           {pay.provider}
                         </span>
                       </div>
-                      <div className="mt-1 text-xs text-[#A7B0C0] flex flex-wrap items-center gap-3">
-                        <span>Akaunti / Namba: <strong className="text-white font-mono">{pay.accountNumber}</strong></span>
-                        <span>Jina: <strong className="text-white">{pay.accountHolderName}</strong></span>
+                      <div className="mt-1 text-xs text-slate-600 dark:text-[#A7B0C0] flex flex-wrap items-center gap-3">
+                        <span>Akaunti / Namba: <strong className="text-slate-900 dark:text-white font-mono">{pay.accountNumber}</strong></span>
+                        <span>Jina: <strong className="text-slate-900 dark:text-white">{pay.accountHolderName}</strong></span>
                         <span>Muda: {new Date(pay.requestedAt).toLocaleString()}</span>
                       </div>
-                      <div className="mt-1 text-[11px] text-[#16C784] font-semibold flex items-center gap-1">
+                      <div className="mt-1 text-[11px] text-emerald-700 dark:text-[#16C784] font-semibold flex items-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Uthibitisho wa Usalama: Salio linatosha, hakuna udanganyifu.
                       </div>
                     </div>
 
                     <div className="flex items-center gap-3 self-end md:self-center">
                       <div className="text-right">
-                        <span className="text-[10px] text-[#A7B0C0] block">Kiasi Kinachoombwa</span>
-                        <span className="text-lg font-black font-mono text-[#16C784]">{formatTZS(pay.amountTZS)}</span>
+                        <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0] block">Kiasi Kinachoombwa</span>
+                        <span className="text-lg font-black font-mono text-emerald-700 dark:text-[#16C784]">{formatTZS(pay.amountTZS)}</span>
                       </div>
 
                       <button
@@ -1990,7 +2041,7 @@ export const AdminPage: React.FC = () => {
                           updatePayoutStatus(pay.id, 'rejected', 'Salio lina mashaka au namba ya akaunti si sahihi');
                           showToast(`Malipo yamekataliwa.`, 'info');
                         }}
-                        className="px-3 py-2 rounded-xl bg-red-600/20 text-red-400 hover:bg-red-600/40 border border-red-500/30 font-bold text-xs"
+                        className="px-3 py-2 rounded-xl bg-red-500/15 dark:bg-red-600/20 text-red-700 dark:text-red-400 hover:bg-red-500/25 dark:hover:bg-red-600/40 border border-red-300 dark:border-red-500/30 font-bold text-xs"
                       >
                         Kataa
                       </button>
@@ -2005,12 +2056,12 @@ export const AdminPage: React.FC = () => {
           {payoutsSubTab === 'approved' && (
             <div className="space-y-3">
               {payoutRequests.filter(p => p.status === 'approved' || p.status === 'processed').map(pay => (
-                <div key={pay.id} className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] flex items-center justify-between">
+                <div key={pay.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] flex items-center justify-between">
                   <div>
-                    <h4 className="font-bold text-white text-xs">{pay.channelName} — {formatTZS(pay.amountTZS)}</h4>
-                    <p className="text-[11px] text-[#A7B0C0] font-mono mt-0.5">{pay.provider} • Ref: TZ-PAY-{pay.id} • {pay.accountNumber}</p>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-xs">{pay.channelName} — {formatTZS(pay.amountTZS)}</h4>
+                    <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0] font-mono mt-0.5">{pay.provider} • Ref: TZ-PAY-{pay.id} • {pay.accountNumber}</p>
                   </div>
-                  <span className="text-xs font-bold text-[#16C784] bg-[#16C784]/15 px-3 py-1 rounded-full border border-[#16C784]/30">
+                  <span className="text-xs font-bold text-emerald-700 dark:text-[#16C784] bg-emerald-500/15 dark:bg-[#16C784]/15 px-3 py-1 rounded-full border border-emerald-300 dark:border-[#16C784]/30">
                     Kamilifu (Processed)
                   </span>
                 </div>
@@ -2021,9 +2072,9 @@ export const AdminPage: React.FC = () => {
           {/* Subtab 3: Creator Balances & Top-up */}
           {payoutsSubTab === 'balances' && (
             <div className="space-y-4">
-              <div className="overflow-x-auto rounded-2xl border border-[#262E3E]">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-[#262E3E]">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#10131B] text-[#A7B0C0] uppercase text-[10px]">
+                  <thead className="bg-slate-50 dark:bg-[#10131B] text-slate-600 dark:text-[#A7B0C0] uppercase text-[10px] border-b border-slate-200 dark:border-[#262E3E]">
                     <tr>
                       <th className="py-3 px-4">Kituo cha Muundaji</th>
                       <th className="py-3 px-3">Mmiliki</th>
@@ -2031,17 +2082,25 @@ export const AdminPage: React.FC = () => {
                       <th className="py-3 px-4 text-right">Kitendo</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#262E3E]/60 text-white">
+                  <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/60 text-slate-900 dark:text-white">
                     {channels.map(ch => {
                       const owner = users.find(u => u.uid === ch.ownerId);
                       return (
-                        <tr key={ch.id} className="hover:bg-[#232A39]/50">
+                        <tr key={ch.id} className="hover:bg-slate-50 dark:hover:bg-[#232A39]/50">
                           <td className="py-3 px-4 font-bold flex items-center gap-2">
-                            <img src={ch.avatarUrl} className="w-7 h-7 rounded-full object-cover" />
+                            <img
+                              src={ch.avatarUrl || createAvatarSvgDataUri(ch.name)}
+                              alt={ch.name}
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = createAvatarSvgDataUri(ch.name);
+                              }}
+                              className="w-7 h-7 rounded-full object-cover"
+                            />
                             <span>{ch.name}</span>
                           </td>
-                          <td className="py-3 px-3 text-[#A7B0C0]">{owner?.displayName || ch.ownerId}</td>
-                          <td className="py-3 px-3 font-mono font-bold text-[#16C784]">
+                          <td className="py-3 px-3 text-slate-600 dark:text-[#A7B0C0]">{owner?.displayName || ch.ownerId}</td>
+                          <td className="py-3 px-3 font-mono font-bold text-emerald-700 dark:text-[#16C784]">
                             {formatTZS(owner?.balanceTZS || 0)}
                           </td>
                           <td className="py-3 px-4 text-right">
@@ -2071,14 +2130,14 @@ export const AdminPage: React.FC = () => {
       {/* 6. TAB: UHAKIKI WA HAKIMILIKI (COPYRIGHT & COSOTA CENTER)       */}
       {/* ============================================================== */}
       {activeTab === 'copyright' && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-[#262E3E] space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262E3E]">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#262E3E]">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Flag className="w-5 h-5 text-red-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Flag className="w-5 h-5 text-red-600 dark:text-red-400" />
                 Uhakiki wa Hakimiliki na Sheria za COSOTA (Copyright Match &amp; Rights Hub)
               </h3>
-              <p className="text-xs text-[#A7B0C0]">
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Mfumo wa kutambua maudhui yenye hakimiliki (audio fingerprint match), madai ya wamiliki wa haki, na utatuzi wa migogoro.
               </p>
             </div>
@@ -2086,77 +2145,77 @@ export const AdminPage: React.FC = () => {
 
           <div className="grid grid-cols-1 gap-4">
             {copyrightClaims.map((claim) => (
-              <div key={claim.id} className="p-5 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-3">
+              <div key={claim.id} className="p-5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] bg-red-600/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase">
+                    <span className="text-[10px] bg-red-500/15 dark:bg-red-600/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase">
                       COSOTA Claim
                     </span>
-                    <span className="text-xs font-mono font-bold text-amber-400">
+                    <span className="text-xs font-mono font-bold text-amber-700 dark:text-amber-400">
                       Ulinganifu wa Sauti (Match): {claim.matchPercentage}%
                     </span>
                   </div>
 
                   <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
-                    claim.status === 'approved' ? 'bg-red-500/20 text-red-400' : claim.status === 'rejected' ? 'bg-[#16C784]/20 text-[#16C784]' : 'bg-yellow-500/20 text-yellow-400'
+                    claim.status === 'approved' ? 'bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400' : claim.status === 'rejected' ? 'bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]' : 'bg-yellow-500/15 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
                   }`}>
                     {claim.status === 'approved' ? 'Imethibitishwa & Video Imeondolewa' : claim.status === 'rejected' ? 'Imekataliwa (Hakuna Kosa)' : 'Inasubiri Uamuzi'}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-[#191E29] p-3.5 rounded-xl border border-[#262E3E]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-white dark:bg-[#191E29] p-3.5 rounded-xl border border-slate-200 dark:border-[#262E3E]">
                   <div>
-                    <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Mdai / Mmiliki wa Haki:</span>
-                    <span className="font-bold text-white block mt-0.5">{claim.claimantName}</span>
-                    <span className="text-[11px] text-[#A7B0C0]">{claim.claimantOrg}</span>
+                    <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] uppercase font-bold block">Mdai / Mmiliki wa Haki:</span>
+                    <span className="font-bold text-slate-900 dark:text-white block mt-0.5">{claim.claimantName}</span>
+                    <span className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">{claim.claimantOrg}</span>
                     <div className="mt-1">
-                      <span className="text-[10px] text-[#A7B0C0]">Kazi Iliyoathiriwa: </span>
-                      <strong className="text-amber-300">{claim.infringedWorkTitle}</strong>
+                      <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">Kazi Iliyoathiriwa: </span>
+                      <strong className="text-amber-700 dark:text-amber-300">{claim.infringedWorkTitle}</strong>
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Video Inayolalamikiwa:</span>
-                    <span className="font-bold text-white block mt-0.5">{claim.targetVideoTitle}</span>
-                    <span className="text-[11px] text-purple-400">Kituo: {claim.targetChannelName}</span>
+                    <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] uppercase font-bold block">Video Inayolalamikiwa:</span>
+                    <span className="font-bold text-slate-900 dark:text-white block mt-0.5">{claim.targetVideoTitle}</span>
+                    <span className="text-[11px] text-purple-700 dark:text-purple-400">Kituo: {claim.targetChannelName}</span>
                     {claim.evidenceUrl && (
-                      <a href={claim.evidenceUrl} target="_blank" rel="noreferrer" className="text-[10px] text-blue-400 hover:underline flex items-center gap-1 mt-1">
+                      <a href={claim.evidenceUrl} target="_blank" rel="noreferrer" className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 mt-1">
                         <ExternalLink className="w-3 h-3" /> Cheti cha Usajili COSOTA
                       </a>
                     )}
                   </div>
                 </div>
 
-                <p className="text-xs text-[#A7B0C0]">
+                <p className="text-xs text-slate-700 dark:text-[#A7B0C0]">
                   <strong>Maelezo ya Dai:</strong> {claim.notes}
                 </p>
 
                 {/* Escrow and Proportional Freeze Breakdown */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-2xl bg-[#191E29] border border-[#262E3E] text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-xs">
                   <div>
-                    <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Hali ya Escrow (Fedha):</span>
-                    <span className="font-mono font-bold text-amber-300">
+                    <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] uppercase font-bold block">Hali ya Escrow (Fedha):</span>
+                    <span className="font-mono font-bold text-amber-700 dark:text-amber-300">
                       TZS {(claim.disputedRevenueTZS || 185000).toLocaleString()} {claim.escrowStatus === 'released_to_claimant' ? '(Yametolewa)' : claim.escrowStatus === 'returned_to_uploader' ? '(Yamerudishwa)' : '(Yameshikiwa)'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Upeo wa Zuio (Proportional):</span>
-                    <span className="text-emerald-400 font-semibold">Video hii pekee (Salio lingine lipo huru)</span>
+                    <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] uppercase font-bold block">Upeo wa Zuio (Proportional):</span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-semibold">Video hii pekee (Salio lingine lipo huru)</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Ushahidi wa COSOTA:</span>
-                    <span className="text-blue-300 font-semibold">{claim.cosotaCertNumber ? `#${claim.cosotaCertNumber}` : 'Hakuna Cheti'} (Ushahidi wa Kusaidia)</span>
+                    <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] uppercase font-bold block">Ushahidi wa COSOTA:</span>
+                    <span className="text-blue-700 dark:text-blue-300 font-semibold">{claim.cosotaCertNumber ? `#${claim.cosotaCertNumber}` : 'Hakuna Cheti'} (Ushahidi wa Kusaidia)</span>
                   </div>
                 </div>
 
                 {/* Counter Notice Alert if submitted */}
                 {claim.counterNoticeSubmitted && (
-                  <div className="p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-xs space-y-1">
-                    <p className="font-bold text-blue-300 flex items-center gap-1.5">
-                      <FileText className="w-4 h-4 text-blue-400" />
+                  <div className="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 text-xs space-y-1">
+                    <p className="font-bold text-blue-800 dark:text-blue-300 flex items-center gap-1.5">
+                      <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       <span>Uploader Amewasilisha Counter-Notice (Kipingamizi cha Kisheria):</span>
                     </p>
-                    <p className="text-[#A7B0C0] bg-[#10131B] p-2.5 rounded-xl border border-[#262E3E]">
+                    <p className="text-slate-700 dark:text-[#A7B0C0] bg-white dark:bg-[#10131B] p-2.5 rounded-xl border border-blue-200/80 dark:border-[#262E3E]">
                       &ldquo;{claim.counterNoticeText || claim.notes}&rdquo;
                     </p>
                   </div>
@@ -2164,13 +2223,13 @@ export const AdminPage: React.FC = () => {
 
                 {/* Real-time Resolution Outcome Banner */}
                 {claim.actionTaken === 'divert_revenue' && (
-                  <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-2.5">
-                    <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 flex items-start gap-2.5">
+                    <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                     <div className="text-xs space-y-1">
-                      <p className="font-extrabold text-emerald-300">
+                      <p className="font-extrabold text-emerald-800 dark:text-emerald-300">
                         Uamuzi: Mapato ya Escrow Yameidhinishwa kwa Mmiliki Halisi ({claim.claimantName})
                       </p>
-                      <p className="text-[#A7B0C0] text-[11px]">
+                      <p className="text-slate-700 dark:text-[#A7B0C0] text-[11px]">
                         Uhakiki umekamilika. TZS {claim.divertedRevenueTZS?.toLocaleString() || (claim.disputedRevenueTZS || 185000).toLocaleString()} zilizokuwa zimeshikiliwa kwenye Escrow zimeingizwa kwenye akaunti ya mwenye kazi. Salio la mtumiaji kwa video zake zingine halali halijaathiriwa.
                       </p>
                     </div>
@@ -2178,14 +2237,14 @@ export const AdminPage: React.FC = () => {
                 )}
 
                 {claim.actionTaken === 'takedown_strike' && (
-                  <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center gap-2 text-xs text-red-400 font-bold">
+                  <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 flex items-center gap-2 text-xs text-red-700 dark:text-red-400 font-bold">
                     <XCircle className="w-4 h-4 shrink-0" />
                     <span>Video imefutwa. Notisi ya Strike imetolewa na dirisha la siku 14 la rufaa linafuatiliwa chini ya miongozo ya faragha na haki.</span>
                   </div>
                 )}
 
                 {(claim.status === 'pending' || claim.status === 'under_investigation' || claim.status === 'disputed') && (
-                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#262E3E]">
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200 dark:border-[#262E3E]">
                     <button
                       onClick={() => handleResolveClaim(claim.id, 'approved', 'divert_revenue')}
                       className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md flex items-center gap-1.5"
@@ -2208,7 +2267,7 @@ export const AdminPage: React.FC = () => {
                     </button>
                     <button
                       onClick={() => handleResolveClaim(claim.id, 'rejected', 'dismissed')}
-                      className="px-3.5 py-1.5 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-white font-semibold text-xs"
+                      className="px-3.5 py-1.5 rounded-xl bg-slate-200 dark:bg-[#232A39] hover:bg-slate-300 dark:hover:bg-[#2E3748] text-slate-900 dark:text-white font-semibold text-xs"
                       title="Kataa dai na urejeshe fedha zilizoshikiliwa kwenye escrow kwenda kwa uploader"
                     >
                       Kataa Dai &amp; Rejesha Escrow kwa Uploader
@@ -2225,29 +2284,29 @@ export const AdminPage: React.FC = () => {
       {/* 7. TAB: MFUMO & MATANGAZO (SYSTEM CONFIG & ADS MANAGEMENT)      */}
       {/* ============================================================== */}
       {activeTab === 'system' && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-[#262E3E] space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262E3E]">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#262E3E]">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Sliders className="w-5 h-5 text-amber-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Sliders className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 Mipangilio ya Mfumo &amp; Usimamizi wa Matangazo (System &amp; Ads Hub)
               </h3>
-              <p className="text-xs text-[#A7B0C0]">
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Dhibiti kamisheni za jukwaa, mipaka ya malipo, na kampeni za matangazo (Pre-roll, Banner, Sponsored).
               </p>
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="flex bg-[#10131B] p-1 rounded-2xl border border-[#262E3E] text-xs">
+              <div className="flex bg-slate-100 dark:bg-[#10131B] p-1 rounded-2xl border border-slate-200 dark:border-[#262E3E] text-xs">
                 <button
                   onClick={() => setSystemSubTab('general')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${systemSubTab === 'general' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${systemSubTab === 'general' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
                 >
                   Mipangilio ya Mfumo
                 </button>
                 <button
                   onClick={() => setSystemSubTab('ads')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${systemSubTab === 'ads' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition-all ${systemSubTab === 'ads' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
                 >
                   Matangazo ({adCampaigns.length})
                 </button>
@@ -2268,50 +2327,50 @@ export const AdminPage: React.FC = () => {
           {/* Subtab 1: System Config */}
           {systemSubTab === 'general' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-5 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-4">
-                <h4 className="font-extrabold text-white text-sm">Gawio la Mapato (Revenue Split):</h4>
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-4">
+                <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">Gawio la Mapato (Revenue Split):</h4>
                 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-[#A7B0C0] block mb-1">Kamisheni ya Jukwaa la Tazama (%)</label>
+                    <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Kamisheni ya Jukwaa la Tazama (%)</label>
                     <input
                       type="number"
                       value={platformSettings.platformCommissionPercent}
                       onChange={(e) => updatePlatformSettings({ platformCommissionPercent: Number(e.target.value) })}
-                      className="w-full bg-[#191E29] border border-[#262E3E] rounded-xl px-3 py-2 text-white font-mono font-bold"
+                      className="w-full bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[#A7B0C0] block mb-1">Gawio la Waumbaji wa Maudhui (%)</label>
+                    <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Gawio la Waumbaji wa Maudhui (%)</label>
                     <input
                       type="number"
                       value={platformSettings.creatorRevenuePercent}
                       onChange={(e) => updatePlatformSettings({ creatorRevenuePercent: Number(e.target.value) })}
-                      className="w-full bg-[#191E29] border border-[#262E3E] rounded-xl px-3 py-2 text-white font-mono font-bold"
+                      className="w-full bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[#A7B0C0] block mb-1">Kiwango cha Chini cha Kutoa Pesa (Minimum Payout TZS)</label>
+                    <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Kiwango cha Chini cha Kutoa Pesa (Minimum Payout TZS)</label>
                     <input
                       type="number"
                       value={platformSettings.minPayoutTZS}
                       onChange={(e) => updatePlatformSettings({ minPayoutTZS: Number(e.target.value) })}
-                      className="w-full bg-[#191E29] border border-[#262E3E] rounded-xl px-3 py-2 text-white font-mono font-bold"
+                      className="w-full bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-slate-900 dark:text-white font-mono font-bold focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-4">
-                <h4 className="font-extrabold text-white text-sm">Hali ya Uendeshaji &amp; Vigezo:</h4>
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-4">
+                <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">Hali ya Uendeshaji &amp; Vigezo:</h4>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#191E29] border border-[#262E3E]">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E]">
                     <div>
-                      <span className="font-bold text-white block">Kuruhusu Usajili Mpya</span>
-                      <span className="text-[11px] text-[#A7B0C0]">Watumiaji wapya wanaweza kujisajili</span>
+                      <span className="font-bold text-slate-900 dark:text-white block">Kuruhusu Usajili Mpya</span>
+                      <span className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">Watumiaji wapya wanaweza kujisajili</span>
                     </div>
                     <input
                       type="checkbox"
@@ -2321,10 +2380,10 @@ export const AdminPage: React.FC = () => {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-[#191E29] border border-[#262E3E]">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E]">
                     <div>
-                      <span className="font-bold text-white block">Hali ya Matengenezo (Maintenance Mode)</span>
-                      <span className="text-[11px] text-[#A7B0C0]">Zuia ufikiaji wa umma wakati wa updates</span>
+                      <span className="font-bold text-slate-900 dark:text-white block">Hali ya Matengenezo (Maintenance Mode)</span>
+                      <span className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">Zuia ufikiaji wa umma wakati wa updates</span>
                     </div>
                     <input
                       type="checkbox"
@@ -2350,28 +2409,28 @@ export const AdminPage: React.FC = () => {
       {/* 8. TAB: KUMBUKUMBU ZA USALAMA (SECURITY & AUDIT LOGS)          */}
       {/* ============================================================== */}
       {activeTab === 'security' && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-[#191E29] border border-[#262E3E] space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#262E3E]">
+        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#262E3E]">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Activity className="w-5 h-5 text-amber-400" />
+              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Activity className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 Kumbukumbu za Usalama na Shughuli za Kiutawala (Audit Trail &amp; Security Logs)
               </h3>
-              <p className="text-xs text-[#A7B0C0]">
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Kila kitendo cha admin na matukio ya usalama yanarekodiwa bila kubadilishwa kwa ajili ya uwajibikaji.
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-[#10131B] p-1 rounded-2xl border border-[#262E3E] text-xs">
+            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#10131B] p-1 rounded-2xl border border-slate-200 dark:border-[#262E3E] text-xs">
               <button
                 onClick={() => setSecuritySubTab('audit')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${securitySubTab === 'audit' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${securitySubTab === 'audit' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
               >
                 Admin Audit Trail ({auditLogs.length})
               </button>
               <button
                 onClick={() => setSecuritySubTab('logins')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${securitySubTab === 'logins' ? 'bg-amber-500 text-black' : 'text-[#A7B0C0]'}`}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${securitySubTab === 'logins' ? 'bg-amber-500 text-black' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'}`}
               >
                 Matukio ya Kuingia ({securityLogs.length})
               </button>
@@ -2380,9 +2439,9 @@ export const AdminPage: React.FC = () => {
 
           {/* Subtab 1: Admin Audit Trail */}
           {securitySubTab === 'audit' && (
-            <div className="overflow-x-auto rounded-2xl border border-[#262E3E]">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-[#262E3E]">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#10131B] text-[#A7B0C0] uppercase text-[10px]">
+                <thead className="bg-slate-50 dark:bg-[#10131B] text-slate-600 dark:text-[#A7B0C0] uppercase text-[10px] border-b border-slate-200 dark:border-[#262E3E]">
                   <tr>
                     <th className="py-3 px-4">Kitendo (Action)</th>
                     <th className="py-3 px-3">Msimamizi</th>
@@ -2392,21 +2451,21 @@ export const AdminPage: React.FC = () => {
                     <th className="py-3 px-3">Muda</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#262E3E]/60 text-white">
+                <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/60 text-slate-900 dark:text-white">
                   {auditLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-[#232A39]/50">
-                      <td className="py-3 px-4 font-mono font-bold text-amber-400">{log.action}</td>
-                      <td className="py-3 px-3 text-[#A7B0C0] font-mono text-[11px]">{log.adminEmail}</td>
+                    <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-[#232A39]/50">
+                      <td className="py-3 px-4 font-mono font-bold text-amber-700 dark:text-amber-400">{log.action}</td>
+                      <td className="py-3 px-3 text-slate-600 dark:text-[#A7B0C0] font-mono text-[11px]">{log.adminEmail}</td>
                       <td className="py-3 px-3 font-semibold">{log.target}</td>
-                      <td className="py-3 px-4 text-[#A7B0C0] max-w-sm truncate">{log.details}</td>
+                      <td className="py-3 px-4 text-slate-600 dark:text-[#A7B0C0] max-w-sm truncate">{log.details}</td>
                       <td className="py-3 px-3">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          log.status === 'SUCCESS' ? 'bg-[#16C784]/20 text-[#16C784]' : log.status === 'WARNING' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'
+                          log.status === 'SUCCESS' ? 'bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]' : log.status === 'WARNING' ? 'bg-yellow-500/15 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400' : 'bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400'
                         }`}>
                           {log.status}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-[11px] text-[#A7B0C0] font-mono whitespace-nowrap">
+                      <td className="py-3 px-3 text-[11px] text-slate-600 dark:text-[#A7B0C0] font-mono whitespace-nowrap">
                         {new Date(log.timestamp).toLocaleString()}
                       </td>
                     </tr>
@@ -2420,23 +2479,23 @@ export const AdminPage: React.FC = () => {
           {securitySubTab === 'logins' && (
             <div className="space-y-3">
               {securityLogs.map(sec => (
-                <div key={sec.id} className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                <div key={sec.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        sec.severity === 'HIGH' ? 'bg-red-600/20 text-red-400 border border-red-500/30' : sec.severity === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-emerald-500/20 text-emerald-400'
+                        sec.severity === 'HIGH' ? 'bg-red-500/15 dark:bg-red-600/20 text-red-700 dark:text-red-400 border border-red-300 dark:border-red-500/30' : sec.severity === 'MEDIUM' ? 'bg-yellow-500/15 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400' : 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
                       }`}>
                         {sec.eventType}
                       </span>
-                      <span className="font-bold text-white">{sec.userEmail}</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{sec.userEmail}</span>
                     </div>
-                    <div className="mt-1 text-[11px] text-[#A7B0C0] flex items-center gap-3">
-                      <span>IP: <strong className="font-mono text-white">{sec.ipAddress}</strong></span>
-                      <span>Mahali: <strong className="text-white">{sec.location}</strong></span>
+                    <div className="mt-1 text-[11px] text-slate-600 dark:text-[#A7B0C0] flex items-center gap-3">
+                      <span>IP: <strong className="font-mono text-slate-900 dark:text-white">{sec.ipAddress}</strong></span>
+                      <span>Mahali: <strong className="text-slate-900 dark:text-white">{sec.location}</strong></span>
                       <span>Kifaa: {sec.device}</span>
                     </div>
                   </div>
-                  <span className="text-[11px] font-mono text-[#A7B0C0] whitespace-nowrap self-end sm:self-center">
+                  <span className="text-[11px] font-mono text-slate-600 dark:text-[#A7B0C0] whitespace-nowrap self-end sm:self-center">
                     {new Date(sec.timestamp).toLocaleString()}
                   </span>
                 </div>
@@ -2453,19 +2512,19 @@ export const AdminPage: React.FC = () => {
 
       {/* Delete User Modal */}
       {userToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-[#191E29] border border-red-500/40 rounded-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-red-400 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-[#191E29] border border-red-300 dark:border-red-500/40 rounded-3xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-base font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               Thibitisha Kufuta Mtumiaji
             </h3>
-            <p className="text-xs text-[#A7B0C0]">
-              Je, una uhakika unataka kumfuta mtumiaji <strong>{userToDelete.displayName}</strong> ({userToDelete.email})? Hatua hii haitoweza kubatilishwa.
+            <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
+              Je, una uhakika unataka kumfuta mtumiaji <strong className="text-slate-900 dark:text-white">{userToDelete.displayName}</strong> ({userToDelete.email})? Hatua hii haitoweza kubatilishwa.
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setUserToDelete(null)}
-                className="px-4 py-2 rounded-xl bg-[#10131B] text-xs font-bold text-white"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-xs font-bold text-slate-900 dark:text-white"
               >
                 Ghairi
               </button>
@@ -2482,22 +2541,22 @@ export const AdminPage: React.FC = () => {
 
       {/* Block User Modal */}
       {userToBlock && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-[#191E29] border border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
               {userToBlock.isBlocked ? 'Fungua Akaunti (Unblock)' : 'Funga Akaunti (Block User)'}
             </h3>
-            <p className="text-xs text-[#A7B0C0]">
-              Mtumiaji: <strong>{userToBlock.displayName}</strong> ({userToBlock.email})
+            <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
+              Mtumiaji: <strong className="text-slate-900 dark:text-white">{userToBlock.displayName}</strong> ({userToBlock.email})
             </p>
             {!userToBlock.isBlocked && (
               <div>
-                <label className="text-xs text-[#A7B0C0] block mb-1">Sababu ya Kufunga Akaunti:</label>
+                <label className="text-xs text-slate-600 dark:text-[#A7B0C0] block mb-1">Sababu ya Kufunga Akaunti:</label>
                 <textarea
                   value={blockReasonInput}
                   onChange={(e) => setBlockReasonInput(e.target.value)}
                   placeholder="Mfano: Kusambaza maudhui yasiyofaa au spam..."
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-3 text-xs text-white"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                   rows={3}
                 />
               </div>
@@ -2505,7 +2564,7 @@ export const AdminPage: React.FC = () => {
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setUserToBlock(null)}
-                className="px-4 py-2 rounded-xl bg-[#10131B] text-xs font-bold text-white"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-xs font-bold text-slate-900 dark:text-white"
               >
                 Ghairi
               </button>
@@ -2522,30 +2581,30 @@ export const AdminPage: React.FC = () => {
 
       {/* Adjust User Balance Modal */}
       {userToEditBalance && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-[#191E29] border border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-[#16C784]" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-emerald-600 dark:text-[#16C784]" />
               Rekebisha Salio la Mtumiaji
             </h3>
-            <p className="text-xs text-[#A7B0C0]">
-              Mtumiaji: <strong>{userToEditBalance.displayName}</strong><br />
-              Salio la sasa: <span className="font-mono text-[#16C784] font-bold">{formatTZS(userToEditBalance.balanceTZS || 0)}</span>
+            <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
+              Mtumiaji: <strong className="text-slate-900 dark:text-white">{userToEditBalance.displayName}</strong><br />
+              Salio la sasa: <span className="font-mono text-emerald-700 dark:text-[#16C784] font-bold">{formatTZS(userToEditBalance.balanceTZS || 0)}</span>
             </p>
             <div>
-              <label className="text-xs text-[#A7B0C0] block mb-1">Kiasi cha TZS (Weka nambari chanya kuongeza, hasi kupunguza):</label>
+              <label className="text-xs text-slate-600 dark:text-[#A7B0C0] block mb-1">Kiasi cha TZS (Weka nambari chanya kuongeza, hasi kupunguza):</label>
               <input
                 type="number"
                 value={balanceAdjustmentInput}
                 onChange={(e) => setBalanceAdjustmentInput(e.target.value)}
                 placeholder="Mfano: 25000"
-                className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-xs text-white font-mono"
+                className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 font-mono focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
               />
             </div>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setUserToEditBalance(null)}
-                className="px-4 py-2 rounded-xl bg-[#10131B] text-xs font-bold text-white"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-xs font-bold text-slate-900 dark:text-white"
               >
                 Ghairi
               </button>
@@ -2562,51 +2621,59 @@ export const AdminPage: React.FC = () => {
 
       {/* Creator Profile Deep Dive Modal */}
       {selectedCreatorProfile && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-lg bg-[#191E29] border border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-lg bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div className="flex items-center gap-3">
-                <img src={selectedCreatorProfile.avatarUrl} className="w-12 h-12 rounded-full object-cover" />
+                <img
+                  src={selectedCreatorProfile.avatarUrl || createAvatarSvgDataUri(selectedCreatorProfile.name)}
+                  alt={selectedCreatorProfile.name}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = createAvatarSvgDataUri(selectedCreatorProfile.name);
+                  }}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
                 <div>
-                  <h3 className="font-black text-white text-base flex items-center gap-1.5">
+                  <h3 className="font-black text-slate-900 dark:text-white text-base flex items-center gap-1.5">
                     {selectedCreatorProfile.name}
-                    {selectedCreatorProfile.isVerified && <CheckCircle2 className="w-4 h-4 text-blue-400" />}
+                    {selectedCreatorProfile.isVerified && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
                   </h3>
-                  <span className="text-xs text-[#A7B0C0] font-mono">{selectedCreatorProfile.handle}</span>
+                  <span className="text-xs text-slate-600 dark:text-[#A7B0C0] font-mono">{selectedCreatorProfile.handle}</span>
                 </div>
               </div>
-              <button onClick={() => setSelectedCreatorProfile(null)} className="text-[#A7B0C0] hover:text-white p-1">✕</button>
+              <button onClick={() => setSelectedCreatorProfile(null)} className="text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white p-1">✕</button>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-              <div className="p-3 bg-[#10131B] rounded-xl border border-[#262E3E]">
-                <span className="text-[10px] text-[#A7B0C0] block">Subscribers</span>
-                <span className="font-bold text-white font-mono">{formatViews(selectedCreatorProfile.subscriberCount, language)}</span>
+              <div className="p-3 bg-slate-50 dark:bg-[#10131B] rounded-xl border border-slate-200 dark:border-[#262E3E]">
+                <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0] block">Subscribers</span>
+                <span className="font-bold text-slate-900 dark:text-white font-mono">{formatViews(selectedCreatorProfile.subscriberCount, language)}</span>
               </div>
-              <div className="p-3 bg-[#10131B] rounded-xl border border-[#262E3E]">
-                <span className="text-[10px] text-[#A7B0C0] block">Video Zote</span>
-                <span className="font-bold text-white font-mono">{selectedCreatorProfile.videoCount}</span>
+              <div className="p-3 bg-slate-50 dark:bg-[#10131B] rounded-xl border border-slate-200 dark:border-[#262E3E]">
+                <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0] block">Video Zote</span>
+                <span className="font-bold text-slate-900 dark:text-white font-mono">{selectedCreatorProfile.videoCount}</span>
               </div>
-              <div className="p-3 bg-[#10131B] rounded-xl border border-[#262E3E]">
-                <span className="text-[10px] text-[#A7B0C0] block">Jumla ya Views</span>
-                <span className="font-bold text-white font-mono">{formatViews(selectedCreatorProfile.totalViews, language)}</span>
+              <div className="p-3 bg-slate-50 dark:bg-[#10131B] rounded-xl border border-slate-200 dark:border-[#262E3E]">
+                <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0] block">Jumla ya Views</span>
+                <span className="font-bold text-slate-900 dark:text-white font-mono">{formatViews(selectedCreatorProfile.totalViews, language)}</span>
               </div>
-              <div className="p-3 bg-[#10131B] rounded-xl border border-[#262E3E]">
-                <span className="text-[10px] text-[#A7B0C0] block">Mapato ya Mwezi</span>
-                <span className="font-bold text-[#16C784] font-mono">{formatTZS(selectedCreatorProfile.monthlyEarningsTZS || 0)}</span>
+              <div className="p-3 bg-slate-50 dark:bg-[#10131B] rounded-xl border border-slate-200 dark:border-[#262E3E]">
+                <span className="text-[10px] text-slate-600 dark:text-[#A7B0C0] block">Mapato ya Mwezi</span>
+                <span className="font-bold text-emerald-700 dark:text-[#16C784] font-mono">{formatTZS(selectedCreatorProfile.monthlyEarningsTZS || 0)}</span>
               </div>
             </div>
 
             {/* Adjust Wallet Directly */}
-            <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-2">
-              <span className="font-bold text-white text-xs block">Ongeza Salio au Bonasi kwa Mtayarishaji Huyu:</span>
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-2">
+              <span className="font-bold text-slate-900 dark:text-white text-xs block">Ongeza Salio au Bonasi kwa Mtayarishaji Huyu:</span>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
                   value={creatorBalanceInput}
                   onChange={(e) => setCreatorBalanceInput(e.target.value)}
                   placeholder="Kiasi cha TZS (Mfano: 50000)"
-                  className="flex-1 bg-[#191E29] border border-[#262E3E] rounded-xl p-2 text-xs text-white font-mono"
+                  className="flex-1 bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 font-mono focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                 />
                 <button
                   onClick={handleAdjustCreatorWallet}
@@ -2620,7 +2687,7 @@ export const AdminPage: React.FC = () => {
             <div className="flex items-center justify-end pt-2">
               <button
                 onClick={() => setSelectedCreatorProfile(null)}
-                className="px-4 py-2 rounded-xl bg-[#10131B] text-xs font-bold text-white"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-xs font-bold text-slate-900 dark:text-white"
               >
                 Funga
               </button>
@@ -2631,30 +2698,30 @@ export const AdminPage: React.FC = () => {
 
       {/* Create / Edit Premium Plan Modal */}
       {(editingPlan || isCreatingPlan) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-lg bg-[#191E29] border border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-base font-bold text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-lg bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
               {isCreatingPlan ? 'Unda Kifurushi Kipya cha Premium' : `Hariri Kifurushi: ${editingPlan?.name}`}
             </h3>
             
             <form onSubmit={handleSavePlan} className="space-y-3 text-xs">
               <div>
-                <label className="text-[#A7B0C0] block mb-1">Jina la Kifurushi:</label>
+                <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Jina la Kifurushi:</label>
                 <input
                   type="text"
                   value={planForm.name}
                   onChange={(e) => setPlanForm({ ...planForm, name: e.target.value })}
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                   required
                 />
               </div>
 
               <div>
-                <label className="text-[#A7B0C0] block mb-1">Maelezo Mafupi:</label>
+                <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Maelezo Mafupi:</label>
                 <textarea
                   value={planForm.description}
                   onChange={(e) => setPlanForm({ ...planForm, description: e.target.value })}
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                   rows={2}
                   required
                 />
@@ -2662,35 +2729,35 @@ export const AdminPage: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[#A7B0C0] block mb-1">Walengwa:</label>
+                  <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Walengwa:</label>
                   <select
                     value={planForm.target}
                     onChange={(e) => setPlanForm({ ...planForm, target: e.target.value as any })}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white focus:outline-none"
                   >
-                    <option value="viewer">Watazamaji (Viewer)</option>
-                    <option value="creator">Waumbaji (Creator)</option>
+                    <option value="viewer" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Watazamaji (Viewer)</option>
+                    <option value="creator" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Waumbaji (Creator)</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-[#A7B0C0] block mb-1">Bei (TZS):</label>
+                  <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Bei (TZS):</label>
                   <input
                     type="number"
                     value={planForm.priceTZS}
                     onChange={(e) => setPlanForm({ ...planForm, priceTZS: Number(e.target.value) })}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white font-mono"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[#A7B0C0] block mb-1">Faida za Kifurushi (Weka kila faida kwenye mstari mpya):</label>
+                <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Faida za Kifurushi (Weka kila faida kwenye mstari mpya):</label>
                 <textarea
                   value={planForm.perks}
                   onChange={(e) => setPlanForm({ ...planForm, perks: e.target.value })}
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                   rows={4}
                 />
               </div>
@@ -2699,7 +2766,7 @@ export const AdminPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => { setEditingPlan(null); setIsCreatingPlan(false); }}
-                  className="px-4 py-2 rounded-xl bg-[#10131B] text-xs font-bold text-white"
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-xs font-bold text-slate-900 dark:text-white"
                 >
                   Ghairi
                 </button>
@@ -2717,59 +2784,59 @@ export const AdminPage: React.FC = () => {
 
       {/* Add Promo Code Modal */}
       {showAddPromoModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-[#191E29] border border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Tag className="w-5 h-5 text-amber-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Tag className="w-5 h-5 text-amber-600 dark:text-amber-400" />
               Unda Msimbo wa Promo (Discount Code)
             </h3>
             
             <form onSubmit={handleCreatePromoCode} className="space-y-3 text-xs">
               <div>
-                <label className="text-[#A7B0C0] block mb-1">Msimbo (Code):</label>
+                <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Msimbo (Code):</label>
                 <input
                   type="text"
                   value={newPromoCode.code}
                   onChange={(e) => setNewPromoCode({ ...newPromoCode, code: e.target.value.toUpperCase() })}
                   placeholder="Mfano: TAZAMA30"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white font-mono font-bold"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white placeholder-slate-400 font-mono font-bold focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[#A7B0C0] block mb-1">Punguzo (%):</label>
+                  <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Punguzo (%):</label>
                   <input
                     type="number"
                     min={1}
                     max={100}
                     value={newPromoCode.discountPercent}
                     onChange={(e) => setNewPromoCode({ ...newPromoCode, discountPercent: Number(e.target.value) })}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white font-mono"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-[#A7B0C0] block mb-1">Kikomo cha Matumizi:</label>
+                  <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Kikomo cha Matumizi:</label>
                   <input
                     type="number"
                     value={newPromoCode.maxUses}
                     onChange={(e) => setNewPromoCode({ ...newPromoCode, maxUses: Number(e.target.value) })}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white font-mono"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-[#A7B0C0] block mb-1">Mwisho wa Kutumika:</label>
+                <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Mwisho wa Kutumika:</label>
                 <input
                   type="date"
                   value={newPromoCode.validUntil}
                   onChange={(e) => setNewPromoCode({ ...newPromoCode, validUntil: e.target.value })}
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                   required
                 />
               </div>
@@ -2778,7 +2845,7 @@ export const AdminPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddPromoModal(false)}
-                  className="px-4 py-2 rounded-xl bg-[#10131B] text-xs font-bold text-white"
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-xs font-bold text-slate-900 dark:text-white"
                 >
                   Ghairi
                 </button>
@@ -2796,75 +2863,75 @@ export const AdminPage: React.FC = () => {
 
       {/* Create Ad Campaign Modal */}
       {showCreateAdModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-[#191E29] border border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-cyan-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
               Unda Kampeni Mpya ya Tangazo (Ad Campaign)
             </h3>
             
             <form onSubmit={handleCreateAdCampaign} className="space-y-3 text-xs">
               <div>
-                <label className="text-[#A7B0C0] block mb-1">Jina la Tangazo:</label>
+                <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Jina la Tangazo:</label>
                 <input
                   type="text"
                   value={newAdForm.title}
                   onChange={(e) => setNewAdForm({ ...newAdForm, title: e.target.value })}
                   placeholder="Mfano: Vodacom 5G Kasi Isiyo na Kikomo"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[#A7B0C0] block mb-1">Mtangazaji:</label>
+                  <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Mtangazaji:</label>
                   <input
                     type="text"
                     value={newAdForm.advertiserName}
                     onChange={(e) => setNewAdForm({ ...newAdForm, advertiserName: e.target.value })}
                     placeholder="Mfano: Vodacom Tanzania"
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-[#A7B0C0] block mb-1">Aina ya Tangazo:</label>
+                  <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Aina ya Tangazo:</label>
                   <select
                     value={newAdForm.adType}
                     onChange={(e) => setNewAdForm({ ...newAdForm, adType: e.target.value as any })}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white focus:outline-none"
                   >
-                    <option value="pre-roll">Pre-roll (Kabla ya Video)</option>
-                    <option value="banner">Banner (Upau wa Chini)</option>
-                    <option value="sponsored-card">Sponsored Card</option>
+                    <option value="pre-roll" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Pre-roll (Kabla ya Video)</option>
+                    <option value="banner" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Banner (Upau wa Chini)</option>
+                    <option value="sponsored-card" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Sponsored Card</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[#A7B0C0] block mb-1">Kundi Linalolengwa:</label>
+                  <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Kundi Linalolengwa:</label>
                   <select
                     value={newAdForm.targetCategory}
                     onChange={(e) => setNewAdForm({ ...newAdForm, targetCategory: e.target.value })}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white focus:outline-none"
                   >
-                    <option value="Muziki">Muziki</option>
-                    <option value="Habari">Habari</option>
-                    <option value="Michezo">Michezo</option>
-                    <option value="Teknolojia">Teknolojia</option>
+                    <option value="Muziki" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Muziki</option>
+                    <option value="Habari" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Habari</option>
+                    <option value="Michezo" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Michezo</option>
+                    <option value="Teknolojia" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Teknolojia</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="text-[#A7B0C0] block mb-1">Bajeti (TZS):</label>
+                  <label className="text-slate-600 dark:text-[#A7B0C0] block mb-1">Bajeti (TZS):</label>
                   <input
                     type="number"
                     value={newAdForm.budgetTZS}
                     onChange={(e) => setNewAdForm({ ...newAdForm, budgetTZS: Number(e.target.value) })}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-2.5 text-white font-mono"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-2.5 text-slate-900 dark:text-white font-mono focus:outline-none focus:border-amber-500 dark:focus:border-amber-400"
                     required
                   />
                 </div>
@@ -2874,7 +2941,7 @@ export const AdminPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateAdModal(false)}
-                  className="px-4 py-2 rounded-xl bg-[#10131B] text-xs font-bold text-white"
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-xs font-bold text-slate-900 dark:text-white"
                 >
                   Ghairi
                 </button>
@@ -2892,19 +2959,19 @@ export const AdminPage: React.FC = () => {
 
       {/* Delete Video Modal */}
       {videoToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-[#191E29] border border-red-500/40 rounded-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-red-400 flex items-center gap-2">
-              <Trash2 className="w-5 h-5 text-red-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-[#191E29] border border-red-300 dark:border-red-500/40 rounded-3xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-base font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
               Thibitisha Kufuta Video
             </h3>
-            <p className="text-xs text-[#A7B0C0]">
-              Je, una uhakika unataka kuifuta video &ldquo;<strong>{videoToDelete.title}</strong>&rdquo; ya kituo cha <strong>{videoToDelete.channelName}</strong> kabisa kwenye seva ya Tazama?
+            <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
+              Je, una uhakika unataka kuifuta video &ldquo;<strong className="text-slate-900 dark:text-white">{videoToDelete.title}</strong>&rdquo; ya kituo cha <strong className="text-slate-900 dark:text-white">{videoToDelete.channelName}</strong> kabisa kwenye seva ya Tazama?
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <button
                 onClick={() => setVideoToDelete(null)}
-                className="px-4 py-2 rounded-xl bg-[#10131B] text-xs font-bold text-white"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-xs font-bold text-slate-900 dark:text-white"
               >
                 Ghairi
               </button>

@@ -75,22 +75,22 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onRegist
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center py-6 px-4 select-none">
-      <div className="w-full max-w-lg bg-[#121622] border border-[#262E3E] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-lg bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-6 sm:p-8 shadow-xl dark:shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
         
         {/* Logo & Heading */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FF3040] to-orange-500 text-white shadow-xl shadow-[#FF3040]/30 mb-1">
             <Tv className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Tengeneza Akaunti ya Tazama</h1>
-          <p className="text-xs text-[#A7B0C0]">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Tengeneza Akaunti ya Tazama</h1>
+          <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
             Jisajili bure ili kuanza kutazama video, kubana bando na kujiunga na jamii ya Tazama.
           </p>
         </div>
 
         {/* Error Alert */}
         {errorMsg && (
-          <div className="p-3 rounded-2xl bg-red-500/15 border border-red-500/30 text-xs text-red-400 flex items-center gap-2">
+          <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 text-xs text-red-700 dark:text-red-400 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -101,70 +101,70 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onRegist
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block font-bold text-[#A7B0C0] mb-1">Jina Kamili:</label>
+              <label className="block font-bold text-slate-700 dark:text-[#A7B0C0] mb-1">Jina Kamili:</label>
               <div className="relative">
-                <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A7B0C0]" />
+                <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#A7B0C0]" />
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="mfano: Baraka Mrema"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none focus:border-[#FF3040]"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 text-xs focus:outline-none focus:border-[#FF3040]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block font-bold text-[#A7B0C0] mb-1">Barua Pepe (Email):</label>
+              <label className="block font-bold text-slate-700 dark:text-[#A7B0C0] mb-1">Barua Pepe (Email):</label>
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A7B0C0]" />
+                <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#A7B0C0]" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="baraka@gmail.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none focus:border-[#FF3040]"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 text-xs focus:outline-none focus:border-[#FF3040]"
                 />
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block font-bold text-[#A7B0C0] mb-1">Namba ya Simu (Kwa ajili ya M-Pesa / Tigo Pesa):</label>
+            <label className="block font-bold text-slate-700 dark:text-[#A7B0C0] mb-1">Namba ya Simu (Kwa ajili ya M-Pesa / Tigo Pesa):</label>
             <div className="relative">
-              <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A7B0C0]" />
+              <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#A7B0C0]" />
               <input
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="0754 123 456"
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs font-mono focus:outline-none focus:border-[#FF3040]"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 text-xs font-mono focus:outline-none focus:border-[#FF3040]"
               />
             </div>
-            <span className="text-[10px] text-[#A7B0C0] block mt-1">
+            <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] block mt-1">
               Taarifa zako za simu na akaunti zinalindwa na hazitawekwa hadharani.
             </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block font-bold text-[#A7B0C0] mb-1">Nenosiri (Password):</label>
+              <label className="block font-bold text-slate-700 dark:text-[#A7B0C0] mb-1">Nenosiri (Password):</label>
               <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A7B0C0]" />
+                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#A7B0C0]" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Angalau herufi 6..."
-                  className="w-full pl-10 pr-10 py-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none focus:border-[#FF3040]"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 text-xs focus:outline-none focus:border-[#FF3040]"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A7B0C0] hover:text-white"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:text-[#A7B0C0] dark:hover:text-white"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -172,23 +172,23 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onRegist
             </div>
 
             <div>
-              <label className="block font-bold text-[#A7B0C0] mb-1">Thibitisha Nenosiri:</label>
+              <label className="block font-bold text-slate-700 dark:text-[#A7B0C0] mb-1">Thibitisha Nenosiri:</label>
               <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A7B0C0]" />
+                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#A7B0C0]" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Rudia nenosiri..."
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none focus:border-[#FF3040]"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 text-xs focus:outline-none focus:border-[#FF3040]"
                 />
               </div>
             </div>
           </div>
 
           <div>
-            <label className="flex items-start gap-2 text-[#A7B0C0] cursor-pointer">
+            <label className="flex items-start gap-2 text-slate-600 dark:text-[#A7B0C0] cursor-pointer">
               <input
                 type="checkbox"
                 checked={termsAccepted}
@@ -220,8 +220,8 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onNavigate, onRegist
         </form>
 
         {/* Link to Login */}
-        <div className="pt-4 border-t border-[#262E3E]/60 text-center text-xs">
-          <p className="text-[#A7B0C0]">
+        <div className="pt-4 border-t border-slate-200 dark:border-[#262E3E]/60 text-center text-xs">
+          <p className="text-slate-600 dark:text-[#A7B0C0]">
             Tayari unayo akaunti ya Tazama?{' '}
             <button
               onClick={() => onNavigate('login')}

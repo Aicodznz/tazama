@@ -54,13 +54,13 @@ export function getHashFallbackPalette(seed: string): [string, string, string] {
     hash |= 0;
   }
   const baseHue = Math.abs(hash) % 360;
-  const hue2 = (baseHue + 40) % 360;
-  const hue3 = (baseHue + 80) % 360;
+  const hue2 = (baseHue + 45) % 360;
+  const hue3 = (baseHue + 100) % 360;
 
   return [
-    `hsl(${baseHue}, 75%, 52%)`,
-    `hsl(${hue2}, 80%, 55%)`,
-    `hsl(${hue3}, 70%, 50%)`,
+    hslToHex(baseHue, 78, 54),
+    hslToHex(hue2, 82, 56),
+    hslToHex(hue3, 76, 52),
   ];
 }
 
@@ -187,8 +187,8 @@ export async function extractDominantColors(
           const imageData = ctx.getImageData(0, 0, 16, 16);
           const data = imageData.data;
 
-          // 12 hue bins (each 30 degrees)
-          const hueBins = new Array(12).fill(0).map(() => ({ count: 0, totalS: 0, totalL: 0, hue: 0 }));
+          // 12 hue bins (each 30 degrees) weighted by chroma/vibrance
+          const hueBins = new Array(12).fill(0).map(() => ({ count: 0, weight: 0, hue: 0 }));
 
           for (let i = 0; i < data.length; i += 4) {
             const r = data[i];
@@ -201,20 +201,20 @@ export async function extractDominantColors(
             const [h, s, l] = rgbToHsl(r, g, b);
 
             // Filter out near-black, near-white, or muddy low-saturation noise
-            if (l < 15 || l > 90 || s < 18) continue;
+            if (l < 12 || l > 92 || s < 16) continue;
 
             const binIndex = Math.floor(h / 30) % 12;
             const bin = hueBins[binIndex];
+            const pixelWeight = (s / 100) * (1 - Math.abs(l - 55) / 60) + 0.15;
             bin.count += 1;
-            bin.totalS += s;
-            bin.totalL += l;
+            bin.weight += pixelWeight;
             bin.hue = binIndex * 30 + 15;
           }
 
-          // Sort bins by prominence
+          // Sort bins by vibrance-weighted prominence
           const sortedBins = hueBins
             .filter((b) => b.count > 0)
-            .sort((a, b) => b.count - a.count);
+            .sort((a, b) => b.weight - a.weight);
 
           if (sortedBins.length === 0) {
             resolve(fallback);
@@ -223,21 +223,26 @@ export async function extractDominantColors(
 
           // Pick primary dominant hue
           const primaryHue = sortedBins[0].hue;
-          // Normalize saturation to 72% and lightness to 52% for luminous jewel tone
-          const color1 = hslToHex(primaryHue, 76, 52);
+          // Normalize saturation and lightness for luminous jewel tone on Light & Dark modes
+          const color1 = hslToHex(primaryHue, 82, 54);
 
           // Find a distinct secondary hue (at least 45 degrees away)
-          let secondaryBin = sortedBins.find((b) => {
+          const secondaryBin = sortedBins.find((b) => {
             const diff = Math.abs(b.hue - primaryHue);
             return diff >= 45 && diff <= 315;
           });
 
-          const secondaryHue = secondaryBin ? secondaryBin.hue : (primaryHue + 45) % 360;
-          const color2 = hslToHex(secondaryHue, 80, 56);
+          const secondaryHue = secondaryBin ? secondaryBin.hue : (primaryHue + 50) % 360;
+          const color2 = hslToHex(secondaryHue, 84, 58);
 
-          // Tertiary harmonic color
-          const tertiaryHue = (primaryHue + 90) % 360;
-          const color3 = hslToHex(tertiaryHue, 74, 50);
+          // Find tertiary distinct hue or harmonic split complement
+          const tertiaryBin = sortedBins.find((b) => {
+            const diff1 = Math.abs(b.hue - primaryHue);
+            const diff2 = Math.abs(b.hue - secondaryHue);
+            return diff1 >= 45 && diff1 <= 315 && diff2 >= 40 && diff2 <= 320;
+          });
+          const tertiaryHue = tertiaryBin ? tertiaryBin.hue : (primaryHue + 115) % 360;
+          const color3 = hslToHex(tertiaryHue, 78, 52);
 
           const result: [string, string, string] = [color1, color2, color3];
 
@@ -275,15 +280,35 @@ export interface BorderGradientConfig {
   colors: [string, string, string];
   highlightColor: string;
   baseBorderColor: string;
+  baseBorderGradient: string;
   glowColor: string;
   beamConicGradient: string;
   animationType: 'rotate' | 'pulse-live' | 'static';
   variant: 'live' | 'premium' | 'trending' | 'dynamic';
 }
 
+function hexToRgba(hex: string, alpha: number): string {
+  const clean = hex.startsWith('#') ? hex.slice(1) : hex;
+  if (clean.length !== 6) return `rgba(255, 48, 64, ${alpha})`;
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Full-perimeter ambient gradient rim so all 4 edges clearly reflect thumbnail colors at every frame
+ */
+export function createBaseBorderGradient(colors: [string, string, string]): string {
+  const c0 = hexToRgba(colors[0], 0.85);
+  const c1 = hexToRgba(colors[1], 0.78);
+  const c2 = hexToRgba(colors[2], 0.82);
+  return `conic-gradient(from 45deg at 50% 50%, ${c0} 0deg, ${c1} 120deg, ${c2} 240deg, ${c0} 360deg)`;
+}
+
 /**
  * Creates the high-intensity traveling Border Beam conic-gradient
- * Transparent around 200 degrees, then accelerates into rich gradient tail and white-hot highlight head
+ * Keeps soft color aura around the ring while accelerating into the bright specular highlight sweep
  */
 export function createBorderBeamGradient(
   highlight: string,
@@ -291,7 +316,7 @@ export function createBorderBeamGradient(
   secondary: string,
   tertiary: string
 ): string {
-  return `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 200deg, ${tertiary} 240deg, ${secondary} 280deg, ${primary} 325deg, ${highlight} 354deg, ${primary} 358deg, transparent 360deg)`;
+  return `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 150deg, ${hexToRgba(tertiary, 0.5)} 195deg, ${tertiary} 235deg, ${secondary} 280deg, ${primary} 325deg, ${highlight} 352deg, ${primary} 358deg, transparent 360deg)`;
 }
 
 /**
@@ -307,79 +332,65 @@ export function getVideoGradientConfig(
     video.tags?.some((t) => t.toLowerCase() === 'live' || t.toLowerCase() === 'mubashara')
   );
 
-  // 1. Live Videos: Pulsing Red border with radiant glow (Rule 8)
+  // 1. Live Videos: Pulsing Red border with radiant glow
   if (isLive) {
-    const colors: [string, string, string] = ['#FF1E42', '#FF4D6D', '#FF0033'];
+    const colors: [string, string, string] = ['#FF1E42', '#FF4D6D', '#FF6B35'];
     const highlight = '#FFFFFF';
     return {
       variant: 'live',
       colors,
       highlightColor: highlight,
-      baseBorderColor: 'rgba(255, 30, 66, 0.35)',
-      glowColor: 'rgba(255, 30, 66, 0.55)',
+      baseBorderColor: 'rgba(255, 30, 66, 0.45)',
+      baseBorderGradient: createBaseBorderGradient(colors),
+      glowColor: 'rgba(255, 30, 66, 0.6)',
       beamConicGradient: createBorderBeamGradient(highlight, colors[0], colors[1], colors[2]),
       animationType: 'pulse-live',
     };
   }
 
-  // 2. Premium Videos: Distinctive Luxury Gold gradient beam (Rule 6 & reference image_97ec2eb4.png)
+  // 2. Premium / VIP Videos: Luxury Gold gradient beam (preserving golden VIP edge)
   const isPremium = Boolean(
     video.isMembersOnly ||
     video.tags?.some((t) => t.toLowerCase().includes('premium') || t.toLowerCase().includes('vip'))
   );
 
   if (isPremium) {
-    const colors: [string, string, string] = ['#F59E0B', '#FCD34D', '#D97706'];
-    const highlight = '#FFFDE7'; // Brilliant gold-white specular highlight
+    const colors: [string, string, string] = ['#FDE047', '#F59E0B', '#D97706'];
+    const highlight = '#FFFBEB';
     return {
       variant: 'premium',
       colors,
       highlightColor: highlight,
-      baseBorderColor: 'rgba(245, 158, 11, 0.22)',
+      baseBorderColor: 'rgba(245, 158, 11, 0.45)',
+      baseBorderGradient: createBaseBorderGradient(colors),
       glowColor: 'rgba(245, 158, 11, 0.55)',
-      beamConicGradient: createBorderBeamGradient(highlight, '#FCD34D', '#F59E0B', '#B45309'),
+      beamConicGradient: createBorderBeamGradient(highlight, '#FDE047', '#F59E0B', '#B45309'),
       animationType: 'rotate',
     };
   }
 
-  // 3. Trending Videos: Red/Orange fiery accents (Rule 7)
+  // 3. Dynamic Thumbnail-Extracted Colors (prioritized over static Trending override so every video adapts to its thumbnail)
   const isTrending = Boolean(
     (video.viewsCount || 0) >= 10000 ||
     video.tags?.some((t) => t.toLowerCase().includes('trending') || t.toLowerCase().includes('zinazovuma'))
   );
 
-  if (isTrending) {
-    const colors: [string, string, string] = ['#FF3040', '#FF6B35', '#F59E0B'];
-    const highlight = '#FFF1F2';
-    return {
-      variant: 'trending',
-      colors,
-      highlightColor: highlight,
-      baseBorderColor: 'rgba(255, 48, 64, 0.2)',
-      glowColor: 'rgba(255, 48, 64, 0.45)',
-      beamConicGradient: createBorderBeamGradient(highlight, colors[0], colors[1], colors[2]),
-      animationType: 'rotate',
-    };
-  }
-
-  // 4. Dynamic Thumbnail-based 2-3 Color Gradient Beam (Rule 1 & 2)
-  const colors =
+  const colors: [string, string, string] =
     customExtractedColors ||
+    (isTrending ? ['#FF3040', '#FF6B35', '#F59E0B'] : undefined) ||
+    (video.id || video.title ? getHashFallbackPalette(video.id || video.title) : undefined) ||
     CATEGORY_PALETTES[video.category] ||
-    getHashFallbackPalette(video.id || video.title || 'tazama');
+    DEFAULT_TAZAMA_PALETTE;
 
   const highlight = '#FFFFFF';
-  const hex = colors[0].startsWith('#') ? colors[0] : '#FF3040';
-  const r = parseInt(hex.slice(1, 3), 16) || 255;
-  const g = parseInt(hex.slice(3, 5), 16) || 48;
-  const b = parseInt(hex.slice(5, 7), 16) || 64;
 
   return {
-    variant: 'dynamic',
+    variant: isTrending ? 'trending' : 'dynamic',
     colors,
     highlightColor: highlight,
-    baseBorderColor: `rgba(${r}, ${g}, ${b}, 0.18)`,
-    glowColor: `rgba(${r}, ${g}, ${b}, 0.45)`,
+    baseBorderColor: hexToRgba(colors[0], 0.42),
+    baseBorderGradient: createBaseBorderGradient(colors),
+    glowColor: hexToRgba(colors[0], 0.52),
     beamConicGradient: createBorderBeamGradient(highlight, colors[0], colors[1], colors[2]),
     animationType: 'rotate',
   };

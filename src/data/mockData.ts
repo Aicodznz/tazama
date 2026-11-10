@@ -23,6 +23,10 @@ import {
   CreatorPromotion,
   TazamaNotification
 } from '../types';
+import donghuaBannerImg from '../assets/images/donghua_banner_1794262686600.jpg';
+import donghuaAvatarImg from '../assets/images/donghua_avatar_1794262686500.jpg';
+import firstDragonThumbImg from '../assets/images/first_dragon_thumb_1794262687776.jpg';
+import mortalsJourneyThumbImg from '../assets/images/mortals_journey_thumb_1794262688065.jpg';
 
 // PRODUCTION MODE: All demo channels, videos, shorts, users, and ad campaigns start empty.
 // Real content is created dynamically by registered users and persisted to database/storage.
@@ -33,8 +37,8 @@ export const INITIAL_CHANNELS: Channel[] = [
     ownerId: 'user-admin-amytzee',
     handle: '@luciferdonghua',
     bio: 'Nyumba rasmi ya Donghua (Chinese Anime), First Dragon, Mortal\'s Journey na vipindi bora vya kusisimua kwa lugha ya Kiswahili na Kiingereza.',
-    avatarUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80',
-    bannerUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1200&auto=format&fit=crop&q=80',
+    avatarUrl: donghuaAvatarImg,
+    bannerUrl: donghuaBannerImg,
     subscriberCount: 24800,
     videoCount: 2,
     isVerified: true,
@@ -49,14 +53,14 @@ export const INITIAL_VIDEOS: VideoItem[] = [
     id: 'vid-donghua-first-dragon-ep1',
     channelId: 'ch-lucifer-donghua-tz',
     channelName: 'Lucifer Donghua TZ',
-    channelAvatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80',
+    channelAvatar: donghuaAvatarImg,
     channelOwnerId: 'user-admin-amytzee',
     isChannelVerified: true,
     title: 'First Dragon (Yuan Long) - Episode 1 [Donghua Multi-Dub]',
-    description: 'Msururu maarufu wa uhuishaji wa Kichina (Donghua) Yuan Long (First Dragon). Hadithi ya askari hodari Wang Sheng aliyejikuta akizama katika ulimwengu wa roho ya Yuan na kupambana ili kuwa joka kuu. Tazama moja kwa moja kupitia mfumo wa streaming wa Tazama!',
+    description: 'Msururu maarufu wa uhuishaji wa Kichina (Donghua) Yuan Long (First Dragon). Hadithi ya askari hodari Wang Sheng aliyejikuta akizama katika ulimwengu wa roho ya Yuan na kupambana ili kuwa joka kuu. Tazama kipindi kamili (Dakika 19:31) bila kukatika!',
     videoUrl: 'https://www.youtube.com/watch?v=Dv0mX1heJVc',
-    thumbnailUrl: 'https://img.youtube.com/vi/Dv0mX1heJVc/hqdefault.jpg',
-    durationSeconds: 1260,
+    thumbnailUrl: firstDragonThumbImg,
+    durationSeconds: 1171,
     category: 'Burudani',
     tags: [
       'Donghua',
@@ -80,13 +84,13 @@ export const INITIAL_VIDEOS: VideoItem[] = [
     id: 'vid-donghua-mortals-journey-ep1',
     channelId: 'ch-lucifer-donghua-tz',
     channelName: 'Lucifer Donghua TZ',
-    channelAvatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80',
+    channelAvatar: donghuaAvatarImg,
     channelOwnerId: 'user-admin-amytzee',
     isChannelVerified: true,
     title: 'A Record of Mortal\'s Journey to Immortality - Episode 1 [VIP]',
-    description: 'Kazi bora ya hadhi ya juu ya Donghua ya Han Li, mvulana wa kawaida kutoka kijijini anayeanza safari ndefu ya mafunzo ya kiroho kuelekea kutokufa (Cultivation / Immortality). Video hii ni sehemu ya maudhui maalum ya Tazama Premium VIP yenye kingo za kung\'aa za dhahabu.',
+    description: 'Kazi bora ya hadhi ya juu ya Donghua ya Han Li, mvulana wa kawaida kutoka kijijini anayeanza safari ndefu ya mafunzo ya kiroho kuelekea kutokufa (Cultivation / Immortality). Kipindi kamili cha kwanza chenye picha kali na kingo za dhahabu za VIP.',
     videoUrl: 'https://www.youtube.com/watch?v=lG3YdTdfOCM',
-    thumbnailUrl: 'https://img.youtube.com/vi/lG3YdTdfOCM/hqdefault.jpg',
+    thumbnailUrl: mortalsJourneyThumbImg,
     durationSeconds: 1380,
     category: 'Burudani',
     tags: [

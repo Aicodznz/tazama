@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { VideoItem } from '../../types';
 import { useVideo } from '../../context/VideoContext';
+import { createThumbnailSvgDataUri } from '../../lib/mediaPlaceholders';
 
 interface VideoDownloadModalProps {
   isOpen: boolean;
@@ -140,23 +141,23 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 select-none">
-      <div className="relative w-full max-w-md bg-[#191E29] border border-[#262E3E] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200 select-none">
+      <div className="relative w-full max-w-md bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
         
         {/* Header */}
-        <div className="bg-[#121620] px-4 py-3.5 border-b border-[#262E3E] flex items-center justify-between">
+        <div className="bg-slate-50 dark:bg-[#121620] px-4 py-3.5 border-b border-slate-200 dark:border-[#262E3E] flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-[#16C784]/20 text-[#16C784] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784] flex items-center justify-center">
               <Download className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-extrabold text-sm text-white">Pakua Video Kwenye Simu</h3>
-              <p className="text-[11px] text-[#A7B0C0]">Hifadhi kwa ajili ya kutazama nje ya mtandao</p>
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">Pakua Video Kwenye Simu</h3>
+              <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">Hifadhi kwa ajili ya kutazama nje ya mtandao</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-1 rounded-full text-[#A7B0C0] hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1 rounded-full text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -166,17 +167,21 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
         <div className="p-4 space-y-4 overflow-y-auto">
           
           {/* Video Preview Card */}
-          <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E]">
+          <div className="flex items-center gap-3 p-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
             <img 
-              src={video.thumbnailUrl} 
-              alt={video.title} 
-              className="w-20 h-14 object-cover rounded-xl shrink-0 border border-[#262E3E]" 
+              src={video.thumbnailUrl || createThumbnailSvgDataUri(video.title, video.category)} 
+              alt={video.title}
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = createThumbnailSvgDataUri(video.title, video.category);
+              }}
+              className="w-20 h-14 object-cover rounded-xl shrink-0 border border-slate-200 dark:border-[#262E3E]" 
             />
             <div className="min-w-0 flex-1">
-              <h4 className="text-xs font-bold text-white line-clamp-2 leading-snug">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug">
                 {video.title}
               </h4>
-              <p className="text-[11px] text-[#A7B0C0] truncate mt-0.5">
+              <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0] truncate mt-0.5">
                 {video.channelName}
               </p>
             </div>
@@ -184,24 +189,24 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
 
           {/* Downloading state with progress bar */}
           {downloadState === 'downloading' && (
-            <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-3">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-3">
               <div className="flex items-center justify-between text-xs font-bold">
-                <span className="flex items-center gap-2 text-white">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#16C784]" />
+                <span className="flex items-center gap-2 text-slate-900 dark:text-white">
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald-600 dark:text-[#16C784]" />
                   Inapakua faili kwenye simu...
                 </span>
-                <span className="font-mono text-[#16C784]">{progress}%</span>
+                <span className="font-mono text-emerald-700 dark:text-[#16C784]">{progress}%</span>
               </div>
               
               {/* Progress Bar */}
-              <div className="w-full h-2.5 bg-[#232A39] rounded-full overflow-hidden p-0.5">
+              <div className="w-full h-2.5 bg-slate-200 dark:bg-[#232A39] rounded-full overflow-hidden p-0.5">
                 <div 
                   className="h-full bg-gradient-to-r from-[#16C784] to-emerald-400 rounded-full transition-all duration-300 shadow-sm"
                   style={{ width: `${progress}%` }}
                 />
               </div>
 
-              <p className="text-[11px] text-[#A7B0C0] text-center">
+              <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0] text-center">
                 Tafadhali subiri kidogo, faili linatayarishwa na kuhifadhiwa kwenye kumbukumbu ya simu.
               </p>
             </div>
@@ -209,13 +214,13 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
 
           {/* Completed state */}
           {downloadState === 'completed' && (
-            <div className="p-4 rounded-2xl bg-[#16C784]/15 border border-[#16C784]/30 space-y-3 text-center">
+            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-[#16C784]/15 border border-emerald-200 dark:border-[#16C784]/30 space-y-3 text-center">
               <div className="w-12 h-12 rounded-full bg-[#16C784] text-black flex items-center justify-center mx-auto shadow-lg shadow-[#16C784]/30">
                 <CheckCircle2 className="w-7 h-7" />
               </div>
               <div>
-                <h4 className="text-sm font-extrabold text-white">Video Imepakuliwa Kikamilifu!</h4>
-                <p className="text-xs text-[#A7B0C0] mt-1">
+                <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Video Imepakuliwa Kikamilifu!</h4>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0] mt-1">
                   Imehifadhiwa kwenye folda ya <strong>Downloads</strong> ya simu yako na kwenye <strong>Maktaba ya Nje ya Mtandao</strong> ya Tazama.
                 </p>
               </div>
@@ -236,15 +241,15 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
 
                 <button
                   onClick={finishDownload}
-                  className="w-full py-2 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1.5"
+                  className="w-full py-2 rounded-xl bg-white dark:bg-[#232A39] hover:bg-slate-100 dark:hover:bg-[#2E3748] border border-slate-200 dark:border-transparent text-slate-900 dark:text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1.5"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#16C784]" />
+                  <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
                   <span>Pakua Faili Tena (Download Again)</span>
                 </button>
 
                 <button
                   onClick={handleRemove}
-                  className="text-[11px] text-red-400 hover:underline pt-1"
+                  className="text-[11px] text-red-600 dark:text-red-400 hover:underline pt-1"
                 >
                   Ondoa video hii kwenye maktaba
                 </button>
@@ -255,7 +260,7 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
           {/* Idle: Select Quality */}
           {downloadState === 'idle' && (
             <div className="space-y-3">
-              <label className="text-xs font-bold text-[#A7B0C0] uppercase tracking-wider block">
+              <label className="text-xs font-bold text-slate-600 dark:text-[#A7B0C0] uppercase tracking-wider block">
                 Chagua Ubora wa Video (Quality)
               </label>
 
@@ -268,27 +273,27 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
                       onClick={() => setQuality(opt.id as any)}
                       className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
                         isSelected 
-                          ? 'bg-[#16C784]/15 border-[#16C784] shadow-md shadow-[#16C784]/10' 
-                          : 'bg-[#10131B] border-[#262E3E] hover:border-white/20'
+                          ? 'bg-emerald-50 dark:bg-[#16C784]/15 border-[#16C784] shadow-md shadow-[#16C784]/10' 
+                          : 'bg-slate-50 dark:bg-[#10131B] border-slate-200 dark:border-[#262E3E] hover:border-slate-300 dark:hover:border-white/20'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                          isSelected ? 'border-[#16C784] bg-[#16C784]' : 'border-[#A7B0C0]'
+                          isSelected ? 'border-[#16C784] bg-[#16C784]' : 'border-slate-400 dark:border-[#A7B0C0]'
                         }`}>
                           {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-black" />}
                         </div>
                         <div>
-                          <p className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-[#A7B0C0]'}`}>
+                          <p className={`text-xs font-bold ${isSelected ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-[#A7B0C0]'}`}>
                             {opt.name}
                           </p>
-                          <p className="text-[11px] text-[#A7B0C0]/80">
+                          <p className="text-[11px] text-slate-500 dark:text-[#A7B0C0]/80">
                             {opt.desc}
                           </p>
                         </div>
                       </div>
 
-                      <span className="text-xs font-mono font-bold text-[#16C784] bg-[#16C784]/10 px-2 py-0.5 rounded-lg border border-[#16C784]/20">
+                      <span className="text-xs font-mono font-bold text-emerald-700 dark:text-[#16C784] bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/25 dark:border-[#16C784]/20">
                         {opt.size}
                       </span>
                     </div>
@@ -297,8 +302,8 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
               </div>
 
               {/* Offline perks banner */}
-              <div className="p-3 rounded-2xl bg-[#121620] border border-[#262E3E] flex items-center gap-2.5 text-xs text-[#A7B0C0]">
-                <WifiOff className="w-4 h-4 text-amber-400 shrink-0" />
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#121620] border border-slate-200 dark:border-[#262E3E] flex items-center gap-2.5 text-xs text-slate-600 dark:text-[#A7B0C0]">
+                <WifiOff className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
                 <span>Utaweza kutazama video hii hata ukiwa bila intaneti au ukiwa safarini.</span>
               </div>
 
@@ -307,7 +312,7 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 py-3 rounded-2xl bg-[#10131B] hover:bg-[#232A39] border border-[#262E3E] text-xs font-bold text-white transition-all active:scale-95"
+                  className="flex-1 py-3 rounded-2xl bg-slate-100 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-xs font-bold text-slate-700 dark:text-white transition-all active:scale-95"
                 >
                   Ghairi
                 </button>

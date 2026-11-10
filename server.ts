@@ -231,6 +231,12 @@ async function startServer() {
     }
   }));
 
+  // Ensure Referrer-Policy allows video embeds (like YouTube) to receive origin domain
+  app.use((_req, res, next) => {
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+  });
+
   // ==========================================
   // SHARED PERSISTENT VIDEOS & CHANNELS API
   // ==========================================

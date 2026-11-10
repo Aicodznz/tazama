@@ -90,7 +90,7 @@ export const HomePage: React.FC<HomePageProps> = ({
   }, [selectedCategory, videos, allContent]);
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-20 select-none">
+    <div className="space-y-4 sm:space-y-6 pb-6 select-none">
       
       {/* 1. Top Creator Stories Bar (Matching Screenshot 1 & 7) */}
       <StoriesBar
@@ -109,8 +109,8 @@ export const HomePage: React.FC<HomePageProps> = ({
               onClick={() => setSelectedCategory(cat)}
               className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                 isSelected
-                  ? 'bg-white text-black font-bold shadow-md'
-                  : 'bg-[#191E29] text-[#A7B0C0] hover:text-white hover:bg-[#232A39] border border-[#262E3E]'
+                  ? 'bg-slate-900 text-white font-bold shadow-md dark:bg-white dark:text-black'
+                  : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 dark:bg-[#191E29] dark:text-[#A7B0C0] dark:hover:text-white dark:hover:bg-[#232A39] dark:border-[#262E3E]'
               }`}
             >
               {cat}
@@ -132,7 +132,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#FF3040] to-orange-500 flex items-center justify-center text-white shadow-md">
                 <Film className="w-4 h-4" />
               </div>
-              <h2 className="text-base sm:text-lg font-bold text-white">Tazama Shorts</h2>
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Tazama Shorts</h2>
             </div>
             <button 
               onClick={() => onNavigate('shorts')}
@@ -159,10 +159,10 @@ export const HomePage: React.FC<HomePageProps> = ({
                   onClick={() => onSelectVideo(short)}
                   className="px-1"
                 >
-                  <h4 className="text-xs font-bold text-white line-clamp-1 group-hover:text-[#FF3040] transition-colors">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-[#FF3040] transition-colors">
                     {short.title}
                   </h4>
-                  <p className="text-[11px] text-[#A7B0C0] mt-0.5">
+                  <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0] mt-0.5">
                     {formatViews(short.viewsCount, language)} views
                   </p>
                 </div>
@@ -175,26 +175,26 @@ export const HomePage: React.FC<HomePageProps> = ({
       {/* Main Recommended Videos Grid */}
       <div className="pt-4">
         <div className="flex items-center justify-between mb-3.5">
-          <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-[#FF3040]" />
             <span>{selectedCategory === 'Zote' ? t.recommended : `${selectedCategory} Tanzania`}</span>
           </h2>
-          <span className="text-xs text-[#A7B0C0]">{filteredVideos.length} video</span>
+          <span className="text-xs text-slate-600 dark:text-[#A7B0C0]">{filteredVideos.length} video</span>
         </div>
 
         {filteredVideos.length === 0 ? (
-          <div className="py-16 sm:py-20 px-4 text-center bg-[#141824] rounded-3xl border border-[#262E3E] space-y-4 max-w-xl mx-auto shadow-2xl">
+          <div className="py-16 sm:py-20 px-4 text-center bg-white dark:bg-[#141824] rounded-3xl border border-slate-200 dark:border-[#262E3E] space-y-4 max-w-xl mx-auto shadow-sm dark:shadow-2xl">
             <div className="w-16 h-16 rounded-3xl bg-[#FF3040]/10 border border-[#FF3040]/30 flex items-center justify-center mx-auto text-[#FF3040]">
               <Film className="w-8 h-8" />
             </div>
 
             <div className="space-y-1.5">
-              <h3 className="text-lg font-black text-white">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
                 {selectedCategory !== 'Zote' 
                   ? `Hakuna Video kwenye Kategoria ya "${selectedCategory}"` 
                   : 'Hakuna Video Zilizopakiwa Bado'}
               </h3>
-              <p className="text-xs text-[#A7B0C0] leading-relaxed max-w-md mx-auto">
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0] leading-relaxed max-w-md mx-auto">
                 {selectedCategory !== 'Zote' ? (
                   `Kwa sasa hakuna video iliyochapishwa chini ya kategoria hii. Bofya "Onyesha Zote" ili kuona video zote zilizopakiwa.`
                 ) : isRegistered ? (
@@ -223,7 +223,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               {!isRegistered && (
                 <button
                   onClick={() => onNavigate('register')}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-white text-xs font-semibold transition-colors"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 dark:bg-[#191E29] dark:hover:bg-[#232A39] dark:border-[#262E3E] dark:text-white text-xs font-semibold transition-colors"
                 >
                   Jisajili Kwenye Mfumo
                 </button>
@@ -231,7 +231,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               {isRegistered && (role === 'creator' || profile?.channelId) && (
                 <button
                   onClick={() => onNavigate('studio')}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-white text-xs font-semibold transition-colors"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 dark:bg-[#191E29] dark:hover:bg-[#232A39] dark:border-[#262E3E] dark:text-white text-xs font-semibold transition-colors"
                 >
                   Fungua Studio
                 </button>
@@ -266,8 +266,8 @@ export const HomePage: React.FC<HomePageProps> = ({
       {channels.length > 0 && (
         <div className="pt-6">
           <div className="flex items-center justify-between mb-3.5">
-            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-[#16C784]" />
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
               <span>{t.newCreators}</span>
             </h2>
           </div>
@@ -278,26 +278,27 @@ export const HomePage: React.FC<HomePageProps> = ({
               return (
                 <div
                   key={ch.id}
-                  className="flex items-center justify-between p-3.5 rounded-2xl bg-[#191E29] border border-[#262E3E] hover:border-[#2E3748] transition-colors"
+                  className="flex items-center justify-between p-3.5 rounded-2xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] hover:border-slate-300 dark:hover:border-[#2E3748] shadow-sm dark:shadow-none transition-colors"
                 >
                   <div 
                     onClick={() => onSelectChannel(ch.id)}
                     className="flex items-center gap-3 cursor-pointer min-w-0"
                   >
                     <img
-                      src={ch.avatarUrl}
+                      src={ch.avatarUrl || createAvatarSvgDataUri(ch.name)}
                       alt=""
+                      referrerPolicy="no-referrer"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = createAvatarSvgDataUri(ch.name);
                       }}
-                      className="w-12 h-12 rounded-full object-cover ring-2 ring-[#262E3E] bg-[#141824]"
+                      className="w-12 h-12 rounded-full object-cover ring-2 ring-slate-200 dark:ring-[#262E3E] bg-slate-100 dark:bg-[#141824]"
                     />
                     <div className="min-w-0">
-                      <h4 className="text-xs sm:text-sm font-bold text-white truncate flex items-center gap-1">
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate flex items-center gap-1">
                         {ch.name}
-                        {ch.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-[#16C784]" />}
+                        {ch.isVerified && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />}
                       </h4>
-                      <p className="text-[11px] text-[#A7B0C0] font-mono">
+                      <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0] font-mono">
                         {formatViews(ch.subscriberCount, language)} {t.subscribers}
                       </p>
                     </div>
@@ -307,7 +308,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                     onClick={() => toggleSubscribe(ch.id)}
                     className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ml-2 ${
                       isSubbed
-                        ? 'bg-[#232A39] text-[#A7B0C0] hover:text-white'
+                        ? 'bg-slate-100 text-slate-700 hover:text-slate-900 hover:bg-slate-200 border border-slate-200 dark:bg-[#232A39] dark:text-[#A7B0C0] dark:hover:text-white dark:border-transparent'
                         : 'bg-[#FF3040] hover:bg-[#E02635] text-white shadow-md shadow-[#FF3040]/20'
                     }`}
                   >

@@ -32,7 +32,7 @@ export const VideoCard: React.FC<VideoCardProps> = ({
         video={video}
         onSelectVideo={onSelectVideo}
         aspectRatioClass="aspect-video"
-        className="rounded-2xl sm:rounded-3xl shadow-lg group-hover:shadow-2xl"
+        className="rounded-2xl sm:rounded-3xl shadow-sm dark:shadow-lg group-hover:shadow-md dark:group-hover:shadow-2xl"
       />
 
       {/* Video Details & Meta */}
@@ -50,15 +50,16 @@ export const VideoCard: React.FC<VideoCardProps> = ({
           <img
             src={avatarSrc}
             alt=""
+            referrerPolicy="no-referrer"
             onError={() => setAvatarError(true)}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover ring-1.5 ring-[#262E3E] group-hover/avatar:ring-[#FF3040] transition-all bg-[#1A1F2E]"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover ring-1.5 ring-slate-200 dark:ring-[#262E3E] group-hover/avatar:ring-[#FF3040] transition-all bg-slate-100 dark:bg-[#1A1F2E]"
           />
         </button>
 
         {/* Title, Channel Info, Views */}
         <div className="flex-1 min-w-0" onClick={() => onSelectVideo(video)}>
           <h3 
-            className="text-xs sm:text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-[#FF3040] transition-colors"
+            className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#FF3040] transition-colors"
             title={video.title}
           >
             {video.title}
@@ -66,19 +67,19 @@ export const VideoCard: React.FC<VideoCardProps> = ({
 
           <div className="mt-1 space-y-0.5">
             {/* Channel Name + Verified Badge */}
-            <div className="flex items-center gap-1.5 text-xs text-[#CBD5E1] font-medium">
-              <span className="hover:text-white truncate max-w-[180px] sm:max-w-none">
+            <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-[#CBD5E1] font-medium">
+              <span className="hover:text-slate-900 dark:hover:text-white truncate max-w-[180px] sm:max-w-none">
                 {video.channelName}
               </span>
               {video.isChannelVerified && (
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
               )}
             </div>
 
             {/* Views Count & Relative Time */}
-            <div className="flex items-center gap-1.5 text-[11px] text-[#94A3B8]">
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-[#94A3B8]">
               <span>{formatViews(video.viewsCount, language)} {language === 'sw' ? 'matazamio' : 'views'}</span>
-              <span className="text-[#475569]">•</span>
+              <span className="text-slate-400 dark:text-[#475569]">•</span>
               <span>{formatRelativeTime(video.createdAt, language)}</span>
             </div>
           </div>
@@ -89,7 +90,7 @@ export const VideoCard: React.FC<VideoCardProps> = ({
           onClick={(e) => {
             e.stopPropagation();
           }}
-          className="p-1 text-[#A7B0C0] hover:text-white shrink-0 self-start mt-0.5 cursor-pointer rounded-full hover:bg-white/5 transition-colors"
+          className="p-1 text-slate-500 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white shrink-0 self-start mt-0.5 cursor-pointer rounded-full hover:bg-slate-200/70 dark:hover:bg-white/5 transition-colors"
           title="Chaguo zaidi"
         >
           <MoreVertical className="w-4 h-4" />

@@ -40,7 +40,7 @@ const AppContent: React.FC = () => {
     : null;
   const [minimizedVideo, setMinimizedVideo] = useState<VideoItem | null>(null);
   const [isMiniPlaying, setIsMiniPlaying] = useState<boolean>(true);
-  const [selectedChannelId, setSelectedChannelId] = useState<string>('ch-wasafi');
+  const [selectedChannelId, setSelectedChannelId] = useState<string>('ch-lucifer-donghua-tz');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
   const [isWalletOpen, setIsWalletOpen] = useState<boolean>(false);
@@ -116,8 +116,8 @@ const AppContent: React.FC = () => {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#F4F6F9] dark:bg-[#10131B] text-[#0F172A] dark:text-white flex flex-col font-sans selection:bg-[#FF3040] selection:text-white transition-colors duration-200">
       
-      {/* Main App Navbar (Hidden on mobile watch page for focused immersion) */}
-      <div className={activePage === 'watch' ? 'hidden sm:block' : 'block'}>
+      {/* Main App Navbar (Hidden on mobile watch & shorts pages for focused immersion) */}
+      <div className={activePage === 'watch' || activePage === 'shorts' ? 'hidden sm:block' : 'block'}>
         <Navbar
           onOpenUpload={handleOpenUpload}
           onOpenWallet={handleOpenWallet}
@@ -161,12 +161,14 @@ const AppContent: React.FC = () => {
           }}
         />
 
-        {/* Content View Container: Full width/bleed on mobile for Watch & Shorts */}
+        {/* Content View Container: Full width/bleed on mobile for Watch, Shorts, and Channel */}
         <main 
           className={`flex-1 transition-all duration-300 ${
-            activePage === 'watch' || activePage === 'shorts'
-              ? 'px-0 sm:px-6 pt-0 sm:pt-4 pb-20 md:pb-8'
-              : 'px-3 sm:px-6 pt-3 sm:pt-5 pb-24 md:pb-8'
+            activePage === 'shorts'
+              ? 'px-0 sm:px-6 pt-0 sm:pt-3 pb-[62px] md:pb-6'
+              : activePage === 'watch' || activePage === 'channel'
+                ? 'px-0 sm:px-6 pt-0 sm:pt-4 pb-20 md:pb-8'
+                : 'px-3 sm:px-6 pt-3 sm:pt-5 pb-20 md:pb-8'
           } min-w-0 ${
             isSidebarOpen ? 'md:ml-60' : 'md:ml-[72px]'
           }`}
@@ -212,6 +214,7 @@ const AppContent: React.FC = () => {
             <ShortsPage
               onSelectChannel={handleSelectChannel}
               onOpenWallet={handleOpenWallet}
+              onNavigate={handleNavigate}
             />
           )}
 
@@ -226,13 +229,13 @@ const AppContent: React.FC = () => {
               />
             ) : profile && role === 'viewer' ? (
               <div className="min-h-[60vh] flex items-center justify-center p-6">
-                <div className="max-w-md w-full bg-[#191E29] border border-[#262E3E] rounded-3xl p-8 text-center space-y-5 shadow-2xl">
-                  <div className="w-16 h-16 rounded-2xl bg-[#16C784]/15 border border-[#16C784]/30 flex items-center justify-center mx-auto text-[#16C784]">
+                <div className="max-w-md w-full bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-8 text-center space-y-5 shadow-xl dark:shadow-2xl">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-[#16C784]/15 border border-emerald-200 dark:border-[#16C784]/30 flex items-center justify-center mx-auto text-emerald-600 dark:text-[#16C784]">
                     <Sparkles className="w-8 h-8" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-xl font-black text-white">Kuwa Muundaji wa Tazama</h2>
-                    <p className="text-xs text-[#A7B0C0] leading-relaxed">
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white">Kuwa Muundaji wa Tazama</h2>
+                    <p className="text-xs text-slate-600 dark:text-[#A7B0C0] leading-relaxed">
                       Akaunti yako ({profile.displayName}) kwa sasa ipo katika hadhi ya Mtazamaji. Boresha sasa uwe Muundaji wa Maudhui ili ufungue Studio ya Waumbaji, upakie video, na upate mapato ya M-Pesa.
                     </p>
                   </div>
@@ -246,7 +249,7 @@ const AppContent: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setActivePage('home')}
-                      className="py-2.5 px-4 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-white text-xs font-semibold border border-[#262E3E] transition-all"
+                      className="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#232A39] dark:hover:bg-[#2E3748] text-slate-800 dark:text-white text-xs font-semibold border border-slate-200 dark:border-[#262E3E] transition-all"
                     >
                       Rudi Nyumbani
                     </button>
@@ -255,13 +258,13 @@ const AppContent: React.FC = () => {
               </div>
             ) : (
               <div className="min-h-[60vh] flex items-center justify-center p-6">
-                <div className="max-w-md w-full bg-[#191E29] border border-[#262E3E] rounded-3xl p-8 text-center space-y-5 shadow-2xl">
-                  <div className="w-16 h-16 rounded-2xl bg-[#16C784]/15 border border-[#16C784]/30 flex items-center justify-center mx-auto text-[#16C784]">
+                <div className="max-w-md w-full bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-8 text-center space-y-5 shadow-xl dark:shadow-2xl">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 dark:bg-[#16C784]/15 border border-emerald-200 dark:border-[#16C784]/30 flex items-center justify-center mx-auto text-emerald-600 dark:text-[#16C784]">
                     <Sparkles className="w-8 h-8" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-xl font-black text-white">Studio ya Waumbaji wa Tazama</h2>
-                    <p className="text-xs text-[#A7B0C0] leading-relaxed">
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white">Studio ya Waumbaji wa Tazama</h2>
+                    <p className="text-xs text-slate-600 dark:text-[#A7B0C0] leading-relaxed">
                       Kupakia video, kusimamia chaneli yako, na kuangalia mapato ya kazi zako, tafadhali ingia au jisajili kama Muundaji wa Maudhui.
                     </p>
                   </div>
@@ -274,7 +277,7 @@ const AppContent: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setActivePage('register')}
-                      className="flex-1 py-2.5 px-4 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-white text-xs font-semibold border border-[#262E3E] transition-all"
+                      className="flex-1 py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#232A39] dark:hover:bg-[#2E3748] text-slate-800 dark:text-white text-xs font-semibold border border-slate-200 dark:border-[#262E3E] transition-all"
                     >
                       Jisajili kama Muundaji
                     </button>
@@ -312,13 +315,13 @@ const AppContent: React.FC = () => {
               <AdminPage />
             ) : (
               <div className="min-h-[60vh] flex items-center justify-center p-6">
-                <div className="max-w-md w-full bg-[#191E29] border border-[#262E3E] rounded-3xl p-8 text-center space-y-5 shadow-2xl">
-                  <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+                <div className="max-w-md w-full bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-8 text-center space-y-5 shadow-xl dark:shadow-2xl">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 flex items-center justify-center mx-auto text-amber-600 dark:text-amber-400">
                     <Shield className="w-8 h-8" />
                   </div>
                   <div className="space-y-2">
-                    <h2 className="text-xl font-black text-white">Jopo la Mfumo Limelindwa</h2>
-                    <p className="text-xs text-[#A7B0C0] leading-relaxed">
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white">Jopo la Mfumo Limelindwa</h2>
+                    <p className="text-xs text-slate-600 dark:text-[#A7B0C0] leading-relaxed">
                       Jopo hili la Usimamizi (Admin Hub) linahitaji uingie na akaunti iliyothibitishwa ya Msimamizi Mkuu wa Tazama. Wageni na watazamaji wa kawaida hawaruhusiwi kufikia eneo hili.
                     </p>
                   </div>
@@ -331,7 +334,7 @@ const AppContent: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setActivePage('home')}
-                      className="py-2.5 px-4 rounded-xl bg-[#232A39] hover:bg-[#2E3748] text-[#A7B0C0] hover:text-white text-xs font-semibold border border-[#262E3E] transition-all"
+                      className="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-[#232A39] dark:hover:bg-[#2E3748] text-slate-700 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white text-xs font-semibold border border-slate-200 dark:border-[#262E3E] transition-all"
                     >
                       Rudi Nyumbani
                     </button>
@@ -381,8 +384,8 @@ const AppContent: React.FC = () => {
         </main>
       </div>
 
-      {/* Floating MiniPlayer Docked Above Bottom Bar (Matching Screenshot 3 & 4) */}
-      {minimizedVideo && activePage !== 'watch' && (
+      {/* Floating MiniPlayer Docked Above Bottom Bar */}
+      {minimizedVideo && activePage !== 'watch' && activePage !== 'shorts' && (
         <MiniPlayer
           video={minimizedVideo}
           isPlaying={isMiniPlaying}
@@ -440,14 +443,14 @@ const AppContent: React.FC = () => {
 
       {/* Global Auth Prompt Modal */}
       {authActionPrompt && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-[#191E2A] border border-white/10 rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl animate-in zoom-in-95">
+        <div className="fixed inset-0 z-[100] bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-[#191E2A] border border-slate-200 dark:border-white/10 rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl animate-in zoom-in-95">
             <div className="w-12 h-12 rounded-full bg-[#FF3040]/10 text-[#FF3040] flex items-center justify-center mx-auto">
               <Shield className="w-6 h-6" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-white">Ingia kwenye Akaunti</h3>
-              <p className="text-xs text-[#A7B0C0]">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Ingia kwenye Akaunti</h3>
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Ili uweze {authActionPrompt}, unahitaji kuwa umeingia kwenye akaunti yako ya Tazama.
               </p>
             </div>
@@ -468,13 +471,13 @@ const AppContent: React.FC = () => {
                   setActivePage('register');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-sm transition-colors cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 dark:border-transparent dark:bg-white/10 dark:hover:bg-white/15 text-slate-900 dark:text-white font-semibold text-sm transition-colors cursor-pointer"
               >
                 Tengeneza Akaunti Mpya (Register)
               </button>
               <button
                 onClick={() => setAuthActionPrompt(null)}
-                className="text-xs text-[#A7B0C0] hover:text-white pt-1 cursor-pointer"
+                className="text-xs text-slate-500 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white pt-1 cursor-pointer"
               >
                 Baadaye (Ghairi)
               </button>

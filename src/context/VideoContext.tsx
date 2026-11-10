@@ -59,6 +59,42 @@ import {
 } from '../data/mockData';
 import { useAuth } from './AuthContext';
 import { db, doc, setDoc, deleteDoc, collection, onSnapshot, getDocs, query, where } from '../lib/firebase';
+import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
+
+const SEED_VIDEO_MAP = new Map<string, VideoItem>(
+  INITIAL_VIDEOS.filter(v => Boolean(v && v.id)).map(v => [v.id, v])
+);
+const SEED_CHANNEL_MAP = new Map<string, Channel>(
+  INITIAL_CHANNELS.filter(c => Boolean(c && c.id)).map(c => [c.id, c])
+);
+
+const isStaleSeedUrl = (url?: string): boolean => {
+  if (!url) return true;
+  return url.includes('unsplash.com') || url.includes('img.youtube.com');
+};
+
+const preserveLocalSeedVideo = (incoming: VideoItem, existing?: VideoItem): VideoItem => {
+  const seed = SEED_VIDEO_MAP.get(incoming.id);
+  const merged = existing ? { ...existing, ...incoming } : incoming;
+  if (!seed) return merged;
+  return {
+    ...merged,
+    videoUrl: seed.videoUrl,
+    thumbnailUrl: isStaleSeedUrl(merged.thumbnailUrl) ? seed.thumbnailUrl : merged.thumbnailUrl,
+    channelAvatar: isStaleSeedUrl(merged.channelAvatar) ? seed.channelAvatar : merged.channelAvatar,
+  };
+};
+
+const preserveLocalSeedChannel = (incoming: Channel, existing?: Channel): Channel => {
+  const seed = SEED_CHANNEL_MAP.get(incoming.id);
+  const merged = existing ? { ...existing, ...incoming } : incoming;
+  if (!seed) return merged;
+  return {
+    ...merged,
+    avatarUrl: isStaleSeedUrl(merged.avatarUrl) ? seed.avatarUrl : merged.avatarUrl,
+    bannerUrl: isStaleSeedUrl(merged.bannerUrl) ? seed.bannerUrl : merged.bannerUrl,
+  };
+};
 
 interface VideoContextType {
   videos: VideoItem[];
@@ -219,7 +255,9 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          parsed.filter((item: any) => Boolean(item && item.id && item.videoUrl && item.title)).forEach(v => map.set(v.id, v));
+          parsed.filter((item: any) => Boolean(item && item.id && item.videoUrl && item.title)).forEach(v => {
+            map.set(v.id, preserveLocalSeedVideo(v));
+          });
         }
       }
       const combined = Array.from(map.values());
@@ -252,10 +290,14 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          parsed.filter((item: any) => Boolean(item && item.id && item.name)).forEach(c => map.set(c.id, c));
+          parsed.filter((item: any) => Boolean(item && item.id && item.name)).forEach(c => {
+            map.set(c.id, preserveLocalSeedChannel(c));
+          });
         }
       }
-      return Array.from(map.values());
+      const combinedChannels = Array.from(map.values());
+      try { localStorage.setItem('tazama_custom_channels', JSON.stringify(combinedChannels)); } catch {}
+      return combinedChannels;
     } catch {}
     return INITIAL_CHANNELS;
   });
@@ -295,16 +337,12 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             prev.forEach(v => { if (v && v.id) map.set(v.id, v); });
             serverLongVideos.forEach(v => {
               const existing = map.get(v.id);
-              if (existing) {
-                map.set(v.id, {
-                  ...existing,
-                  ...v,
-                  viewsCount: typeof v.viewsCount === 'number' ? v.viewsCount : (existing.viewsCount || 0),
-                  likesCount: Math.max(v.likesCount || 0, existing.likesCount || 0)
-                });
-              } else {
-                map.set(v.id, v);
-              }
+              const nextVideo = preserveLocalSeedVideo(v, existing);
+              map.set(v.id, {
+                ...nextVideo,
+                viewsCount: typeof v.viewsCount === 'number' ? v.viewsCount : (existing?.viewsCount || 0),
+                likesCount: Math.max(v.likesCount || 0, existing?.likesCount || 0)
+              });
             });
             const merged = Array.from(map.values());
             try { localStorage.setItem('tazama_custom_videos', JSON.stringify(merged)); } catch {}
@@ -345,16 +383,12 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             prev.forEach(c => { if (c && c.id) map.set(c.id, c); });
             data.channels.forEach((c: Channel) => {
               const existing = map.get(c.id);
-              if (existing) {
-                map.set(c.id, {
-                  ...existing,
-                  ...c,
-                  totalViews: Math.max(c.totalViews || 0, existing.totalViews || 0),
-                  subscriberCount: Math.max(c.subscriberCount || 0, existing.subscriberCount || 0)
-                });
-              } else {
-                map.set(c.id, c);
-              }
+              const nextChannel = preserveLocalSeedChannel(c, existing);
+              map.set(c.id, {
+                ...nextChannel,
+                totalViews: Math.max(c.totalViews || 0, existing?.totalViews || 0),
+                subscriberCount: Math.max(c.subscriberCount || 0, existing?.subscriberCount || 0)
+              });
             });
             const merged = Array.from(map.values());
             try { localStorage.setItem('tazama_custom_channels', JSON.stringify(merged)); } catch {}
@@ -388,16 +422,12 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             prev.forEach(v => { if (v && v.id) map.set(v.id, v); });
             longVids.forEach(v => {
               const existing = map.get(v.id);
-              if (existing) {
-                map.set(v.id, {
-                  ...existing,
-                  ...v,
-                  viewsCount: Math.max(v.viewsCount || 0, existing.viewsCount || 0),
-                  likesCount: Math.max(v.likesCount || 0, existing.likesCount || 0)
-                });
-              } else {
-                map.set(v.id, v);
-              }
+              const nextVideo = preserveLocalSeedVideo(v, existing);
+              map.set(v.id, {
+                ...nextVideo,
+                viewsCount: Math.max(v.viewsCount || 0, existing?.viewsCount || 0),
+                likesCount: Math.max(v.likesCount || 0, existing?.likesCount || 0)
+              });
             });
             const merged = Array.from(map.values());
             try { localStorage.setItem('tazama_custom_videos', JSON.stringify(merged)); } catch {}
@@ -457,8 +487,11 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (firestoreChannels.length > 0) {
           setChannels(prev => {
             const map = new Map<string, Channel>();
-            firestoreChannels.forEach(c => map.set(c.id, c));
-            prev.forEach(c => { if (c && c.id && !map.has(c.id)) map.set(c.id, c); });
+            prev.forEach(c => { if (c && c.id) map.set(c.id, c); });
+            firestoreChannels.forEach(c => {
+              const existing = map.get(c.id);
+              map.set(c.id, preserveLocalSeedChannel(c, existing));
+            });
             const merged = Array.from(map.values());
             try { localStorage.setItem('tazama_custom_channels', JSON.stringify(merged)); } catch {}
             return merged;
@@ -726,21 +759,21 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       {
         id: 'msg-1',
         senderName: 'Bakari Mwita',
-        senderAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
+        senderAvatar: createAvatarSvgDataUri('Bakari Mwita'),
         message: 'Kituo cha Wasafi hewani kipo moto sana leo! 🔥🔥',
         timestamp: '19:42'
       },
       {
         id: 'msg-2',
         senderName: 'Halima Khamis (Zanzibar)',
-        senderAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
+        senderAvatar: createAvatarSvgDataUri('Halima Khamis'),
         message: 'Wimbo unaofuata tafadhali Aje na Sukari!',
         timestamp: '19:43'
       },
       {
         id: 'msg-3',
         senderName: 'Kelvin Mushi',
-        senderAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+        senderAvatar: createAvatarSvgDataUri('Kelvin Mushi'),
         message: 'Sauti iko safi sana, Tazama mmeweza sana hii!',
         isTip: true,
         tipAmountTZS: 5000,
@@ -750,10 +783,11 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
 
   const sendLiveChatMessage = (streamId: string, text: string) => {
+    const senderName = profile?.displayName || 'Mtazamaji';
     const newMessage: LiveChatMessage = {
       id: `msg-${Date.now()}`,
-      senderName: profile?.displayName || 'Mtazamaji',
-      senderAvatar: profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+      senderName,
+      senderAvatar: profile?.photoURL || createAvatarSvgDataUri(senderName),
       message: text,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
@@ -769,10 +803,11 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
     const success = deductBalance(amountTZS);
     if (success) {
+      const senderName = profile?.displayName || 'Shabiki Mkuu';
       const tipMsg: LiveChatMessage = {
         id: `tip-${Date.now()}`,
-        senderName: profile?.displayName || 'Shabiki Mkuu',
-        senderAvatar: profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+        senderName,
+        senderAvatar: profile?.photoURL || createAvatarSvgDataUri(senderName),
         message: `Ametuma zawadi ya ${giftName}! TZS ${amountTZS.toLocaleString()}`,
         isTip: true,
         tipAmountTZS: amountTZS,
@@ -1567,7 +1602,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       videoId,
       userId: profile?.uid || 'guest-user',
       userName: profile?.displayName || 'Mwanachama wa Tazama',
-      userAvatar: profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+      userAvatar: profile?.photoURL || createAvatarSvgDataUri(profile?.displayName || 'Mwanachama'),
       text: text.trim(),
       likesCount: 0,
       createdAt: new Date().toISOString()
@@ -1583,6 +1618,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
 
     setVideos(vids => vids.map(v => v.id === videoId ? { ...v, commentsCount: v.commentsCount + 1 } : v));
+    setShorts(shList => shList.map(s => s.id === videoId ? { ...s, commentsCount: s.commentsCount + 1 } : s));
   };
 
   const sendGiftToCreator = async (
@@ -1693,7 +1729,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const uploadNewVideo = async (videoData: Partial<VideoItem>): Promise<VideoItem> => {
     const creatorUid = profile?.uid || 'user-current';
     const creatorName = profile?.displayName || 'Kituo Changu cha Tazama';
-    const creatorAvatar = profile?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80';
+    const creatorAvatar = profile?.photoURL || createAvatarSvgDataUri(creatorName);
     const channelId = profile?.channelId || `ch-${creatorUid}`;
 
     const newVid: VideoItem = {
@@ -1707,7 +1743,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       description: videoData.description || '',
       videoUrl: videoData.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
       streamPlaybackId: videoData.streamPlaybackId || ('stream-' + Math.random().toString(36).substring(2, 9)),
-      thumbnailUrl: videoData.thumbnailUrl || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80',
+      thumbnailUrl: videoData.thumbnailUrl || createThumbnailSvgDataUri(videoData.title || 'Tazama Video', videoData.category || 'Burudani'),
       durationSeconds: videoData.durationSeconds || 180,
       category: (videoData.category as VideoCategory) || 'Burudani',
       tags: videoData.tags || ['Tazama', 'Tanzania'],
@@ -1746,7 +1782,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           name: creatorName,
           bio: 'Kituo rasmi cha video na ubunifu kwenye Tazama.',
           avatarUrl: creatorAvatar,
-          bannerUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80',
+          bannerUrl: createThumbnailSvgDataUri(creatorName, 'Burudani'),
           subscriberCount: 1,
           videoCount: 1,
           isVerified: true,

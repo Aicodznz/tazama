@@ -74,6 +74,7 @@ import {
   AdCampaign
 } from '../types';
 import { CreateAdModal } from '../components/ads/CreateAdModal';
+import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
 
 interface CreatorStudioPageProps {
   onOpenUpload: () => void;
@@ -161,8 +162,8 @@ export const CreatorStudioPage: React.FC<CreatorStudioPageProps> = ({
       handle: '@wasafitv',
       name: 'Wasafi Media',
       bio: 'Jukwaa rasmi la burudani na sanaa Tanzania.',
-      avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-      bannerUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&auto=format&fit=crop&q=80',
+      avatarUrl: createAvatarSvgDataUri('Wasafi Media'),
+      bannerUrl: createThumbnailSvgDataUri('Wasafi Media', 'Muziki'),
       subscriberCount: 1420000,
       videoCount: 86,
       isVerified: true,
@@ -245,7 +246,9 @@ export const CreatorStudioPage: React.FC<CreatorStudioPageProps> = ({
   const [uploadTags, setUploadTags] = useState<string>('tanzania, bongo, muziki');
   const [uploadVisibility, setUploadVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
   const [uploadIsShort, setUploadIsShort] = useState<boolean>(false);
-  const [uploadThumbnailUrl, setUploadThumbnailUrl] = useState<string>('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80');
+  const [uploadThumbnailUrl, setUploadThumbnailUrl] = useState<string>(() =>
+    createThumbnailSvgDataUri('Video Mpya ya Tazama', 'Muziki')
+  );
   const [uploadVideoUrl, setUploadVideoUrl] = useState<string>('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
   const [uploadScheduledDate, setUploadScheduledDate] = useState<string>('');
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -480,30 +483,34 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-[#0C0F17] text-[#E0E6ED] -mx-4 -my-4 sm:-mx-6 sm:-my-6">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-[#F4F6F9] dark:bg-[#0C0F17] text-slate-900 dark:text-[#E0E6ED] -mx-4 -my-4 sm:-mx-6 sm:-my-6">
       
       {/* Sidebar Navigation */}
-      <aside className="w-full lg:w-72 bg-[#121622] border-b lg:border-b-0 lg:border-r border-[#262E3E]/70 flex flex-col shrink-0 select-none">
+      <aside className="w-full lg:w-72 bg-white dark:bg-[#121622] border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-[#262E3E]/70 flex flex-col shrink-0 select-none">
         
         {/* Creator Identity Header */}
-        <div className="p-4 sm:p-5 border-b border-[#262E3E]/70 flex items-center gap-3 bg-[#151A28]">
+        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-[#262E3E]/70 flex items-center gap-3 bg-slate-50 dark:bg-[#151A28]">
           <div className="relative">
             <img 
-              src={creatorChannel.avatarUrl} 
-              alt={creatorChannel.name} 
+              src={creatorChannel.avatarUrl || createAvatarSvgDataUri(creatorChannel.name)} 
+              alt={creatorChannel.name}
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = createAvatarSvgDataUri(creatorChannel.name);
+              }}
               className="w-12 h-12 rounded-2xl object-cover ring-2 ring-[#FF3040]/40 shadow-md"
             />
             {creatorChannel.isVerified && (
-              <CheckCircle2 className="w-4 h-4 text-blue-400 absolute -bottom-1 -right-1 bg-[#121622] rounded-full" />
+              <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute -bottom-1 -right-1 bg-white dark:bg-[#121622] rounded-full" />
             )}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <h2 className="text-sm font-black text-white truncate">{creatorChannel.name}</h2>
-              <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <h2 className="text-sm font-black text-slate-900 dark:text-white truncate">{creatorChannel.name}</h2>
+              <Crown className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
             </div>
-            <p className="text-[11px] text-[#A7B0C0] font-mono truncate">{creatorChannel.handle}</p>
-            <span className="inline-flex items-center gap-1 text-[10px] text-[#16C784] font-bold mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-[#A7B0C0] font-mono truncate">{creatorChannel.handle}</p>
+            <span className="inline-flex items-center gap-1 text-[10px] text-emerald-700 dark:text-[#16C784] font-bold mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-[#16C784] animate-pulse" />
               Creator Partner
             </span>
@@ -511,7 +518,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         </div>
 
         {/* Mobile Horizontal Pill Scrollable Menu */}
-        <div className="lg:hidden flex items-center gap-1.5 p-2.5 overflow-x-auto no-scrollbar bg-[#10131B] border-b border-[#262E3E]/60">
+        <div className="lg:hidden flex items-center gap-1.5 p-2.5 overflow-x-auto no-scrollbar bg-slate-100 dark:bg-[#10131B] border-b border-slate-200 dark:border-[#262E3E]/60">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -522,13 +529,13 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
                   isActive 
                     ? 'bg-[#FF3040] text-white shadow-md shadow-[#FF3040]/30' 
-                    : 'bg-[#191E29] text-[#A7B0C0] hover:text-white'
+                    : 'bg-white dark:bg-[#191E29] text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent'
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
                 <span>{item.label}</span>
                 {item.badge && (
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-black/30 text-white' : 'bg-[#262E3E] text-white'}`}>
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded-full ${isActive ? 'bg-black/25 text-white' : 'bg-slate-200 dark:bg-[#262E3E] text-slate-700 dark:text-white'}`}>
                     {item.badge}
                   </span>
                 )}
@@ -549,16 +556,16 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition-all text-left ${
                   isActive 
                     ? 'bg-gradient-to-r from-[#FF3040] to-[#E02635] text-white shadow-md shadow-[#FF3040]/25' 
-                    : 'text-[#A7B0C0] hover:bg-[#191E29] hover:text-white'
+                    : 'text-slate-600 dark:text-[#A7B0C0] hover:bg-slate-100 dark:hover:bg-[#191E29] hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-[#A7B0C0]'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-500 dark:text-[#A7B0C0]'}`} />
                   <span>{item.label}</span>
                 </div>
                 {item.badge && (
                   <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                    isActive ? 'bg-black/25 text-white' : 'bg-[#191E29] text-amber-400 border border-[#262E3E]'
+                    isActive ? 'bg-black/25 text-white' : 'bg-slate-100 dark:bg-[#191E29] text-amber-700 dark:text-amber-400 border border-slate-200 dark:border-[#262E3E]'
                   }`}>
                     {item.badge}
                   </span>
@@ -571,7 +578,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
           <div className="pt-4 mt-auto">
             <button
               onClick={() => setActiveTab('upload')}
-              className="w-full py-2.5 rounded-2xl bg-[#16C784]/20 hover:bg-[#16C784]/30 border border-[#16C784]/40 text-[#16C784] font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-md active:scale-95"
+              className="w-full py-2.5 rounded-2xl bg-emerald-500/15 dark:bg-[#16C784]/20 hover:bg-emerald-500/25 dark:hover:bg-[#16C784]/30 border border-emerald-500/40 text-emerald-700 dark:text-[#16C784] font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95"
             >
               <UploadCloud className="w-4 h-4" />
               <span>Pakia Video Mpya</span>
@@ -580,18 +587,18 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         </nav>
 
         {/* Channel Tier & Revenue Footer */}
-        <div className="hidden lg:block p-3.5 m-3 rounded-2xl bg-[#10131B] border border-[#262E3E] text-[11px]">
-          <div className="flex items-center justify-between font-bold text-white mb-1">
+        <div className="hidden lg:block p-3.5 m-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-[11px]">
+          <div className="flex items-center justify-between font-bold text-slate-900 dark:text-white mb-1">
             <span>Salio Linaloweza Kutolewa</span>
-            <Wallet className="w-3.5 h-3.5 text-[#16C784]" />
+            <Wallet className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
           </div>
-          <p className="text-sm font-black font-mono text-[#16C784]">{formatTZS(availablePayoutTZS)}</p>
+          <p className="text-sm font-black font-mono text-emerald-700 dark:text-[#16C784]">{formatTZS(availablePayoutTZS)}</p>
           <button
             onClick={() => {
               setActiveTab('revenue');
               setShowPayoutModal(true);
             }}
-            className="w-full mt-2 py-1.5 rounded-xl bg-[#191E29] hover:bg-[#232A39] text-white text-[10px] font-bold border border-[#262E3E] transition-colors"
+            className="w-full mt-2 py-1.5 rounded-xl bg-white dark:bg-[#191E29] hover:bg-slate-100 dark:hover:bg-[#232A39] text-slate-800 dark:text-white text-[10px] font-bold border border-slate-200 dark:border-[#262E3E] transition-colors"
           >
             Omba Malipo (M-Pesa)
           </button>
@@ -603,26 +610,26 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
       <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-6">
         
         {/* Top Breadcrumb Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#262E3E]/60">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200 dark:border-[#262E3E]/60">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-[#A7B0C0]">Creator Studio</span>
-            <ChevronRight className="w-3.5 h-3.5 text-[#A7B0C0]" />
-            <span className="text-xs font-bold text-white capitalize">{activeTab.replace('_', ' ')}</span>
+            <span className="text-xs text-slate-500 dark:text-[#A7B0C0]">Creator Studio</span>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-[#A7B0C0]" />
+            <span className="text-xs font-bold text-slate-900 dark:text-white capitalize">{activeTab.replace('_', ' ')}</span>
           </div>
 
           <div className="flex items-center gap-2">
             {/* Date filter for stats */}
-            <div className="flex items-center gap-1.5 bg-[#121622] border border-[#262E3E] rounded-xl px-2.5 py-1.5 text-xs text-white">
-              <Calendar className="w-3.5 h-3.5 text-[#A7B0C0]" />
+            <div className="flex items-center gap-1.5 bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-white shadow-sm dark:shadow-none">
+              <Calendar className="w-3.5 h-3.5 text-slate-500 dark:text-[#A7B0C0]" />
               <select
                 value={dateRange}
                 onChange={(e) => setDateRange(e.target.value)}
-                className="bg-transparent focus:outline-none text-xs cursor-pointer"
+                className="bg-transparent focus:outline-none text-xs cursor-pointer text-slate-900 dark:text-white"
               >
-                <option value="7d">Siku 7 Zilizopita</option>
-                <option value="28d">Siku 28 Zilizopita</option>
-                <option value="90d">Siku 90 Zilizopita</option>
-                <option value="365d">Mwaka Mzima</option>
+                <option value="7d" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Siku 7 Zilizopita</option>
+                <option value="28d" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Siku 28 Zilizopita</option>
+                <option value="90d" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Siku 90 Zilizopita</option>
+                <option value="365d" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Mwaka Mzima</option>
               </select>
             </div>
 
@@ -643,15 +650,15 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
           <div className="space-y-6 animate-in fade-in duration-200">
             
             {/* Channel Snapshot Header Banner */}
-            <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#191E29] via-[#1E2638] to-[#121622] border border-[#262E3E] flex flex-wrap items-center justify-between gap-4">
+            <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-white via-slate-50 to-white dark:from-[#191E29] dark:via-[#1E2638] dark:to-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none flex flex-wrap items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl sm:text-2xl font-black text-white">Muhtasari wa Channel — {creatorChannel.name}</h1>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#16C784]/20 text-[#16C784] border border-[#16C784]/30">
+                  <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">Muhtasari wa Channel — {creatorChannel.name}</h1>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784] border border-emerald-500/30 dark:border-[#16C784]/30">
                     Monetized
                   </span>
                 </div>
-                <p className="text-xs text-[#A7B0C0]">
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                   Uchambuzi wa moja kwa moja wa utendaji wa video zako, watazamaji wapya na mapato halisi ya TZS.
                 </p>
               </div>
@@ -659,7 +666,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               <div className="flex items-center gap-2.5">
                 <button
                   onClick={() => setActiveTab('analytics')}
-                  className="px-3.5 py-2 rounded-xl bg-[#10131B] hover:bg-[#232A39] border border-[#262E3E] text-xs font-bold text-white transition-colors"
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-xs font-bold text-slate-800 dark:text-white transition-colors"
                 >
                   Angalia Takwimu Kamili
                 </button>
@@ -675,80 +682,80 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             {/* 6 Key Channel Overview Cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               
-              <div className="p-4 rounded-2xl bg-[#121622] border border-[#262E3E] space-y-1">
-                <div className="flex items-center justify-between text-[#A7B0C0] text-xs">
+              <div className="p-4 rounded-2xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-1">
+                <div className="flex items-center justify-between text-slate-600 dark:text-[#A7B0C0] text-xs">
                   <span>Jumla ya Views</span>
                   <Eye className="w-4 h-4 text-[#FF3040]" />
                 </div>
-                <div className="text-lg sm:text-xl font-black text-white font-mono">
+                <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono">
                   {formatViews(totalViews, language)}
                 </div>
-                <span className="text-[10px] text-[#16C784] font-semibold flex items-center gap-0.5">
+                <span className="text-[10px] text-emerald-700 dark:text-[#16C784] font-semibold flex items-center gap-0.5">
                   <ArrowUpRight className="w-3 h-3" /> +16.2%
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#121622] border border-[#262E3E] space-y-1">
-                <div className="flex items-center justify-between text-[#A7B0C0] text-xs">
+              <div className="p-4 rounded-2xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-1">
+                <div className="flex items-center justify-between text-slate-600 dark:text-[#A7B0C0] text-xs">
                   <span>Subscribers</span>
-                  <Users className="w-4 h-4 text-purple-400" />
+                  <Users className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                 </div>
-                <div className="text-lg sm:text-xl font-black text-white font-mono">
+                <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono">
                   {(creatorChannel.subscriberCount).toLocaleString()}
                 </div>
-                <span className="text-[10px] text-[#16C784] font-semibold flex items-center gap-0.5">
+                <span className="text-[10px] text-emerald-700 dark:text-[#16C784] font-semibold flex items-center gap-0.5">
                   <ArrowUpRight className="w-3 h-3" /> +3,410 wapya
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#121622] border border-[#262E3E] space-y-1">
-                <div className="flex items-center justify-between text-[#A7B0C0] text-xs">
+              <div className="p-4 rounded-2xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-1">
+                <div className="flex items-center justify-between text-slate-600 dark:text-[#A7B0C0] text-xs">
                   <span>Watch Time (Saa)</span>
-                  <Clock className="w-4 h-4 text-blue-400" />
+                  <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 </div>
-                <div className="text-lg sm:text-xl font-black text-white font-mono">
+                <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono">
                   {watchTimeHours.toLocaleString()}
                 </div>
-                <span className="text-[10px] text-[#16C784] font-semibold flex items-center gap-0.5">
+                <span className="text-[10px] text-emerald-700 dark:text-[#16C784] font-semibold flex items-center gap-0.5">
                   <ArrowUpRight className="w-3 h-3" /> +11.8%
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#121622] border border-[#262E3E] space-y-1">
-                <div className="flex items-center justify-between text-[#A7B0C0] text-xs">
+              <div className="p-4 rounded-2xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-1">
+                <div className="flex items-center justify-between text-slate-600 dark:text-[#A7B0C0] text-xs">
                   <span>Mapato Halisi</span>
-                  <DollarSign className="w-4 h-4 text-[#16C784]" />
+                  <DollarSign className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
                 </div>
-                <div className="text-base sm:text-lg font-black text-[#16C784] font-mono truncate">
+                <div className="text-base sm:text-lg font-black text-emerald-700 dark:text-[#16C784] font-mono truncate">
                   {formatTZS(netRevenueTZS)}
                 </div>
-                <span className="text-[10px] text-[#A7B0C0] font-semibold">
+                <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] font-semibold">
                   Gawio la 85%
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#121622] border border-[#262E3E] space-y-1">
-                <div className="flex items-center justify-between text-[#A7B0C0] text-xs">
+              <div className="p-4 rounded-2xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-1">
+                <div className="flex items-center justify-between text-slate-600 dark:text-[#A7B0C0] text-xs">
                   <span>Video Zilizopakiwa</span>
-                  <Film className="w-4 h-4 text-amber-400" />
+                  <Film className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 </div>
-                <div className="text-lg sm:text-xl font-black text-white font-mono">
+                <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono">
                   {creatorVideos.length + creatorShorts.length}
                 </div>
-                <span className="text-[10px] text-[#A7B0C0] font-semibold">
+                <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] font-semibold">
                   {creatorVideos.length} ndefu &bull; {creatorShorts.length} shorts
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#121622] border border-[#262E3E] space-y-1">
-                <div className="flex items-center justify-between text-[#A7B0C0] text-xs">
+              <div className="p-4 rounded-2xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-1">
+                <div className="flex items-center justify-between text-slate-600 dark:text-[#A7B0C0] text-xs">
                   <span>Inasubiri (Pending)</span>
-                  <ShieldAlert className="w-4 h-4 text-blue-400" />
+                  <ShieldAlert className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 </div>
-                <div className="text-lg sm:text-xl font-black text-white font-mono">
+                <div className="text-lg sm:text-xl font-black text-slate-900 dark:text-white font-mono">
                   0
                 </div>
-                <span className="text-[10px] text-[#16C784] font-semibold">
+                <span className="text-[10px] text-emerald-700 dark:text-[#16C784] font-semibold">
                   Hakuna iliyokwama
                 </span>
               </div>
@@ -762,61 +769,65 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               <div className="lg:col-span-2 space-y-6">
                 
                 {/* Latest Video Card (Matching YouTube Studio 'Latest video performance') */}
-                <div className="p-5 sm:p-6 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]/60">
+                <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]/60">
                     <div className="flex items-center gap-2">
                       <Flame className="w-4 h-4 text-[#FF3040]" />
-                      <h3 className="text-sm font-extrabold text-white">Utendaji wa Video ya Hivi Karibuni</h3>
+                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Utendaji wa Video ya Hivi Karibuni</h3>
                     </div>
-                    <span className="text-[11px] text-[#A7B0C0] font-mono">Saa 48 za kwanza</span>
+                    <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0] font-mono">Saa 48 za kwanza</span>
                   </div>
 
                   {creatorVideos[0] ? (
                     <div className="space-y-4">
                       <div className="flex flex-col sm:flex-row gap-4">
                         <img 
-                          src={creatorVideos[0].thumbnailUrl} 
-                          alt={creatorVideos[0].title} 
-                          className="w-full sm:w-48 h-28 object-cover rounded-2xl border border-[#262E3E] shrink-0"
+                          src={creatorVideos[0].thumbnailUrl || createThumbnailSvgDataUri(creatorVideos[0].title, creatorVideos[0].category)} 
+                          alt={creatorVideos[0].title}
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = createThumbnailSvgDataUri(creatorVideos[0].title, creatorVideos[0].category);
+                          }}
+                          className="w-full sm:w-48 h-28 object-cover rounded-2xl border border-slate-200 dark:border-[#262E3E] shrink-0"
                         />
                         <div className="space-y-1.5 flex-1 min-w-0">
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FF3040]/15 text-[#FF3040] border border-[#FF3040]/30">
                             #{creatorVideos[0].category}
                           </span>
-                          <h4 className="text-sm font-black text-white line-clamp-2 leading-snug">
+                          <h4 className="text-sm font-black text-slate-900 dark:text-white line-clamp-2 leading-snug">
                             {creatorVideos[0].title}
                           </h4>
-                          <p className="text-xs text-[#A7B0C0] line-clamp-2">
+                          <p className="text-xs text-slate-600 dark:text-[#A7B0C0] line-clamp-2">
                             {creatorVideos[0].description}
                           </p>
                         </div>
                       </div>
 
                       {/* Performance breakdown numbers */}
-                      <div className="grid grid-cols-3 gap-3 pt-3 border-t border-[#262E3E]/60 text-xs">
-                        <div className="p-3 rounded-xl bg-[#10131B] border border-[#262E3E]/60">
-                          <span className="text-[11px] text-[#A7B0C0] block">Ranking kwa Views</span>
-                          <span className="text-sm font-extrabold text-[#16C784]">#1 kati ya 10</span>
+                      <div className="grid grid-cols-3 gap-3 pt-3 border-t border-slate-200 dark:border-[#262E3E]/60 text-xs">
+                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]/60">
+                          <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0] block">Ranking kwa Views</span>
+                          <span className="text-sm font-extrabold text-emerald-700 dark:text-[#16C784]">#1 kati ya 10</span>
                         </div>
-                        <div className="p-3 rounded-xl bg-[#10131B] border border-[#262E3E]/60">
-                          <span className="text-[11px] text-[#A7B0C0] block">Matazamio (Views)</span>
-                          <span className="text-sm font-extrabold text-white font-mono">{formatViews(creatorVideos[0].viewsCount, language)}</span>
+                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]/60">
+                          <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0] block">Matazamio (Views)</span>
+                          <span className="text-sm font-extrabold text-slate-900 dark:text-white font-mono">{formatViews(creatorVideos[0].viewsCount, language)}</span>
                         </div>
-                        <div className="p-3 rounded-xl bg-[#10131B] border border-[#262E3E]/60">
-                          <span className="text-[11px] text-[#A7B0C0] block">Wastani wa Kutazama</span>
-                          <span className="text-sm font-extrabold text-white font-mono">4:18 (68%)</span>
+                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]/60">
+                          <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0] block">Wastani wa Kutazama</span>
+                          <span className="text-sm font-extrabold text-slate-900 dark:text-white font-mono">4:18 (68%)</span>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-xs text-[#A7B0C0]">Bado hujapakia video yoyote.</p>
+                    <p className="text-xs text-slate-500 dark:text-[#A7B0C0]">Bado hujapakia video yoyote.</p>
                   )}
                 </div>
 
                 {/* Top Performing Videos list */}
-                <div className="p-5 sm:p-6 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]/60">
-                    <h3 className="text-sm font-extrabold text-white">Video Zilizofanya Vizuri Zaidi (Top Content)</h3>
+                <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]/60">
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Video Zilizofanya Vizuri Zaidi (Top Content)</h3>
                     <button 
                       onClick={() => setActiveTab('content')}
                       className="text-xs text-[#FF3040] hover:underline font-bold"
@@ -829,33 +840,37 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                     {topVideos.map((vid, idx) => (
                       <div 
                         key={vid.id}
-                        className="flex items-center justify-between gap-3 p-2.5 rounded-2xl bg-[#10131B] hover:bg-[#191E29] border border-[#262E3E]/60 transition-colors"
+                        className="flex items-center justify-between gap-3 p-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] hover:bg-slate-100 dark:hover:bg-[#191E29] border border-slate-200 dark:border-[#262E3E]/60 transition-colors"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <span className="text-xs font-black text-[#A7B0C0] w-4 text-center">{idx + 1}</span>
+                          <span className="text-xs font-black text-slate-500 dark:text-[#A7B0C0] w-4 text-center">{idx + 1}</span>
                           <img 
-                            src={vid.thumbnailUrl} 
-                            alt={vid.title} 
-                            className="w-16 h-10 object-cover rounded-xl shrink-0 border border-[#262E3E]"
+                            src={vid.thumbnailUrl || createThumbnailSvgDataUri(vid.title, vid.category)} 
+                            alt={vid.title}
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = createThumbnailSvgDataUri(vid.title, vid.category);
+                            }}
+                            className="w-16 h-10 object-cover rounded-xl shrink-0 border border-slate-200 dark:border-[#262E3E]"
                           />
                           <div className="min-w-0">
-                            <h4 className="text-xs font-bold text-white truncate max-w-xs">{vid.title}</h4>
-                            <span className="text-[10px] text-[#A7B0C0]">{new Date(vid.createdAt).toLocaleDateString()}</span>
+                            <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-xs">{vid.title}</h4>
+                            <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">{new Date(vid.createdAt).toLocaleDateString()}</span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-4 shrink-0 text-right">
                           <div>
-                            <span className="text-xs font-mono font-extrabold text-white block">
+                            <span className="text-xs font-mono font-extrabold text-slate-900 dark:text-white block">
                               {formatViews(vid.viewsCount, language)}
                             </span>
-                            <span className="text-[10px] text-[#16C784] font-semibold">{vid.likesCount} likes</span>
+                            <span className="text-[10px] text-emerald-700 dark:text-[#16C784] font-semibold">{vid.likesCount} likes</span>
                           </div>
                           <button
                             onClick={() => {
                               setEditingVideo(vid);
                             }}
-                            className="p-1.5 rounded-lg text-[#A7B0C0] hover:text-white hover:bg-[#262E3E]"
+                            className="p-1.5 rounded-lg text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-[#262E3E]"
                             title="Hariri Video"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -872,50 +887,50 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               <div className="space-y-6">
                 
                 {/* Monetization Status Card */}
-                <div className="p-5 rounded-3xl bg-gradient-to-br from-[#121622] to-[#181F2E] border border-amber-500/30 space-y-3.5 shadow-lg">
+                <div className="p-5 rounded-3xl bg-gradient-to-br from-amber-50/70 via-white to-white dark:from-[#121622] dark:via-[#121622] dark:to-[#181F2E] border border-amber-300 dark:border-amber-500/30 space-y-3.5 shadow-sm dark:shadow-lg">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-white flex items-center gap-1.5">
-                      <Crown className="w-4 h-4 text-amber-400" />
+                    <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                       Mpango wa Mapato (YPP)
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#16C784]/20 text-[#16C784]">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]">
                       Hai (Active)
                     </span>
                   </div>
 
-                  <p className="text-xs text-[#A7B0C0]">
+                  <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                     Kituo chako kinatimiza vigezo vyote vya mapato ya Tazama. Unanufaika na matangazo, vifurushi vya VIP na zawadi za kidijitali.
                   </p>
 
-                  <div className="space-y-2 pt-2 border-t border-[#262E3E]/60 text-xs">
-                    <div className="flex justify-between text-[#A7B0C0]">
+                  <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-[#262E3E]/60 text-xs">
+                    <div className="flex justify-between text-slate-600 dark:text-[#A7B0C0]">
                       <span>Subscribers (Vigezo 1,000):</span>
-                      <span className="font-bold text-white">100% ✓</span>
+                      <span className="font-bold text-slate-900 dark:text-white">100% ✓</span>
                     </div>
-                    <div className="w-full bg-[#10131B] h-1.5 rounded-full overflow-hidden">
+                    <div className="w-full bg-slate-200 dark:bg-[#10131B] h-1.5 rounded-full overflow-hidden">
                       <div className="w-full h-full bg-[#16C784]" />
                     </div>
 
-                    <div className="flex justify-between text-[#A7B0C0]">
+                    <div className="flex justify-between text-slate-600 dark:text-[#A7B0C0]">
                       <span>Watch Hours (Vigezo 4,000):</span>
-                      <span className="font-bold text-white">100% ✓</span>
+                      <span className="font-bold text-slate-900 dark:text-white">100% ✓</span>
                     </div>
-                    <div className="w-full bg-[#10131B] h-1.5 rounded-full overflow-hidden">
+                    <div className="w-full bg-slate-200 dark:bg-[#10131B] h-1.5 rounded-full overflow-hidden">
                       <div className="w-full h-full bg-[#16C784]" />
                     </div>
                   </div>
                 </div>
 
                 {/* Recent Comments */}
-                <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-3.5">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#262E3E]/60">
-                    <h3 className="text-xs font-extrabold text-white flex items-center gap-1.5">
-                      <MessageSquare className="w-3.5 h-3.5 text-[#16C784]" />
+                <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-3.5">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#262E3E]/60">
+                    <h3 className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <MessageSquare className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
                       <span>Maoni Mapya ya Mashabiki</span>
                     </h3>
                     <button 
                       onClick={() => setActiveTab('community')}
-                      className="text-[11px] text-[#FF3040] hover:underline"
+                      className="text-[11px] text-[#FF3040] hover:underline font-semibold"
                     >
                       Jibu Zote
                     </button>
@@ -923,32 +938,36 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
 
                   <div className="space-y-3">
                     {creatorCommentsList.slice(0, 4).map(({ comment, videoTitle, videoId }) => (
-                      <div key={comment.id} className="p-3 rounded-2xl bg-[#10131B] border border-[#262E3E]/60 space-y-1.5">
+                      <div key={comment.id} className="p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]/60 space-y-1.5">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2 min-w-0">
                             <img 
-                              src={comment.userAvatar} 
-                              alt={comment.userName} 
+                              src={comment.userAvatar || createAvatarSvgDataUri(comment.userName)} 
+                              alt={comment.userName}
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).src = createAvatarSvgDataUri(comment.userName);
+                              }}
                               className="w-5 h-5 rounded-full object-cover shrink-0" 
                             />
-                            <span className="text-xs font-bold text-white truncate">{comment.userName}</span>
+                            <span className="text-xs font-bold text-slate-900 dark:text-white truncate">{comment.userName}</span>
                           </div>
-                          <span className="text-[10px] text-[#A7B0C0] font-mono">{new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] font-mono">{new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
-                        <p className="text-xs text-[#A7B0C0] line-clamp-2">{comment.text}</p>
-                        <span className="text-[10px] text-amber-400 font-semibold block truncate">Kwenye: {videoTitle}</span>
+                        <p className="text-xs text-slate-600 dark:text-[#A7B0C0] line-clamp-2">{comment.text}</p>
+                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold block truncate">Kwenye: {videoTitle}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Policy & Strikes Health */}
-                <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-2 text-xs">
-                  <div className="flex items-center justify-between font-bold text-white">
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-2 text-xs">
+                  <div className="flex items-center justify-between font-bold text-slate-900 dark:text-white">
                     <span>Hali ya Hakimiliki &amp; Sera</span>
-                    <ShieldAlert className="w-4 h-4 text-[#16C784]" />
+                    <ShieldAlert className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
                   </div>
-                  <p className="text-[#A7B0C0]">
+                  <p className="text-slate-600 dark:text-[#A7B0C0]">
                     Kituo chako hakina onyo la hakimiliki au ukiukaji wa miongozo ya jamii (Strikes: 0/3).
                   </p>
                   <button
@@ -973,18 +992,18 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
           <div className="space-y-5 animate-in fade-in duration-200">
             
             {/* Header & Tabs */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#262E3E]/60">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-[#262E3E]/60">
               <div>
-                <h2 className="text-xl font-black text-white">Usimamizi wa Maudhui (Content Manager)</h2>
-                <p className="text-xs text-[#A7B0C0]">Dhibiti video ndefu, shorts, matangazo ya mubashara na machapisho ya jamii.</p>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">Usimamizi wa Maudhui (Content Manager)</h2>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Dhibiti video ndefu, shorts, matangazo ya mubashara na machapisho ya jamii.</p>
               </div>
 
               {/* Sub-tabs */}
-              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#121622] border border-[#262E3E]">
+              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E]">
                 <button
                   onClick={() => setContentTab('videos')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    contentTab === 'videos' ? 'bg-[#FF3040] text-white shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                    contentTab === 'videos' ? 'bg-[#FF3040] text-white shadow-md' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   Video Ndefu ({creatorVideos.length})
@@ -992,7 +1011,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 <button
                   onClick={() => setContentTab('shorts')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    contentTab === 'shorts' ? 'bg-[#FF3040] text-white shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                    contentTab === 'shorts' ? 'bg-[#FF3040] text-white shadow-md' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   Shorts ({creatorShorts.length})
@@ -1000,7 +1019,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 <button
                   onClick={() => setContentTab('live')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    contentTab === 'live' ? 'bg-[#FF3040] text-white shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                    contentTab === 'live' ? 'bg-[#FF3040] text-white shadow-md' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   Mubashara (Live)
@@ -1008,7 +1027,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 <button
                   onClick={() => setContentTab('community')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    contentTab === 'community' ? 'bg-[#FF3040] text-white shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                    contentTab === 'community' ? 'bg-[#FF3040] text-white shadow-md' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   Machapisho ({communityPosts.length})
@@ -1017,18 +1036,18 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             </div>
 
             {/* Filter and Bulk Actions Bar */}
-            <div className="p-4 rounded-2xl bg-[#121622] border border-[#262E3E] flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="p-4 rounded-2xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none flex flex-wrap items-center justify-between gap-3 text-xs">
               
               <div className="flex items-center gap-3 flex-1 min-w-[240px]">
                 {/* Search */}
                 <div className="relative flex-1 max-w-xs">
-                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#A7B0C0]" />
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#A7B0C0]" />
                   <input
                     type="text"
                     value={contentSearch}
                     onChange={(e) => setContentSearch(e.target.value)}
                     placeholder="Tafuta video kwa kichwa..."
-                    className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white placeholder-[#A7B0C0] text-xs focus:outline-none"
+                    className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0] text-xs focus:outline-none focus:border-[#FF3040]"
                   />
                 </div>
 
@@ -1036,25 +1055,25 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 <select
                   value={contentVisibilityFilter}
                   onChange={(e) => setContentVisibilityFilter(e.target.value)}
-                  className="bg-[#10131B] border border-[#262E3E] rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none"
+                  className="bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-2.5 py-1.5 text-xs text-slate-900 dark:text-white focus:outline-none"
                 >
-                  <option value="all">Ufikiaji: Wote</option>
-                  <option value="public">Hadharani (Public)</option>
-                  <option value="unlisted">Bila Orodha (Unlisted)</option>
-                  <option value="private">Binafsi (Private)</option>
+                  <option value="all" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Ufikiaji: Wote</option>
+                  <option value="public" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Hadharani (Public)</option>
+                  <option value="unlisted" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Bila Orodha (Unlisted)</option>
+                  <option value="private" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Binafsi (Private)</option>
                 </select>
               </div>
 
               {/* Bulk actions */}
               {selectedVideoIds.length > 0 && (
-                <div className="flex items-center gap-2 bg-[#191E29] border border-[#FF3040]/40 px-3 py-1.5 rounded-xl animate-in fade-in duration-150">
-                  <span className="font-extrabold text-white text-[11px]">{selectedVideoIds.length} zimechaguliwa</span>
+                <div className="flex items-center gap-2 bg-slate-100 dark:bg-[#191E29] border border-[#FF3040]/40 px-3 py-1.5 rounded-xl animate-in fade-in duration-150">
+                  <span className="font-extrabold text-slate-900 dark:text-white text-[11px]">{selectedVideoIds.length} zimechaguliwa</span>
                   <button
                     onClick={() => {
                       bulkUpdateVisibility(selectedVideoIds, 'public');
                       setSelectedVideoIds([]);
                     }}
-                    className="px-2 py-1 rounded bg-[#10131B] hover:bg-[#262E3E] text-white text-[10px] font-bold"
+                    className="px-2 py-1 rounded bg-white dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#262E3E] text-slate-800 dark:text-white border border-slate-200 dark:border-transparent text-[10px] font-bold"
                   >
                     Weka Public
                   </button>
@@ -1063,7 +1082,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                       bulkUpdateVisibility(selectedVideoIds, 'private');
                       setSelectedVideoIds([]);
                     }}
-                    className="px-2 py-1 rounded bg-[#10131B] hover:bg-[#262E3E] text-white text-[10px] font-bold"
+                    className="px-2 py-1 rounded bg-white dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#262E3E] text-slate-800 dark:text-white border border-slate-200 dark:border-transparent text-[10px] font-bold"
                   >
                     Weka Private
                   </button>
@@ -1074,7 +1093,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                         setSelectedVideoIds([]);
                       }
                     }}
-                    className="px-2 py-1 rounded bg-red-600/30 hover:bg-red-600/50 text-red-300 text-[10px] font-bold"
+                    className="px-2 py-1 rounded bg-red-500/15 dark:bg-red-600/30 hover:bg-red-500/25 dark:hover:bg-red-600/50 text-red-700 dark:text-red-300 text-[10px] font-bold"
                   >
                     Futa Pamoja
                   </button>
@@ -1084,10 +1103,10 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             </div>
 
             {/* Video Management Table */}
-            <div className="p-4 rounded-3xl bg-[#121622] border border-[#262E3E] overflow-x-auto">
+            <div className="p-4 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none overflow-x-auto">
               <table className="w-full text-left text-xs min-w-[750px]">
                 <thead>
-                  <tr className="border-b border-[#262E3E]/60 text-[#A7B0C0] pb-2">
+                  <tr className="border-b border-slate-200 dark:border-[#262E3E]/60 text-slate-500 dark:text-[#A7B0C0] pb-2">
                     <th className="py-2.5 pl-2 w-8">
                       <input
                         type="checkbox"
@@ -1099,7 +1118,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                             setSelectedVideoIds([]);
                           }
                         }}
-                        className="rounded"
+                        className="rounded accent-[#FF3040]"
                       />
                     </th>
                     <th className="py-2.5 font-bold">Video</th>
@@ -1112,7 +1131,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                     <th className="py-2.5 pr-2 text-right font-bold">Vitendo</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#262E3E]/50 text-[#A7B0C0]">
+                <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/50 text-slate-600 dark:text-[#A7B0C0]">
                   {creatorVideos
                     .filter(v => {
                       if (!v) return false;
@@ -1123,7 +1142,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                     .map((vid) => {
                       const isSelected = selectedVideoIds.includes(vid.id);
                       return (
-                        <tr key={vid.id} className={`hover:bg-[#191E29]/60 transition-colors ${isSelected ? 'bg-[#191E29]/40' : ''}`}>
+                        <tr key={vid.id} className={`hover:bg-slate-50 dark:hover:bg-[#191E29]/60 transition-colors ${isSelected ? 'bg-slate-100/80 dark:bg-[#191E29]/40' : ''}`}>
                           <td className="py-3 pl-2">
                             <input
                               type="checkbox"
@@ -1135,46 +1154,50 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                                   setSelectedVideoIds(prev => prev.filter(id => id !== vid.id));
                                 }
                               }}
-                              className="rounded"
+                              className="rounded accent-[#FF3040]"
                             />
                           </td>
                           <td className="py-3 pr-4">
                             <div className="flex items-center gap-3 max-w-md">
                               <img 
-                                src={vid.thumbnailUrl} 
-                                alt={vid.title} 
-                                className="w-20 h-12 rounded-xl object-cover border border-[#262E3E] shrink-0" 
+                                src={vid.thumbnailUrl || createThumbnailSvgDataUri(vid.title, vid.category)} 
+                                alt={vid.title}
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).src = createThumbnailSvgDataUri(vid.title, vid.category);
+                                }}
+                                className="w-20 h-12 rounded-xl object-cover border border-slate-200 dark:border-[#262E3E] shrink-0" 
                               />
                               <div className="min-w-0">
-                                <h4 className="font-extrabold text-white text-xs line-clamp-1 hover:text-[#FF3040] cursor-pointer">
+                                <h4 className="font-extrabold text-slate-900 dark:text-white text-xs line-clamp-1 hover:text-[#FF3040] cursor-pointer">
                                   {vid.title}
                                 </h4>
-                                <p className="text-[10px] text-[#A7B0C0] line-clamp-1 mt-0.5">{vid.description}</p>
+                                <p className="text-[10px] text-slate-500 dark:text-[#A7B0C0] line-clamp-1 mt-0.5">{vid.description}</p>
                               </div>
                             </div>
                           </td>
                           <td className="py-3">
                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                               vid.visibility === 'public' 
-                                ? 'bg-[#16C784]/15 text-[#16C784] border border-[#16C784]/30' 
-                                : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                                ? 'bg-emerald-500/15 text-emerald-700 dark:text-[#16C784] border border-emerald-500/30' 
+                                : 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
                             }`}>
                               {vid.visibility === 'public' ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
                               <span className="capitalize">{vid.visibility}</span>
                             </span>
                           </td>
                           <td className="py-3">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#16C784]/15 text-[#16C784] border border-[#16C784]/30">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-[#16C784] border border-emerald-500/30">
                               Tayari (1080p HD)
                             </span>
                           </td>
                           <td className="py-3">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#16C784]/15 text-[#16C784]">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-[#16C784]">
                               ✓ Hakuna Ukiukaji
                             </span>
                           </td>
-                          <td className="py-3 font-mono font-bold text-white">{formatViews(vid.viewsCount, language)}</td>
-                          <td className="py-3 font-mono text-[11px] text-white">
+                          <td className="py-3 font-mono font-bold text-slate-900 dark:text-white">{formatViews(vid.viewsCount, language)}</td>
+                          <td className="py-3 font-mono text-[11px] text-slate-900 dark:text-white">
                             {vid.likesCount.toLocaleString()} / {comments[vid.id]?.length || 0}
                           </td>
                           <td className="py-3 text-[11px] font-mono">{new Date(vid.createdAt).toLocaleDateString()}</td>
@@ -1182,14 +1205,14 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                             <div className="flex items-center justify-end gap-1">
                               <button
                                 onClick={() => setEditingVideo(vid)}
-                                className="p-1.5 rounded-lg text-[#A7B0C0] hover:text-white hover:bg-[#262E3E]"
+                                className="p-1.5 rounded-lg text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#262E3E]"
                                 title="Hariri (Edit)"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => setAnalyzingVideo(vid)}
-                                className="p-1.5 rounded-lg text-[#A7B0C0] hover:text-[#16C784] hover:bg-[#262E3E]"
+                                className="p-1.5 rounded-lg text-slate-500 dark:text-[#A7B0C0] hover:text-emerald-600 dark:hover:text-[#16C784] hover:bg-slate-100 dark:hover:bg-[#262E3E]"
                                 title="Takwimu (Analytics)"
                               >
                                 <BarChart3 className="w-3.5 h-3.5" />
@@ -1200,7 +1223,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                                     deleteVideo(vid.id);
                                   }
                                 }}
-                                className="p-1.5 rounded-lg text-[#A7B0C0] hover:text-red-400 hover:bg-[#262E3E]"
+                                className="p-1.5 rounded-lg text-slate-500 dark:text-[#A7B0C0] hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-[#262E3E]"
                                 title="Futa Video"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1223,12 +1246,12 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'upload' && (
           <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-200">
             
-            <div className="p-6 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-6">
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-6">
               
-              <div className="flex items-center justify-between pb-4 border-b border-[#262E3E]">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-[#262E3E]">
                 <div>
-                  <h2 className="text-xl font-black text-white">Pakia Video Mpya (Upload Studio)</h2>
-                  <p className="text-xs text-[#A7B0C0]">Uchakataji wa haraka wa 4K/1080p na usalama wa COSOTA kabla ya kuchapisha.</p>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white">Pakia Video Mpya (Upload Studio)</h2>
+                  <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Uchakataji wa haraka wa 4K/1080p na usalama wa COSOTA kabla ya kuchapisha.</p>
                 </div>
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#FF3040]/15 text-[#FF3040] border border-[#FF3040]/30">
                   Hatua ya {uploadStep} kati ya 3
@@ -1237,13 +1260,13 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
 
               {/* Progress Steps Indicators */}
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <div className={`p-2 rounded-xl border ${uploadStep >= 1 ? 'border-[#FF3040] bg-[#FF3040]/10 text-white font-bold' : 'border-[#262E3E] text-[#A7B0C0]'}`}>
+                <div className={`p-2 rounded-xl border ${uploadStep >= 1 ? 'border-[#FF3040] bg-[#FF3040]/10 text-slate-900 dark:text-white font-bold' : 'border-slate-200 dark:border-[#262E3E] text-slate-500 dark:text-[#A7B0C0]'}`}>
                   1. Maelezo ya Video
                 </div>
-                <div className={`p-2 rounded-xl border ${uploadStep >= 2 ? 'border-[#FF3040] bg-[#FF3040]/10 text-white font-bold' : 'border-[#262E3E] text-[#A7B0C0]'}`}>
+                <div className={`p-2 rounded-xl border ${uploadStep >= 2 ? 'border-[#FF3040] bg-[#FF3040]/10 text-slate-900 dark:text-white font-bold' : 'border-slate-200 dark:border-[#262E3E] text-slate-500 dark:text-[#A7B0C0]'}`}>
                   2. Media &amp; Jalada
                 </div>
-                <div className={`p-2 rounded-xl border ${uploadStep >= 3 ? 'border-[#FF3040] bg-[#FF3040]/10 text-white font-bold' : 'border-[#262E3E] text-[#A7B0C0]'}`}>
+                <div className={`p-2 rounded-xl border ${uploadStep >= 3 ? 'border-[#FF3040] bg-[#FF3040]/10 text-slate-900 dark:text-white font-bold' : 'border-slate-200 dark:border-[#262E3E] text-slate-500 dark:text-[#A7B0C0]'}`}>
                   3. Ukaguzi &amp; Ufikiaji
                 </div>
               </div>
@@ -1252,53 +1275,53 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               {uploadStep === 1 && (
                 <div className="space-y-4 text-xs">
                   <div>
-                    <label className="block font-bold text-[#A7B0C0] mb-1">Kichwa cha Video (Title) *</label>
+                    <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-1">Kichwa cha Video (Title) *</label>
                     <input
                       type="text"
                       value={uploadTitle}
                       onChange={(e) => setUploadTitle(e.target.value)}
                       placeholder="k.m. Diamond Platnumz - Tamasha Kubwa Mwanza 2026 (Official Video)"
-                      className="w-full p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none focus:border-[#FF3040]"
+                      className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#FF3040]"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold text-[#A7B0C0] mb-1">Maelezo (Description)</label>
+                    <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-1">Maelezo (Description)</label>
                     <textarea
                       rows={4}
                       value={uploadDescription}
                       onChange={(e) => setUploadDescription(e.target.value)}
                       placeholder="Eleza video hii inahusu nini, orodha ya nyimbo, viungo vya mitandao na credits..."
-                      className="w-full p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none focus:border-[#FF3040]"
+                      className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#FF3040]"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block font-bold text-[#A7B0C0] mb-1">Kundi (Category)</label>
+                      <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-1">Kundi (Category)</label>
                       <select
                         value={uploadCategory}
                         onChange={(e) => setUploadCategory(e.target.value as VideoCategory)}
-                        className="w-full p-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none"
+                        className="w-full p-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs focus:outline-none"
                       >
-                        <option value="Muziki">Muziki</option>
-                        <option value="Vichekesho">Vichekesho</option>
-                        <option value="Habari">Habari</option>
-                        <option value="Elimu">Elimu</option>
-                        <option value="Michezo">Michezo</option>
-                        <option value="Filamu">Filamu &amp; Tamthilia</option>
-                        <option value="Mtindo wa Maisha">Mtindo wa Maisha</option>
+                        <option value="Muziki" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Muziki</option>
+                        <option value="Vichekesho" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Vichekesho</option>
+                        <option value="Habari" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Habari</option>
+                        <option value="Elimu" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Elimu</option>
+                        <option value="Michezo" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Michezo</option>
+                        <option value="Filamu" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Filamu &amp; Tamthilia</option>
+                        <option value="Mtindo wa Maisha" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Mtindo wa Maisha</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block font-bold text-[#A7B0C0] mb-1">Lebo (Tags - tenganisha kwa mkato)</label>
+                      <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-1">Lebo (Tags - tenganisha kwa mkato)</label>
                       <input
                         type="text"
                         value={uploadTags}
                         onChange={(e) => setUploadTags(e.target.value)}
                         placeholder="wasafi, diamond, mwanza, bongo flava"
-                        className="w-full p-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none"
+                        className="w-full p-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1319,51 +1342,55 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               {uploadStep === 2 && (
                 <div className="space-y-4 text-xs">
                   <div>
-                    <label className="block font-bold text-[#A7B0C0] mb-1">URL ya Picha ya Jalada (Thumbnail)</label>
+                    <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-1">URL ya Picha ya Jalada (Thumbnail)</label>
                     <input
                       type="text"
                       value={uploadThumbnailUrl}
                       onChange={(e) => setUploadThumbnailUrl(e.target.value)}
-                      placeholder="https://images.unsplash.com/..."
-                      className="w-full p-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs font-mono"
+                      placeholder="https://..."
+                      className="w-full p-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs font-mono"
                     />
                     <div className="mt-2 flex items-center gap-3">
                       <img 
-                        src={uploadThumbnailUrl} 
-                        alt="Preview" 
-                        className="w-32 h-20 object-cover rounded-xl border border-[#262E3E]" 
+                        src={uploadThumbnailUrl || createThumbnailSvgDataUri(uploadTitle || 'Video Mpya', uploadCategory)} 
+                        alt="Preview"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = createThumbnailSvgDataUri(uploadTitle || 'Video Mpya', uploadCategory);
+                        }}
+                        className="w-32 h-20 object-cover rounded-xl border border-slate-200 dark:border-[#262E3E]" 
                       />
-                      <span className="text-[11px] text-[#A7B0C0]">Mwonekano wa awali wa picha ya video.</span>
+                      <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">Mwonekano wa awali wa picha ya video.</span>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block font-bold text-[#A7B0C0] mb-1">URL ya Faili la Video (MP4 / HLS Stream)</label>
+                    <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-1">URL ya Faili la Video (MP4 / HLS Stream)</label>
                     <input
                       type="text"
                       value={uploadVideoUrl}
                       onChange={(e) => setUploadVideoUrl(e.target.value)}
-                      className="w-full p-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs font-mono"
+                      className="w-full p-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs font-mono"
                     />
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-[#10131B] border border-[#262E3E] flex items-center justify-between">
+                  <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] flex items-center justify-between">
                     <div>
-                      <span className="font-bold text-white block">Je, hii ni Tazama Short?</span>
-                      <span className="text-[11px] text-[#A7B0C0]">Video fupi chini ya sekunde 60 kwa muundo wa wima (Vertical 9:16)</span>
+                      <span className="font-bold text-slate-900 dark:text-white block">Je, hii ni Tazama Short?</span>
+                      <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">Video fupi chini ya sekunde 60 kwa muundo wa wima (Vertical 9:16)</span>
                     </div>
                     <input
                       type="checkbox"
                       checked={uploadIsShort}
                       onChange={(e) => setUploadIsShort(e.target.checked)}
-                      className="w-5 h-5 rounded cursor-pointer"
+                      className="w-5 h-5 rounded cursor-pointer accent-[#FF3040]"
                     />
                   </div>
 
                   <div className="flex justify-between pt-3">
                     <button
                       onClick={() => setUploadStep(1)}
-                      className="px-5 py-2.5 rounded-2xl border border-[#262E3E] text-[#A7B0C0] hover:text-white"
+                      className="px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-[#262E3E] text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white"
                     >
                       Rudi Nyuma
                     </button>
@@ -1382,12 +1409,12 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 <div className="space-y-4 text-xs">
                   
                   {/* Automated Security & Copyright Check Simulation */}
-                  <div className="p-4 rounded-2xl bg-[#10131B] border border-[#16C784]/40 space-y-2">
-                    <div className="flex items-center gap-2 text-[#16C784] font-bold">
+                  <div className="p-4 rounded-2xl bg-emerald-50/60 dark:bg-[#10131B] border border-emerald-200 dark:border-[#16C784]/40 space-y-2">
+                    <div className="flex items-center gap-2 text-emerald-700 dark:text-[#16C784] font-bold">
                       <CheckCircle2 className="w-4 h-4" />
                       <span>Ukaguzi wa Kiotomatiki Umekamilika (Automated System Check)</span>
                     </div>
-                    <div className="space-y-1 text-[#A7B0C0] text-[11px]">
+                    <div className="space-y-1 text-slate-600 dark:text-[#A7B0C0] text-[11px]">
                       <p>✓ Ulinganifu wa COSOTA &amp; Hakimiliki: Hakuna ukiukaji uliogunduliwa.</p>
                       <p>✓ Transcoding ya CDN: Tayari kwa 1080p Full HD, 720p na 360p Data Saver.</p>
                       <p>✓ Miongozo ya Jamii: Maudhui yanafaa hadhira ya umri wote.</p>
@@ -1395,59 +1422,62 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                   </div>
 
                   <div>
-                    <label className="block font-bold text-[#A7B0C0] mb-2">Ufikiaji wa Video (Visibility)</label>
+                    <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-2">Ufikiaji wa Video (Visibility)</label>
                     <div className="space-y-2">
-                      <label className="flex items-center gap-3 p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] cursor-pointer">
+                      <label className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] cursor-pointer">
                         <input
                           type="radio"
                           name="vis"
                           value="public"
                           checked={uploadVisibility === 'public'}
                           onChange={() => setUploadVisibility('public')}
+                          className="accent-[#FF3040]"
                         />
                         <div>
-                          <span className="font-extrabold text-white block">Hadharani (Public)</span>
-                          <span className="text-[11px] text-[#A7B0C0]">Kila mtu anaweza kutafuta na kutazama video hii mara moja.</span>
+                          <span className="font-extrabold text-slate-900 dark:text-white block">Hadharani (Public)</span>
+                          <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">Kila mtu anaweza kutafuta na kutazama video hii mara moja.</span>
                         </div>
                       </label>
 
-                      <label className="flex items-center gap-3 p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] cursor-pointer">
+                      <label className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] cursor-pointer">
                         <input
                           type="radio"
                           name="vis"
                           value="unlisted"
                           checked={uploadVisibility === 'unlisted'}
                           onChange={() => setUploadVisibility('unlisted')}
+                          className="accent-[#FF3040]"
                         />
                         <div>
-                          <span className="font-extrabold text-white block">Bila Orodha (Unlisted)</span>
-                          <span className="text-[11px] text-[#A7B0C0]">Watu wenye kiungo cha video pekee ndio wanaoweza kutazama.</span>
+                          <span className="font-extrabold text-slate-900 dark:text-white block">Bila Orodha (Unlisted)</span>
+                          <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">Watu wenye kiungo cha video pekee ndio wanaoweza kutazama.</span>
                         </div>
                       </label>
 
-                      <label className="flex items-center gap-3 p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] cursor-pointer">
+                      <label className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] cursor-pointer">
                         <input
                           type="radio"
                           name="vis"
                           value="private"
                           checked={uploadVisibility === 'private'}
                           onChange={() => setUploadVisibility('private')}
+                          className="accent-[#FF3040]"
                         />
                         <div>
-                          <span className="font-extrabold text-white block">Binafsi (Private)</span>
-                          <span className="text-[11px] text-[#A7B0C0]">Wewe pekee unayeweza kuona video hii kwenye Studio.</span>
+                          <span className="font-extrabold text-slate-900 dark:text-white block">Binafsi (Private)</span>
+                          <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">Wewe pekee unayeweza kuona video hii kwenye Studio.</span>
                         </div>
                       </label>
                     </div>
                   </div>
 
                   {isUploading && (
-                    <div className="space-y-2 p-4 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-                      <div className="flex justify-between font-bold text-white">
+                    <div className="space-y-2 p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                      <div className="flex justify-between font-bold text-slate-900 dark:text-white">
                         <span>Inachakata na Kuchapisha kwenye CDN...</span>
-                        <span className="font-mono text-[#16C784]">{uploadProgress}%</span>
+                        <span className="font-mono text-emerald-700 dark:text-[#16C784]">{uploadProgress}%</span>
                       </div>
-                      <div className="w-full bg-[#191E29] h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-slate-200 dark:bg-[#191E29] h-2 rounded-full overflow-hidden">
                         <div className="h-full bg-gradient-to-r from-[#FF3040] to-[#16C784] transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                       </div>
                     </div>
@@ -1457,7 +1487,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                     <button
                       onClick={() => setUploadStep(2)}
                       disabled={isUploading}
-                      className="px-5 py-2.5 rounded-2xl border border-[#262E3E] text-[#A7B0C0] hover:text-white"
+                      className="px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-[#262E3E] text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white"
                     >
                       Rudi Nyuma
                     </button>
@@ -1484,12 +1514,12 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'analytics' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#262E3E]">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div>
-                <h2 className="text-xl font-black text-white">Takwimu za Kina za Kituo (Channel Analytics)</h2>
-                <p className="text-xs text-[#A7B0C0]">Uchambuzi wa watazamaji, muda wa kutazama na ulinganifu wa mikoa Tanzania.</p>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">Takwimu za Kina za Kituo (Channel Analytics)</h2>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Uchambuzi wa watazamaji, muda wa kutazama na ulinganifu wa mikoa Tanzania.</p>
               </div>
-              <span className="text-xs font-mono font-bold text-[#16C784] bg-[#16C784]/15 px-3 py-1 rounded-full border border-[#16C784]/30">
+              <span className="text-xs font-mono font-bold text-emerald-700 dark:text-[#16C784] bg-emerald-500/15 dark:bg-[#16C784]/15 px-3 py-1 rounded-full border border-emerald-500/30 dark:border-[#16C784]/30">
                 Data Halisi Zilizothibitishwa
               </span>
             </div>
@@ -1498,18 +1528,18 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
               {/* Left (2 cols): Retention Graph simulation */}
-              <div className="lg:col-span-2 p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-                <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]/60">
+              <div className="lg:col-span-2 p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]/60">
                   <div>
-                    <h3 className="text-sm font-bold text-white">Audience Retention Curve (Uhifadhi wa Watazamaji)</h3>
-                    <p className="text-[11px] text-[#A7B0C0]">Wastani wa watazamaji wanaobaki kwenye video tangu sekunde ya kwanza hadi mwisho</p>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">Audience Retention Curve (Uhifadhi wa Watazamaji)</h3>
+                    <p className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">Wastani wa watazamaji wanaobaki kwenye video tangu sekunde ya kwanza hadi mwisho</p>
                   </div>
-                  <span className="text-xs font-bold font-mono text-[#16C784]">68.4% Wastani</span>
+                  <span className="text-xs font-bold font-mono text-emerald-700 dark:text-[#16C784]">68.4% Wastani</span>
                 </div>
 
                 {/* SVG Retention Graph */}
-                <div className="h-48 w-full bg-[#10131B] rounded-2xl p-4 flex flex-col justify-between border border-[#262E3E]/60">
-                  <div className="flex justify-between text-[10px] text-[#A7B0C0] font-mono">
+                <div className="h-48 w-full bg-slate-50 dark:bg-[#10131B] rounded-2xl p-4 flex flex-col justify-between border border-slate-200 dark:border-[#262E3E]/60">
+                  <div className="flex justify-between text-[10px] text-slate-500 dark:text-[#A7B0C0] font-mono">
                     <span>100% Walianza</span>
                     <span>50% Katikati</span>
                     <span>Mwanzoni mwa Hitimisho</span>
@@ -1527,21 +1557,21 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                     ))}
                   </div>
 
-                  <div className="flex justify-between text-[10px] text-[#A7B0C0] font-mono pt-1 border-t border-[#262E3E]">
+                  <div className="flex justify-between text-[10px] text-slate-500 dark:text-[#A7B0C0] font-mono pt-1 border-t border-slate-200 dark:border-[#262E3E]">
                     <span>0:00 Dakika</span>
                     <span>Wastani wa Video: 6:40 Dakika</span>
                     <span>Mwisho</span>
                   </div>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-[#191E29] border border-[#262E3E] text-xs text-[#A7B0C0] flex items-center justify-between">
-                  <span>💡 <strong>Ushauri:</strong> Watazamaji wengi wanabaki sekunde 45 za mwanzo kwa sababu ya intro yenye mdundo mkali.</span>
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-xs text-slate-600 dark:text-[#A7B0C0] flex items-center justify-between">
+                  <span>💡 <strong className="text-slate-900 dark:text-white">Ushauri:</strong> Watazamaji wengi wanabaki sekunde 45 za mwanzo kwa sababu ya intro yenye mdundo mkali.</span>
                 </div>
               </div>
 
               {/* Right (1 col): Traffic Sources */}
-              <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-                <h3 className="text-sm font-bold text-white pb-3 border-b border-[#262E3E]/60">
+              <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white pb-3 border-b border-slate-200 dark:border-[#262E3E]/60">
                   Vyanzo vya Watazamaji (Traffic Sources)
                 </h3>
 
@@ -1554,28 +1584,28 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                   ].map((item) => (
                     <div key={item.source} className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-[#A7B0C0]">{item.source}</span>
-                        <span className="font-mono font-bold text-white">{item.percent}%</span>
+                        <span className="text-slate-600 dark:text-[#A7B0C0]">{item.source}</span>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white">{item.percent}%</span>
                       </div>
-                      <div className="w-full bg-[#10131B] h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-slate-200 dark:bg-[#10131B] h-2 rounded-full overflow-hidden">
                         <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.percent}%` }} />
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-4 border-t border-[#262E3E]/60 space-y-2 text-xs">
-                  <span className="font-bold text-white block">Vifaa Vinavyotumiwa:</span>
+                <div className="pt-4 border-t border-slate-200 dark:border-[#262E3E]/60 space-y-2 text-xs">
+                  <span className="font-bold text-slate-900 dark:text-white block">Vifaa Vinavyotumiwa:</span>
                   <div className="grid grid-cols-2 gap-2 text-center text-[11px]">
-                    <div className="p-2 rounded-xl bg-[#10131B] border border-[#262E3E]">
-                      <Smartphone className="w-4 h-4 mx-auto text-[#16C784] mb-1" />
-                      <span className="font-bold text-white">78%</span>
-                      <p className="text-[10px] text-[#A7B0C0]">Simu za Mkononi</p>
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                      <Smartphone className="w-4 h-4 mx-auto text-emerald-600 dark:text-[#16C784] mb-1" />
+                      <span className="font-bold text-slate-900 dark:text-white">78%</span>
+                      <p className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">Simu za Mkononi</p>
                     </div>
-                    <div className="p-2 rounded-xl bg-[#10131B] border border-[#262E3E]">
-                      <Laptop className="w-4 h-4 mx-auto text-blue-400 mb-1" />
-                      <span className="font-bold text-white">16%</span>
-                      <p className="text-[10px] text-[#A7B0C0]">Kompyuta &amp; TV</p>
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                      <Laptop className="w-4 h-4 mx-auto text-blue-600 dark:text-blue-400 mb-1" />
+                      <span className="font-bold text-slate-900 dark:text-white">16%</span>
+                      <p className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">Kompyuta &amp; TV</p>
                     </div>
                   </div>
                 </div>
@@ -1587,8 +1617,8 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             {/* Geographic Reach & Peak Hours */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-                <h3 className="text-sm font-bold text-white pb-2 border-b border-[#262E3E]/60">
+              <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white pb-2 border-b border-slate-200 dark:border-[#262E3E]/60">
                   Mikoa Inayoongoza kwa Watazamaji (Tanzania &amp; Afrika Mashariki)
                 </h3>
                 <div className="space-y-2.5 text-xs">
@@ -1599,44 +1629,44 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                     { region: 'Dodoma (Jiji la Serikali)', share: '12%', views: '294,960' },
                     { region: 'Zanzibar (Unguja & Pemba)', share: '8%', views: '196,640' }
                   ].map((r) => (
-                    <div key={r.region} className="flex items-center justify-between p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E]/60">
-                      <span className="text-white font-semibold">{r.region}</span>
+                    <div key={r.region} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]/60">
+                      <span className="text-slate-900 dark:text-white font-semibold">{r.region}</span>
                       <div className="text-right font-mono">
-                        <span className="text-[#16C784] font-bold block">{r.share}</span>
-                        <span className="text-[10px] text-[#A7B0C0]">{r.views} views</span>
+                        <span className="text-emerald-700 dark:text-[#16C784] font-bold block">{r.share}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">{r.views} views</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-                <h3 className="text-sm font-bold text-white pb-2 border-b border-[#262E3E]/60">
+              <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white pb-2 border-b border-slate-200 dark:border-[#262E3E]/60">
                   Saa za Kilele Ambazo Mashabiki Huwa Mtandaoni (Peak Times)
                 </h3>
                 <div className="space-y-3 text-xs">
-                  <div className="p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-1">
-                    <div className="flex justify-between font-bold text-white">
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-1">
+                    <div className="flex justify-between font-bold text-slate-900 dark:text-white">
                       <span>Saa 12:00 Jioni hadi Saa 5:00 Usiku (6 PM - 11 PM)</span>
-                      <span className="text-[#16C784]">Kilele cha Juu (84%)</span>
+                      <span className="text-emerald-700 dark:text-[#16C784]">Kilele cha Juu (84%)</span>
                     </div>
-                    <p className="text-[11px] text-[#A7B0C0]">Wakati mzuri zaidi wa kuachia nyimbo mpya au kuanzisha Live Stream.</p>
+                    <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">Wakati mzuri zaidi wa kuachia nyimbo mpya au kuanzisha Live Stream.</p>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-1">
-                    <div className="flex justify-between font-bold text-white">
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-1">
+                    <div className="flex justify-between font-bold text-slate-900 dark:text-white">
                       <span>Saa 6:00 Mchana hadi Saa 8:00 Mchana (Mchana)</span>
-                      <span className="text-blue-400">Wastani (45%)</span>
+                      <span className="text-blue-600 dark:text-blue-400">Wastani (45%)</span>
                     </div>
-                    <p className="text-[11px] text-[#A7B0C0]">Muda wa mapumziko ya chakula cha mchana na Tazama Shorts.</p>
+                    <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">Muda wa mapumziko ya chakula cha mchana na Tazama Shorts.</p>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-1">
-                    <div className="flex justify-between font-bold text-white">
+                  <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-1">
+                    <div className="flex justify-between font-bold text-slate-900 dark:text-white">
                       <span>Watazamaji Wapya dhidi ya Wanaorudi</span>
-                      <span className="text-amber-400">62% Wanaorudi &bull; 38% Wapya</span>
+                      <span className="text-amber-600 dark:text-amber-400">62% Wanaorudi &bull; 38% Wapya</span>
                     </div>
-                    <p className="text-[11px] text-[#A7B0C0]">Una jamii thabiti ya mashabiki wa dhati wanaoendelea kurudi kutazama maudhui yako.</p>
+                    <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">Una jamii thabiti ya mashabiki wa dhati wanaoendelea kurudi kutazama maudhui yako.</p>
                   </div>
                 </div>
               </div>
@@ -1652,16 +1682,16 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'revenue' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             
-            <div className="p-6 rounded-3xl bg-gradient-to-r from-[#151B28] via-[#1C2436] to-[#121622] border border-[#16C784]/30 flex flex-wrap items-center justify-between gap-4">
+            <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-50 via-white to-slate-50 dark:from-[#151B28] dark:via-[#1C2436] dark:to-[#121622] border border-emerald-200 dark:border-[#16C784]/30 shadow-sm dark:shadow-none flex flex-wrap items-center justify-between gap-4">
               <div>
-                <span className="text-xs font-bold text-[#16C784] uppercase tracking-wider">Uchumi wa Waumbaji (Creator Economy)</span>
-                <h2 className="text-2xl font-black text-white mt-0.5">Studio ya Mapato &amp; Malipo ya TZS</h2>
-                <p className="text-xs text-[#A7B0C0]">Tenganisho la uwazi kati ya mapato ya matangazo, vifurushi vya VIP, na zawadi.</p>
+                <span className="text-xs font-bold text-emerald-700 dark:text-[#16C784] uppercase tracking-wider">Uchumi wa Waumbaji (Creator Economy)</span>
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">Studio ya Mapato &amp; Malipo ya TZS</h2>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Tenganisho la uwazi kati ya mapato ya matangazo, vifurushi vya VIP, na zawadi.</p>
               </div>
 
               <div className="text-right">
-                <span className="text-xs text-[#A7B0C0] block">Salio Linaloweza Kutolewa Sasa:</span>
-                <span className="text-2xl font-black text-[#16C784] font-mono">{formatTZS(availablePayoutTZS)}</span>
+                <span className="text-xs text-slate-600 dark:text-[#A7B0C0] block">Salio Linaloweza Kutolewa Sasa:</span>
+                <span className="text-2xl font-black text-emerald-700 dark:text-[#16C784] font-mono">{formatTZS(availablePayoutTZS)}</span>
                 <button
                   onClick={() => setShowPayoutModal(true)}
                   className="mt-2 px-5 py-2 rounded-2xl bg-gradient-to-r from-[#16C784] to-[#10B981] hover:brightness-110 text-black font-extrabold text-xs shadow-lg shadow-[#16C784]/25 active:scale-95 transition-all"
@@ -1672,76 +1702,76 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             </div>
 
             {/* Financial Ledger Table (Matching User's Specified Ledger) */}
-            <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-              <h3 className="text-sm font-extrabold text-white pb-3 border-b border-[#262E3E]/60">
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white pb-3 border-b border-slate-200 dark:border-[#262E3E]/60">
                 Mchanganuo Kamili wa Fedha (Financial Breakdown)
               </h3>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-[#262E3E] text-[#A7B0C0]">
+                    <tr className="border-b border-slate-200 dark:border-[#262E3E] text-slate-500 dark:text-[#A7B0C0]">
                       <th className="pb-3 font-bold">Kipengele cha Mapato</th>
                       <th className="pb-3 font-bold">Maelezo</th>
                       <th className="pb-3 font-bold text-right">Kiasi (TZS)</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#262E3E]/60 text-white">
+                  <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/60 text-slate-900 dark:text-white">
                     <tr>
                       <td className="py-3 font-semibold flex items-center gap-2">
-                        <Tv className="w-4 h-4 text-blue-400" />
+                        <Tv className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         Mapato ya Matangazo (Pre-Roll &amp; Banners)
                       </td>
-                      <td className="py-3 text-[#A7B0C0]">Mauzo ya matangazo ya kibiashara kwenye video</td>
+                      <td className="py-3 text-slate-600 dark:text-[#A7B0C0]">Mauzo ya matangazo ya kibiashara kwenye video</td>
                       <td className="py-3 font-mono font-bold text-right">{formatTZS(adRevenueTZS)}</td>
                     </tr>
                     <tr>
                       <td className="py-3 font-semibold flex items-center gap-2">
-                        <Crown className="w-4 h-4 text-amber-400" />
+                        <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                         Gawio la Premium (Premium Revenue Share)
                       </td>
-                      <td className="py-3 text-[#A7B0C0]">Mgawo wa wanachama wa Tazama VIP wanaotazama bila matangazo</td>
+                      <td className="py-3 text-slate-600 dark:text-[#A7B0C0]">Mgawo wa wanachama wa Tazama VIP wanaotazama bila matangazo</td>
                       <td className="py-3 font-mono font-bold text-right">{formatTZS(premiumShareTZS)}</td>
                     </tr>
                     <tr>
                       <td className="py-3 font-semibold flex items-center gap-2">
-                        <Gift className="w-4 h-4 text-[#16C784]" />
+                        <Gift className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
                         Zawadi za Kidijitali (Virtual Gifts)
                       </td>
-                      <td className="py-3 text-[#A7B0C0]">Zawadi za Simba, Kahawa na Tanzanite kutoka kwa mashabiki</td>
+                      <td className="py-3 text-slate-600 dark:text-[#A7B0C0]">Zawadi za Simba, Kahawa na Tanzanite kutoka kwa mashabiki</td>
                       <td className="py-3 font-mono font-bold text-right">{formatTZS(giftsRevenueTZS)}</td>
                     </tr>
                     <tr>
                       <td className="py-3 font-semibold flex items-center gap-2">
-                        <Award className="w-4 h-4 text-purple-400" />
+                        <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                         Uanachama wa Kituo (Channel Memberships)
                       </td>
-                      <td className="py-3 text-[#A7B0C0]">Ada za kila mwezi za wanachama wa Shaba, Fedha na Dhahabu</td>
+                      <td className="py-3 text-slate-600 dark:text-[#A7B0C0]">Ada za kila mwezi za wanachama wa Shaba, Fedha na Dhahabu</td>
                       <td className="py-3 font-mono font-bold text-right">{formatTZS(membershipsRevenueTZS)}</td>
                     </tr>
-                    <tr className="bg-[#10131B] font-extrabold text-[#16C784]">
+                    <tr className="bg-slate-50 dark:bg-[#10131B] font-extrabold text-emerald-700 dark:text-[#16C784]">
                       <td className="py-3.5 pl-3">Jumla ya Mapato Ghafi (Gross Revenue)</td>
-                      <td className="py-3.5 text-[#A7B0C0]">Jumla ya mapato kabla ya makato</td>
+                      <td className="py-3.5 text-slate-600 dark:text-[#A7B0C0]">Jumla ya mapato kabla ya makato</td>
                       <td className="py-3.5 pr-3 font-mono text-right text-sm">{formatTZS(totalGrossRevenueTZS)}</td>
                     </tr>
-                    <tr className="text-red-400">
+                    <tr className="text-red-600 dark:text-red-400">
                       <td className="py-3">Makato ya Uendeshaji &amp; Seva (15% Platform Fee)</td>
-                      <td className="py-3 text-[#A7B0C0]">Gharama za CDN, seva za video na usimamizi wa COSOTA</td>
+                      <td className="py-3 text-slate-600 dark:text-[#A7B0C0]">Gharama za CDN, seva za video na usimamizi wa COSOTA</td>
                       <td className="py-3 font-mono text-right">- {formatTZS(platformDeductionTZS)}</td>
                     </tr>
-                    <tr className="bg-[#191E29] font-black text-white">
+                    <tr className="bg-slate-100 dark:bg-[#191E29] font-black text-slate-900 dark:text-white">
                       <td className="py-3.5 pl-3 text-sm">Mapato Halisi ya Muumbaji (Net Earnings)</td>
-                      <td className="py-3.5 text-[#A7B0C0]">Pesa zilizotengwa kwa ajili ya muumbaji</td>
-                      <td className="py-3.5 pr-3 font-mono text-right text-sm text-[#16C784]">{formatTZS(netRevenueTZS)}</td>
+                      <td className="py-3.5 text-slate-600 dark:text-[#A7B0C0]">Pesa zilizotengwa kwa ajili ya muumbaji</td>
+                      <td className="py-3.5 pr-3 font-mono text-right text-sm text-emerald-700 dark:text-[#16C784]">{formatTZS(netRevenueTZS)}</td>
                     </tr>
                     <tr>
-                      <td className="py-3 text-[#A7B0C0]">Malipo Yaliyokwisha Fanyika (Paid Out)</td>
-                      <td className="py-3 text-[#A7B0C0]">Fedha zilizotumwa tayari kwenye M-Pesa au Benki</td>
-                      <td className="py-3 font-mono text-right text-[#A7B0C0]">- {formatTZS(completedPayoutsTZS)}</td>
+                      <td className="py-3 text-slate-600 dark:text-[#A7B0C0]">Malipo Yaliyokwisha Fanyika (Paid Out)</td>
+                      <td className="py-3 text-slate-600 dark:text-[#A7B0C0]">Fedha zilizotumwa tayari kwenye M-Pesa au Benki</td>
+                      <td className="py-3 font-mono text-right text-slate-600 dark:text-[#A7B0C0]">- {formatTZS(completedPayoutsTZS)}</td>
                     </tr>
-                    <tr className="bg-[#16C784]/15 font-black text-[#16C784]">
+                    <tr className="bg-emerald-500/15 font-black text-emerald-700 dark:text-[#16C784]">
                       <td className="py-4 pl-3 text-base">Salio Linalosubiri Kutolewa (Available Payout)</td>
-                      <td className="py-4 text-[#A7B0C0]">Pesa iliyopo tayari kutoa leo</td>
+                      <td className="py-4 text-slate-700 dark:text-[#A7B0C0]">Pesa iliyopo tayari kutoa leo</td>
                       <td className="py-4 pr-3 font-mono text-right text-base">{formatTZS(availablePayoutTZS)}</td>
                     </tr>
                   </tbody>
@@ -1750,16 +1780,16 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             </div>
 
             {/* Payout History */}
-            <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]/60">
-                <h3 className="text-sm font-extrabold text-white">Historia ya Maombi ya Malipo (Payout Requests)</h3>
-                <span className="text-xs text-[#A7B0C0]">{payoutRequests.length} miamala</span>
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]/60">
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Historia ya Maombi ya Malipo (Payout Requests)</h3>
+                <span className="text-xs text-slate-500 dark:text-[#A7B0C0]">{payoutRequests.length} miamala</span>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-[#262E3E] text-[#A7B0C0]">
+                    <tr className="border-b border-slate-200 dark:border-[#262E3E] text-slate-500 dark:text-[#A7B0C0]">
                       <th className="pb-2.5">Kumbukumbu</th>
                       <th className="pb-2.5">Njia ya Malipo</th>
                       <th className="pb-2.5">Akaunti / Namba</th>
@@ -1768,25 +1798,25 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                       <th className="pb-2.5">Tarehe</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#262E3E]/50">
+                  <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/50">
                     {payoutRequests.map((req) => (
                       <tr key={req.id}>
-                        <td className="py-3 font-mono text-white">{req.id}</td>
-                        <td className="py-3 font-bold text-white">{req.provider}</td>
-                        <td className="py-3 font-mono text-[#A7B0C0]">{req.accountNumber}</td>
-                        <td className="py-3 font-mono font-bold text-right text-[#16C784]">{formatTZS(req.amountTZS)}</td>
+                        <td className="py-3 font-mono text-slate-900 dark:text-white">{req.id}</td>
+                        <td className="py-3 font-bold text-slate-900 dark:text-white">{req.provider}</td>
+                        <td className="py-3 font-mono text-slate-600 dark:text-[#A7B0C0]">{req.accountNumber}</td>
+                        <td className="py-3 font-mono font-bold text-right text-emerald-700 dark:text-[#16C784]">{formatTZS(req.amountTZS)}</td>
                         <td className="py-3">
                           <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                             req.status === 'approved' 
-                              ? 'bg-[#16C784]/20 text-[#16C784] border border-[#16C784]/30' 
+                              ? 'bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784] border border-emerald-500/30 dark:border-[#16C784]/30' 
                               : req.status === 'rejected'
-                              ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                              : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              ? 'bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-500/30'
+                              : 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30'
                           }`}>
                             {req.status === 'approved' ? 'Imelipwa (Paid)' : req.status === 'rejected' ? 'Imekataliwa' : 'Inasubiri Idhini'}
                           </span>
                         </td>
-                        <td className="py-3 text-[11px] font-mono text-[#A7B0C0]">{new Date(req.requestedAt).toLocaleDateString()}</td>
+                        <td className="py-3 text-[11px] font-mono text-slate-500 dark:text-[#A7B0C0]">{new Date(req.requestedAt).toLocaleDateString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1803,16 +1833,16 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'community' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#262E3E]">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div>
-                <h2 className="text-xl font-black text-white">Kituo cha Jamii &amp; Mashabiki (Community Studio)</h2>
-                <p className="text-xs text-[#A7B0C0]">Dhibiti maoni ya video, jibu maswali ya watazamaji na chapisha habari kwenye ukurasa wa jamii.</p>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">Kituo cha Jamii &amp; Mashabiki (Community Studio)</h2>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Dhibiti maoni ya video, jibu maswali ya watazamaji na chapisha habari kwenye ukurasa wa jamii.</p>
               </div>
             </div>
 
             {/* Create Community Post Form */}
-            <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-              <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <Plus className="w-4 h-4 text-[#FF3040]" />
                 Andika Chapisho Jipya kwa Mashabiki (Community Post)
               </h3>
@@ -1823,7 +1853,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                   value={newPostContent}
                   onChange={(e) => setNewPostContent(e.target.value)}
                   placeholder="Shiriki taarifa, picha au uliza kura (poll) kwa mashabiki wako wa Tazama..."
-                  className="w-full p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none focus:border-[#FF3040]"
+                  className="w-full p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0] text-xs focus:outline-none focus:border-[#FF3040]"
                 />
 
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1832,7 +1862,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                       type="button"
                       onClick={() => setShowPollInputs(!showPollInputs)}
                       className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-colors ${
-                        showPollInputs ? 'bg-[#FF3040]/20 border-[#FF3040] text-[#FF3040]' : 'border-[#262E3E] text-[#A7B0C0] hover:text-white'
+                        showPollInputs ? 'bg-[#FF3040]/15 dark:bg-[#FF3040]/20 border-[#FF3040] text-[#FF3040]' : 'border-slate-200 dark:border-[#262E3E] text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       📊 Weka Kura (Poll)
@@ -1842,7 +1872,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                       value={newPostImageUrl}
                       onChange={(e) => setNewPostImageUrl(e.target.value)}
                       placeholder="URL ya picha (hiari)..."
-                      className="px-3 py-1.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs max-w-xs font-mono"
+                      className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0] text-xs max-w-xs font-mono"
                     />
                   </div>
 
@@ -1856,25 +1886,25 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 </div>
 
                 {showPollInputs && (
-                  <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] text-xs">
+                  <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-xs">
                     <div>
-                      <label className="block text-[#A7B0C0] mb-1">Chaguo la 1:</label>
+                      <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1">Chaguo la 1:</label>
                       <input
                         type="text"
                         value={pollOption1}
                         onChange={(e) => setPollOption1(e.target.value)}
                         placeholder="k.m. Harmonize"
-                        className="w-full p-2 rounded-xl bg-[#191E29] border border-[#262E3E] text-white text-xs"
+                        className="w-full p-2 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-[#A7B0C0] mb-1">Chaguo la 2:</label>
+                      <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1">Chaguo la 2:</label>
                       <input
                         type="text"
                         value={pollOption2}
                         onChange={(e) => setPollOption2(e.target.value)}
                         placeholder="k.m. Rayvanny"
-                        className="w-full p-2 rounded-xl bg-[#191E29] border border-[#262E3E] text-white text-xs"
+                        className="w-full p-2 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs"
                       />
                     </div>
                   </div>
@@ -1884,46 +1914,62 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
 
             {/* Existing Community Posts */}
             <div className="space-y-4">
-              <h3 className="text-sm font-bold text-white">Machapisho Yaliyopita</h3>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Machapisho Yaliyopita</h3>
               {communityPosts.map((post) => (
-                <div key={post.id} className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-3">
+                <div key={post.id} className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <img src={post.channelAvatar} alt={post.channelName} className="w-9 h-9 rounded-full object-cover" />
+                      <img
+                        src={post.channelAvatar || createAvatarSvgDataUri(post.channelName)}
+                        alt={post.channelName}
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = createAvatarSvgDataUri(post.channelName);
+                        }}
+                        className="w-9 h-9 rounded-full object-cover"
+                      />
                       <div>
-                        <h4 className="text-xs font-bold text-white">{post.channelName}</h4>
-                        <span className="text-[10px] text-[#A7B0C0]">{new Date(post.createdAt).toLocaleDateString()}</span>
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">{post.channelName}</h4>
+                        <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">{new Date(post.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                     <button
                       onClick={() => deleteCommunityPost(post.id)}
-                      className="p-1.5 rounded-lg text-[#A7B0C0] hover:text-red-400"
+                      className="p-1.5 rounded-lg text-slate-500 dark:text-[#A7B0C0] hover:text-red-600 dark:hover:text-red-400"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <p className="text-xs text-white leading-relaxed whitespace-pre-line">{post.content}</p>
+                  <p className="text-xs text-slate-800 dark:text-white leading-relaxed whitespace-pre-line">{post.content}</p>
 
                   {post.imageUrl && (
-                    <img src={post.imageUrl} alt="Post attachment" className="w-full max-h-72 object-cover rounded-2xl border border-[#262E3E]" />
+                    <img
+                      src={post.imageUrl}
+                      alt="Post attachment"
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = createThumbnailSvgDataUri(post.channelName, 'Jamii');
+                      }}
+                      className="w-full max-h-72 object-cover rounded-2xl border border-slate-200 dark:border-[#262E3E]"
+                    />
                   )}
 
                   {post.pollOptions && (
-                    <div className="space-y-2 p-3 rounded-2xl bg-[#10131B] border border-[#262E3E]">
+                    <div className="space-y-2 p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
                       {post.pollOptions.map((opt, i) => (
-                        <div key={i} className="flex justify-between p-2 rounded-xl bg-[#191E29] text-xs font-semibold text-white">
+                        <div key={i} className="flex justify-between p-2 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200/80 dark:border-transparent text-xs font-semibold text-slate-900 dark:text-white">
                           <span>{opt.option}</span>
-                          <span className="font-mono text-[#16C784]">{opt.votes} kura</span>
+                          <span className="font-mono text-emerald-700 dark:text-[#16C784]">{opt.votes} kura</span>
                         </div>
                       ))}
                     </div>
                   )}
 
-                  <div className="flex items-center gap-4 pt-2 border-t border-[#262E3E]/60 text-xs text-[#A7B0C0]">
+                  <div className="flex items-center gap-4 pt-2 border-t border-slate-200 dark:border-[#262E3E]/60 text-xs text-slate-500 dark:text-[#A7B0C0]">
                     <button 
                       onClick={() => likeCommunityPost(post.id)}
-                      className={`flex items-center gap-1.5 hover:text-white ${post.isLiked ? 'text-[#FF3040] font-bold' : ''}`}
+                      className={`flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white ${post.isLiked ? 'text-[#FF3040] font-bold' : ''}`}
                     >
                       <Heart className={`w-4 h-4 ${post.isLiked ? 'fill-[#FF3040]' : ''}`} />
                       <span>{post.likesCount}</span>
@@ -1938,34 +1984,42 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             </div>
 
             {/* Video Comments Moderation Feed */}
-            <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]/60">
-                <h3 className="text-sm font-extrabold text-white">Usimamizi wa Maoni ya Video (Comments Moderation)</h3>
-                <span className="text-xs text-[#A7B0C0]">{creatorCommentsList.length} maoni</span>
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]/60">
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Usimamizi wa Maoni ya Video (Comments Moderation)</h3>
+                <span className="text-xs text-slate-500 dark:text-[#A7B0C0]">{creatorCommentsList.length} maoni</span>
               </div>
 
               <div className="space-y-3">
                 {creatorCommentsList.map(({ comment, videoTitle, videoId }) => (
-                  <div key={comment.id} className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E]/60 space-y-2">
+                  <div key={comment.id} className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]/60 space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <img src={comment.userAvatar} alt={comment.userName} className="w-7 h-7 rounded-full object-cover" />
+                        <img
+                          src={comment.userAvatar || createAvatarSvgDataUri(comment.userName)}
+                          alt={comment.userName}
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = createAvatarSvgDataUri(comment.userName);
+                          }}
+                          className="w-7 h-7 rounded-full object-cover"
+                        />
                         <div>
-                          <span className="text-xs font-bold text-white block">{comment.userName}</span>
-                          <span className="text-[10px] text-[#A7B0C0]">Kwenye: {videoTitle}</span>
+                          <span className="text-xs font-bold text-slate-900 dark:text-white block">{comment.userName}</span>
+                          <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">Kwenye: {videoTitle}</span>
                         </div>
                       </div>
-                      <span className="text-[10px] text-[#A7B0C0] font-mono">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] font-mono">{new Date(comment.createdAt).toLocaleDateString()}</span>
                     </div>
 
-                    <p className="text-xs text-white pl-9">{comment.text}</p>
+                    <p className="text-xs text-slate-800 dark:text-white pl-9">{comment.text}</p>
 
-                    <div className="flex items-center gap-3 pl-9 pt-1 text-xs text-[#A7B0C0]">
-                      <button className="flex items-center gap-1 hover:text-[#16C784]">
+                    <div className="flex items-center gap-3 pl-9 pt-1 text-xs text-slate-500 dark:text-[#A7B0C0]">
+                      <button className="flex items-center gap-1 hover:text-emerald-600 dark:hover:text-[#16C784]">
                         <Heart className="w-3.5 h-3.5" />
                         <span>Upendo wa Muumbaji</span>
                       </button>
-                      <button className="flex items-center gap-1 hover:text-white">
+                      <button className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white">
                         <Pin className="w-3.5 h-3.5" />
                         <span>Weka Juu (Pin)</span>
                       </button>
@@ -1984,15 +2038,15 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'customization' && (
           <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-200">
             
-            <div className="p-6 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-6">
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-6">
               
-              <div className="pb-4 border-b border-[#262E3E]">
-                <h2 className="text-xl font-black text-white">Kuboresha Mwonekano wa Kituo (Channel Customization)</h2>
-                <p className="text-xs text-[#A7B0C0]">Tengeneza utambulisho wako, picha ya wasifu, bango, maelezo na uombe beji ya uthibitisho.</p>
+              <div className="pb-4 border-b border-slate-200 dark:border-[#262E3E]">
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">Kuboresha Mwonekano wa Kituo (Channel Customization)</h2>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Tengeneza utambulisho wako, picha ya wasifu, bango, maelezo na uombe beji ya uthibitisho.</p>
               </div>
 
               {custSavedToast && (
-                <div className="p-3 rounded-2xl bg-[#16C784]/20 border border-[#16C784]/50 text-[#16C784] font-bold text-xs flex items-center gap-2">
+                <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-[#16C784]/20 border border-emerald-300 dark:border-[#16C784]/50 text-emerald-700 dark:text-[#16C784] font-bold text-xs flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Taarifa za kituo zimehifadhiwa kikamilifu!</span>
                 </div>
@@ -2002,58 +2056,74 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 
                 {/* Banner preview & input */}
                 <div>
-                  <label className="block font-bold text-[#A7B0C0] mb-1">Picha ya Bango (Channel Banner 1200x300)</label>
-                  <img src={custBanner} alt="Banner Preview" className="w-full h-32 object-cover rounded-2xl border border-[#262E3E] mb-2" />
+                  <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-1">Picha ya Bango (Channel Banner 1200x300)</label>
+                  <img
+                    src={custBanner || createThumbnailSvgDataUri(custName || 'Kituo Changu', 'Burudani')}
+                    alt="Banner Preview"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = createThumbnailSvgDataUri(custName || 'Kituo Changu', 'Burudani');
+                    }}
+                    className="w-full h-32 object-cover rounded-2xl border border-slate-200 dark:border-[#262E3E] mb-2"
+                  />
                   <input
                     type="text"
                     value={custBanner}
                     onChange={(e) => setCustBanner(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs font-mono"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs font-mono"
                   />
                 </div>
 
                 {/* Avatar preview & input */}
                 <div className="flex items-center gap-4">
-                  <img src={custAvatar} alt="Avatar" className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#FF3040]" />
+                  <img
+                    src={custAvatar || createAvatarSvgDataUri(custName || 'Kituo')}
+                    alt="Avatar"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = createAvatarSvgDataUri(custName || 'Kituo');
+                    }}
+                    className="w-16 h-16 rounded-2xl object-cover ring-2 ring-[#FF3040]"
+                  />
                   <div className="flex-1">
-                    <label className="block font-bold text-[#A7B0C0] mb-1">Picha ya Wasifu (Avatar)</label>
+                    <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-1">Picha ya Wasifu (Avatar)</label>
                     <input
                       type="text"
                       value={custAvatar}
                       onChange={(e) => setCustAvatar(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs font-mono"
+                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs font-mono"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-bold text-[#A7B0C0] mb-1">Jina la Kituo (Channel Name)</label>
+                    <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-1">Jina la Kituo (Channel Name)</label>
                     <input
                       type="text"
                       value={custName}
                       onChange={(e) => setCustName(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs"
+                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-[#A7B0C0] mb-1">Jina Maalum (Handle)</label>
+                    <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-1">Jina Maalum (Handle)</label>
                     <input
                       type="text"
                       value={custHandle}
                       onChange={(e) => setCustHandle(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs font-mono"
+                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs font-mono"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-[#A7B0C0] mb-1">Kuhusu Kituo (Bio / Description)</label>
+                  <label className="block font-bold text-slate-600 dark:text-[#A7B0C0] mb-1">Kuhusu Kituo (Bio / Description)</label>
                   <textarea
                     rows={3}
                     value={custBio}
                     onChange={(e) => setCustBio(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs"
                   />
                 </div>
 
@@ -2068,54 +2138,54 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               </form>
 
               {/* Creator Verification Request Section */}
-              <div className="pt-6 border-t border-[#262E3E] space-y-4">
+              <div className="pt-6 border-t border-slate-200 dark:border-[#262E3E] space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-extrabold text-white flex items-center gap-1.5">
-                      <BadgeCheck className="w-4 h-4 text-blue-400" />
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <BadgeCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       Uthibitisho wa Kituo (Creator Verification Badge)
                     </h3>
-                    <p className="text-[11px] text-[#A7B0C0]">Omba alama rasmi ya buluu kuthibitisha utambulisho wa chapa yako.</p>
+                    <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">Omba alama rasmi ya buluu kuthibitisha utambulisho wa chapa yako.</p>
                   </div>
                   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                     creatorChannel.isVerified 
-                      ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                      : 'bg-amber-500/20 text-amber-400'
+                      ? 'bg-blue-500/15 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-500/30' 
+                      : 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
                   }`}>
                     {creatorChannel.isVerified ? '✓ Umethibitishwa' : 'Haijathibitishwa'}
                   </span>
                 </div>
 
                 {verifSubmittedToast && (
-                  <div className="p-3 rounded-2xl bg-blue-500/20 border border-blue-500/40 text-blue-300 text-xs">
+                  <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-500/20 border border-blue-200 dark:border-blue-500/40 text-blue-800 dark:text-blue-300 text-xs">
                     Ombi lako la uthibitisho limewasilishwa kwa usalama kwa msimamizi wa mfumo!
                   </div>
                 )}
 
                 {!creatorChannel.isVerified && (
-                  <form onSubmit={handleApplyVerification} className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-3 text-xs">
+                  <form onSubmit={handleApplyVerification} className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-3 text-xs">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[#A7B0C0] mb-1">Aina ya Kitambulisho:</label>
+                        <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1">Aina ya Kitambulisho:</label>
                         <select
                           value={verifDocType}
                           onChange={(e) => setVerifDocType(e.target.value as any)}
-                          className="w-full p-2 rounded-xl bg-[#191E29] border border-[#262E3E] text-white text-xs"
+                          className="w-full p-2 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs"
                         >
-                          <option value="NIDA">Kitambulisho cha Taifa (NIDA)</option>
-                          <option value="Passport">Paspoti ya Kusafiria</option>
-                          <option value="Leseni ya Udereva">Leseni ya Udereva</option>
-                          <option value="BRELA">Cheti cha Usajili cha BRELA</option>
+                          <option value="NIDA" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Kitambulisho cha Taifa (NIDA)</option>
+                          <option value="Passport" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Paspoti ya Kusafiria</option>
+                          <option value="Leseni ya Udereva" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Leseni ya Udereva</option>
+                          <option value="BRELA" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Cheti cha Usajili cha BRELA</option>
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[#A7B0C0] mb-1">Namba ya Kitambulisho:</label>
+                        <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1">Namba ya Kitambulisho:</label>
                         <input
                           type="text"
                           required
                           value={verifDocNum}
                           onChange={(e) => setVerifDocNum(e.target.value)}
-                          className="w-full p-2 rounded-xl bg-[#191E29] border border-[#262E3E] text-white text-xs font-mono"
+                          className="w-full p-2 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs font-mono"
                         />
                       </div>
                     </div>
@@ -2141,24 +2211,24 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'copyright' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#262E3E]">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div>
-                <h2 className="text-xl font-black text-white flex items-center gap-2">
+                <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <ShieldAlert className="w-6 h-6 text-[#FF3040]" />
                   <span>Ulinzi wa Hakimiliki &amp; Maudhui (Tazama Content Shield)</span>
                 </h2>
-                <p className="text-xs text-[#A7B0C0]">
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                   Komesha wizi wa kazi: Zuia watu kupakia kazi zako na kutengeneza faida kubwa kuliko wewe mwenyewe.
                 </p>
               </div>
 
               {/* Sub-tabs for Copyright Center */}
-              <div className="flex items-center gap-1.5 bg-[#10131B] p-1 rounded-2xl border border-[#262E3E] text-xs">
+              <div className="flex items-center gap-1.5 bg-white dark:bg-[#10131B] p-1 rounded-2xl border border-slate-200 dark:border-[#262E3E] text-xs">
                 <button
                   type="button"
                   onClick={() => setCopyrightSubTab('shield')}
                   className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
-                    copyrightSubTab === 'shield' ? 'bg-[#FF3040] text-white shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                    copyrightSubTab === 'shield' ? 'bg-[#FF3040] text-white shadow-md' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   🛡️ Waliopakia Kazi Zangu ({copyrightClaims.filter(c => c.matchPercentage >= 70).length})
@@ -2167,7 +2237,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                   type="button"
                   onClick={() => setCopyrightSubTab('registry')}
                   className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
-                    copyrightSubTab === 'registry' ? 'bg-[#FF3040] text-white shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                    copyrightSubTab === 'registry' ? 'bg-[#FF3040] text-white shadow-md' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   📑 Sajili Kazi za Asili (COSOTA)
@@ -2176,7 +2246,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                   type="button"
                   onClick={() => setCopyrightSubTab('claims')}
                   className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
-                    copyrightSubTab === 'claims' ? 'bg-[#FF3040] text-white shadow-md' : 'text-[#A7B0C0] hover:text-white'
+                    copyrightSubTab === 'claims' ? 'bg-[#FF3040] text-white shadow-md' : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   ⚖️ Madai Dhidi Yangu ({copyrightClaims.length})
@@ -2185,17 +2255,17 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             </div>
 
             {/* Strikes Status banner */}
-            <div className="p-5 rounded-3xl bg-[#121622] border border-[#16C784]/30 flex items-center justify-between gap-4">
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-emerald-200 dark:border-[#16C784]/30 shadow-sm dark:shadow-none flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-[#16C784]/20 text-[#16C784] flex items-center justify-center font-black text-lg">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784] flex items-center justify-center font-black text-lg">
                   0/3
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white">Akaunti Iko Salama Kabisa (Zero Copyright Strikes)</h3>
-                  <p className="text-xs text-[#A7B0C0]">Maudhui yako yanatambuliwa na kulindwa na mfumo wa Alama za Kidijitali wa Tazama.</p>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">Akaunti Iko Salama Kabisa (Zero Copyright Strikes)</h3>
+                  <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Maudhui yako yanatambuliwa na kulindwa na mfumo wa Alama za Kidijitali wa Tazama.</p>
                 </div>
               </div>
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#16C784]/20 text-[#16C784]">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]">
                 Hali Nzuri
               </span>
             </div>
@@ -2203,37 +2273,37 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             {/* ---------------- SUBTAB 1: CONTENT SHIELD ANTI-THEFT MATCHES ---------------- */}
             {copyrightSubTab === 'shield' && (
               <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-[#191E29] to-transparent border border-amber-500/30">
-                  <h3 className="text-sm font-bold text-amber-300 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 via-white to-transparent dark:from-amber-500/10 dark:via-[#191E29] dark:to-transparent border border-amber-300 dark:border-amber-500/30">
+                  <h3 className="text-sm font-bold text-amber-800 dark:text-amber-300 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                     <span>Ulinzi wa Kazi kwa Mfumo wa Escrow (Tazama Shield):</span>
                   </h3>
-                  <p className="text-xs text-[#A7B0C0] mt-1 leading-relaxed">
-                    Kazi yako ikipatikana kwenye video nyingine (hata ikiwa na ulinganifu wa 94%), mapato ya video hiyo <strong className="text-white">yanashikiliwa kwanza kwenye Escrow ya muda</strong>. Hayahamishwi kiholela; uhamishaji wa 100% hufanyika baada ya uhakiki wa haki na dirisha la siku 14 la rufaa kumalizika.
+                  <p className="text-xs text-slate-600 dark:text-[#A7B0C0] mt-1 leading-relaxed">
+                    Kazi yako ikipatikana kwenye video nyingine (hata ikiwa na ulinganifu wa 94%), mapato ya video hiyo <strong className="text-slate-900 dark:text-white">yanashikiliwa kwanza kwenye Escrow ya muda</strong>. Hayahamishwi kiholela; uhamishaji wa 100% hufanyika baada ya uhakiki wa haki na dirisha la siku 14 la rufaa kumalizika.
                   </p>
                 </div>
 
                 <div className="space-y-3">
                   {copyrightClaims.map((claim) => (
-                    <div key={claim.id} className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
+                    <div key={claim.id} className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] bg-red-600/20 text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase">
+                          <span className="text-[10px] bg-red-500/15 dark:bg-red-600/20 text-red-700 dark:text-red-400 border border-red-500/30 px-2.5 py-0.5 rounded-full font-bold uppercase">
                             Ulinganifu wa Mawimbi: {claim.matchPercentage}% Match
                           </span>
-                          <span className="text-xs font-bold text-white">
-                            Chaneli Iliyopakia: <strong className="text-amber-400">{claim.targetChannelName}</strong>
+                          <span className="text-xs font-bold text-slate-900 dark:text-white">
+                            Chaneli Iliyopakia: <strong className="text-amber-700 dark:text-amber-400">{claim.targetChannelName}</strong>
                           </span>
                         </div>
 
                         <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold ${
                           claim.escrowStatus === 'released_to_claimant'
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            ? 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
                             : claim.escrowStatus === 'held_in_escrow'
-                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                            ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30'
                             : claim.actionTaken === 'takedown_strike'
-                            ? 'bg-red-500/20 text-red-400'
-                            : 'bg-yellow-500/20 text-yellow-400'
+                            ? 'bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400'
+                            : 'bg-yellow-500/15 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
                         }`}>
                           {claim.escrowStatus === 'released_to_claimant'
                             ? '💰 Mapato Yameidhinishwa & Kulipwa Kwako (100%)'
@@ -2245,33 +2315,33 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-[#10131B] p-3.5 rounded-2xl border border-[#262E3E]">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs bg-slate-50 dark:bg-[#10131B] p-3.5 rounded-2xl border border-slate-200 dark:border-[#262E3E]">
                         <div>
-                          <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Kazi Yako ya Asili:</span>
-                          <p className="font-bold text-white text-sm mt-0.5">{claim.infringedWorkTitle}</p>
-                          <span className="text-[11px] text-emerald-400 font-semibold block mt-1">
+                          <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] uppercase font-bold block">Kazi Yako ya Asili:</span>
+                          <p className="font-bold text-slate-900 dark:text-white text-sm mt-0.5">{claim.infringedWorkTitle}</p>
+                          <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold block mt-1">
                             Ushahidi: {claim.cosotaCertNumber ? `Cheti cha COSOTA #${claim.cosotaCertNumber} (Ushahidi wa Kusaidia)` : 'Alama ya Sauti ya Tazama'}
                           </span>
                         </div>
 
                         <div>
-                          <span className="text-[10px] text-[#A7B0C0] uppercase font-bold block">Video Inayobishaniwa:</span>
-                          <p className="font-bold text-white text-sm mt-0.5 truncate">{claim.targetVideoTitle}</p>
+                          <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] uppercase font-bold block">Video Inayobishaniwa:</span>
+                          <p className="font-bold text-slate-900 dark:text-white text-sm mt-0.5 truncate">{claim.targetVideoTitle}</p>
                           <div className="flex items-center gap-3 mt-1 font-mono text-[11px]">
-                            <span className="text-[#A7B0C0]">Watazamaji: <strong>142,500</strong></span>
-                            <span className="text-amber-400 font-bold">Kiasi cha Escrow: TZS {(claim.disputedRevenueTZS || 185000).toLocaleString()}</span>
+                            <span className="text-slate-600 dark:text-[#A7B0C0]">Watazamaji: <strong className="text-slate-900 dark:text-white">142,500</strong></span>
+                            <span className="text-amber-700 dark:text-amber-400 font-bold">Kiasi cha Escrow: TZS {(claim.disputedRevenueTZS || 185000).toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Escrow and Due Process Explanation */}
-                      <div className="p-3 rounded-2xl bg-[#191E29] border border-[#262E3E] text-xs text-[#A7B0C0] space-y-1">
+                      <div className="p-3 rounded-2xl bg-slate-100/80 dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-xs text-slate-600 dark:text-[#A7B0C0] space-y-1">
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="text-white font-semibold flex items-center gap-1.5">
-                            <Info className="w-3.5 h-3.5 text-blue-400" />
+                          <span className="text-slate-900 dark:text-white font-semibold flex items-center gap-1.5">
+                            <Info className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                             Hali ya Fedha na Hatari:
                           </span>
-                          <span className="font-mono text-emerald-400 font-bold">
+                          <span className="font-mono text-emerald-700 dark:text-emerald-400 font-bold">
                             {claim.escrowStatus === 'released_to_claimant' ? 'IMEKAMILIKA' : 'INASHIKILIWA'}
                           </span>
                         </div>
@@ -2283,7 +2353,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                       </div>
 
                       {claim.escrowStatus !== 'released_to_claimant' && claim.status !== 'rejected' && (
-                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#262E3E]">
+                        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200 dark:border-[#262E3E]">
                           <button
                             type="button"
                             onClick={() => {
@@ -2317,7 +2387,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                               updateCopyrightClaim(claim.id, 'approved', 'revenue_share', 'Mgawanyo wa 50/50 kwa remix/reaction.');
                               alert('Umekubali mgawanyo wa 50% ya mapato kwa sababu ni Remix / Reaction video.');
                             }}
-                            className="px-3.5 py-2 rounded-xl bg-[#191E29] hover:bg-[#262E3E] text-white font-semibold text-xs border border-[#262E3E]"
+                            className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-[#191E29] hover:bg-slate-200 dark:hover:bg-[#262E3E] text-slate-900 dark:text-white font-semibold text-xs border border-slate-200 dark:border-[#262E3E]"
                           >
                             🤝 Gawana 50/50 (Remix / Reaction)
                           </button>
@@ -2331,22 +2401,22 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
 
             {/* ---------------- SUBTAB 2: REGISTER ORIGINAL WORKS ---------------- */}
             {copyrightSubTab === 'registry' && (
-              <div className="p-6 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-5">
-                <div className="pb-3 border-b border-[#262E3E]">
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-amber-400" />
+              <div className="p-6 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-5">
+                <div className="pb-3 border-b border-slate-200 dark:border-[#262E3E]">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-amber-500 dark:text-amber-400" />
                     <span>Usajili wa Alama za Kidijitali &amp; Ushahidi wa COSOTA (Digital Rights Registry)</span>
                   </h3>
-                  <div className="mt-2 p-3.5 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-xs text-blue-300 space-y-1">
+                  <div className="mt-2 p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 text-xs text-blue-800 dark:text-blue-300 space-y-1">
                     <strong className="block font-bold">Ufafanuzi Muhimu wa Kisheria (COSOTA Supporting Evidence):</strong>
-                    <p className="text-[11px] text-[#A7B0C0] leading-relaxed">
-                      Namba ya cheti cha COSOTA inayowekwa hapa inachukuliwa kama <span className="text-blue-300 font-semibold">"Ushahidi wa Kusaidia Uhakiki" (Supporting Evidence)</span> na si uthibitisho wa moja kwa moja kwamba msajili ndiye anayemiliki kila haki inayohusika (k.m. leseni za beats, watunzi wenza, au sampuli). Uhakiki wa kina utafanyika kwenye daftari la COSOTA kabla ya uamuzi wowote wa mwisho.
+                    <p className="text-[11px] text-slate-700 dark:text-[#A7B0C0] leading-relaxed">
+                      Namba ya cheti cha COSOTA inayowekwa hapa inachukuliwa kama <span className="text-blue-700 dark:text-blue-300 font-semibold">"Ushahidi wa Kusaidia Uhakiki" (Supporting Evidence)</span> na si uthibitisho wa moja kwa moja kwamba msajili ndiye anayemiliki kila haki inayohusika (k.m. leseni za beats, watunzi wenza, au sampuli). Uhakiki wa kina utafanyika kwenye daftari la COSOTA kabla ya uamuzi wowote wa mwisho.
                     </p>
                   </div>
                 </div>
 
                 {workProtectionSuccess && (
-                  <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
+                  <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 shrink-0" />
                     <span>Kazi yako imepokelewa na kuwekwa alama ya kidijitali. Cheti cha COSOTA kimerekodiwa kama ushahidi wa kusaidia uhakiki endapo dai litatokea!</span>
                   </div>
@@ -2364,37 +2434,37 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                   className="space-y-4 max-w-xl text-xs"
                 >
                   <div>
-                    <label className="block text-[#A7B0C0] mb-1 font-bold">Jina la Kazi ya Asili (Wimbo, Filamu, Skit, au Kipindi):</label>
+                    <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1 font-bold">Jina la Kazi ya Asili (Wimbo, Filamu, Skit, au Kipindi):</label>
                     <input
                       type="text"
                       required
                       value={newWorkTitle}
                       onChange={(e) => setNewWorkTitle(e.target.value)}
                       placeholder="k.m. 'Bongo Flava Anthem 2026' au 'Kichekesho cha Vunjambavu Episode 4'"
-                      className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs placeholder-[#A7B0C0]"
+                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs placeholder-slate-400 dark:placeholder-[#A7B0C0]"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[#A7B0C0] mb-1 font-bold">Namba ya Cheti cha COSOTA (Ushahidi wa Kusaidia Uhakiki):</label>
+                    <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1 font-bold">Namba ya Cheti cha COSOTA (Ushahidi wa Kusaidia Uhakiki):</label>
                     <input
                       type="text"
                       value={newWorkCosotaNumber}
                       onChange={(e) => setNewWorkCosotaNumber(e.target.value)}
                       placeholder="k.m. COSOTA-TZ-2026-9041 (Hiari)"
-                      className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs font-mono placeholder-[#A7B0C0]"
+                      className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs font-mono placeholder-slate-400 dark:placeholder-[#A7B0C0]"
                     />
-                    <span className="text-[10px] text-[#A7B0C0] mt-1 block">
+                    <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] mt-1 block">
                       Cheti hiki kitasaidia timu ya ukaguzi kuthibitisha umiliki wako kwenye daftari la COSOTA Tanzania.
                     </span>
                   </div>
 
                   <div>
-                    <label className="block text-[#A7B0C0] mb-1 font-bold">Sera ya Ushikiliaji wa Escrow Iwapo Mtu Ataiga Kazi Hii:</label>
-                    <select className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs">
-                      <option value="escrow_review">⏳ Shikilia Mapato kwenye Escrow ya Muda Wakati wa Uhakiki (Inapendekezwa)</option>
-                      <option value="notice_takedown">📋 Toa Notisi ya Siku 14 ya Kisheria na Zuio la Video</option>
-                      <option value="share">🤝 Ruhusu Mgawanyo wa 50% ya Mapato kwa Remix/Reaction</option>
+                    <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1 font-bold">Sera ya Ushikiliaji wa Escrow Iwapo Mtu Ataiga Kazi Hii:</label>
+                    <select className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs">
+                      <option value="escrow_review" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">⏳ Shikilia Mapato kwenye Escrow ya Muda Wakati wa Uhakiki (Inapendekezwa)</option>
+                      <option value="notice_takedown" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">📋 Toa Notisi ya Siku 14 ya Kisheria na Zuio la Video</option>
+                      <option value="share" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">🤝 Ruhusu Mgawanyo wa 50% ya Mapato kwa Remix/Reaction</option>
                     </select>
                   </div>
 
@@ -2410,13 +2480,13 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
 
             {/* ---------------- SUBTAB 3: CLAIMS AGAINST ME ---------------- */}
             {copyrightSubTab === 'claims' && (
-              <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-                <div className="pb-3 border-b border-[#262E3E]/60 flex items-center justify-between">
+              <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+                <div className="pb-3 border-b border-slate-200 dark:border-[#262E3E]/60 flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-extrabold text-white">Madai ya Hakimiliki Dhidi ya Kituo Chako</h3>
-                    <p className="text-xs text-[#A7B0C0]">Usimamizi wa haki, zuio la muda la escrow, na nafasi ya kuwasilisha Counter-Notice.</p>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Madai ya Hakimiliki Dhidi ya Kituo Chako</h3>
+                    <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Usimamizi wa haki, zuio la muda la escrow, na nafasi ya kuwasilisha Counter-Notice.</p>
                   </div>
-                  <span className="text-xs px-2.5 py-1 rounded-xl bg-[#191E29] border border-[#262E3E] text-emerald-400 font-bold">
+                  <span className="text-xs px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-[#191E29] border border-emerald-200 dark:border-[#262E3E] text-emerald-700 dark:text-emerald-400 font-bold">
                     Salio Lililo Huru Linabaki Salama
                   </span>
                 </div>
@@ -2424,7 +2494,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs min-w-[700px]">
                     <thead>
-                      <tr className="border-b border-[#262E3E] text-[#A7B0C0]">
+                      <tr className="border-b border-slate-200 dark:border-[#262E3E] text-slate-500 dark:text-[#A7B0C0]">
                         <th className="pb-2.5">Video Yako</th>
                         <th className="pb-2.5">Mmiliki wa Haki (Mdai)</th>
                         <th className="pb-2.5">Kiasi cha Escrow (Zuio)</th>
@@ -2433,26 +2503,26 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                         <th className="pb-2.5 text-right">Hatua / Counter-Notice</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#262E3E]/50">
+                    <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/50">
                       {copyrightClaims.map((claim) => (
                         <tr key={claim.id}>
-                          <td className="py-3 font-semibold text-white max-w-xs truncate">{claim.targetVideoTitle}</td>
-                          <td className="py-3 text-white">
+                          <td className="py-3 font-semibold text-slate-900 dark:text-white max-w-xs truncate">{claim.targetVideoTitle}</td>
+                          <td className="py-3 text-slate-900 dark:text-white">
                             <div>
                               <span>{claim.claimantName}</span>
-                              <span className="block text-[10px] text-[#A7B0C0]">{claim.claimantOrg}</span>
+                              <span className="block text-[10px] text-slate-500 dark:text-[#A7B0C0]">{claim.claimantOrg}</span>
                             </div>
                           </td>
-                          <td className="py-3 font-mono text-amber-400 font-bold">
+                          <td className="py-3 font-mono text-amber-700 dark:text-amber-400 font-bold">
                             TZS {(claim.disputedRevenueTZS || 185000).toLocaleString()}
                           </td>
                           <td className="py-3">
                             <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                               claim.status === 'disputed' 
-                                ? 'bg-blue-500/20 text-blue-400' 
+                                ? 'bg-blue-500/15 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400' 
                                 : claim.status === 'approved' 
-                                ? 'bg-red-500/20 text-red-400' 
-                                : 'bg-amber-500/20 text-amber-400'
+                                ? 'bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400' 
+                                : 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
                             }`}>
                               {claim.status === 'disputed' 
                                 ? 'Counter-Notice Inapitiwa' 
@@ -2461,12 +2531,12 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                                 : 'Kwenye Escrow (Uchunguzi)'}
                             </span>
                           </td>
-                          <td className="py-3 text-[11px] text-[#A7B0C0]">
-                            <span className="text-emerald-400 font-semibold">Video hii pekee</span> (Salio lingine liko huru)
+                          <td className="py-3 text-[11px] text-slate-600 dark:text-[#A7B0C0]">
+                            <span className="text-emerald-700 dark:text-emerald-400 font-semibold">Video hii pekee</span> (Salio lingine liko huru)
                           </td>
                           <td className="py-3 text-right">
                             {claim.counterNoticeSubmitted ? (
-                              <span className="text-blue-400 text-[11px] font-bold">Counter-Notice Imewasilishwa</span>
+                              <span className="text-blue-700 dark:text-blue-400 text-[11px] font-bold">Counter-Notice Imewasilishwa</span>
                             ) : (
                               <button
                                 type="button"
@@ -2477,7 +2547,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                                     alert('Counter-Notice yako imepokelewa na kuwasilishwa kwa jopo la kisheria. Zuio la video linabaki kwenye Escrow hadi uamuzi rasmi ufanyike.');
                                   }
                                 }}
-                                className="px-3 py-1 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-bold border border-blue-500/30"
+                                className="px-3 py-1 rounded-xl bg-blue-50 dark:bg-blue-600/20 hover:bg-blue-100 dark:hover:bg-blue-600/30 text-blue-700 dark:text-blue-400 text-xs font-bold border border-blue-200 dark:border-blue-500/30"
                               >
                                 Wasilisha Counter-Notice
                               </button>
@@ -2500,10 +2570,10 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'live' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#262E3E]">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div>
-                <h2 className="text-xl font-black text-white">Studio ya Mubashara (Live Studio Control Room)</h2>
-                <p className="text-xs text-[#A7B0C0]">Kuanzisha matangazo ya moja kwa moja, RTMP keys na usimamizi wa mazungumzo.</p>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">Studio ya Mubashara (Live Studio Control Room)</h2>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Kuanzisha matangazo ya moja kwa moja, RTMP keys na usimamizi wa mazungumzo.</p>
               </div>
 
               <button
@@ -2523,7 +2593,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               <div className="lg:col-span-2 space-y-6">
                 
                 {/* Video Monitor Box */}
-                <div className="relative aspect-video rounded-3xl bg-black border border-[#262E3E] overflow-hidden flex flex-col items-center justify-center text-center p-6">
+                <div className="relative aspect-video rounded-3xl bg-black border border-slate-200 dark:border-[#262E3E] overflow-hidden flex flex-col items-center justify-center text-center p-6">
                   {isLiveActive ? (
                     <div className="space-y-3">
                       <span className="w-4 h-4 rounded-full bg-red-600 animate-ping mx-auto block" />
@@ -2544,21 +2614,21 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 </div>
 
                 {/* RTMP Credentials */}
-                <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-3 text-xs">
-                  <h3 className="font-extrabold text-white">Mipangilio ya RTMP (Encoder Setup)</h3>
+                <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-3 text-xs">
+                  <h3 className="font-extrabold text-slate-900 dark:text-white">Mipangilio ya RTMP (Encoder Setup)</h3>
                   
                   <div>
-                    <label className="block text-[#A7B0C0] mb-1">Server URL:</label>
+                    <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1">Server URL:</label>
                     <div className="flex items-center gap-2">
                       <input 
                         type="text" 
                         readOnly 
                         value="rtmp://live.tazama.co.tz/live-app" 
-                        className="flex-1 p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white font-mono"
+                        className="flex-1 p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white font-mono"
                       />
                       <button 
                         onClick={() => alert('Server URL imenakiliwa!')}
-                        className="px-3 py-2.5 rounded-xl bg-[#191E29] hover:bg-[#262E3E] text-white"
+                        className="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#191E29] hover:bg-slate-200 dark:hover:bg-[#262E3E] text-slate-800 dark:text-white border border-slate-200 dark:border-transparent"
                       >
                         <Copy className="w-4 h-4" />
                       </button>
@@ -2566,17 +2636,17 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                   </div>
 
                   <div>
-                    <label className="block text-[#A7B0C0] mb-1">Stream Key (Siri):</label>
+                    <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1">Stream Key (Siri):</label>
                     <div className="flex items-center gap-2">
                       <input 
                         type="password" 
                         readOnly 
                         value="tzm_live_9845_wasafi_secret_key_prod" 
-                        className="flex-1 p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white font-mono"
+                        className="flex-1 p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white font-mono"
                       />
                       <button 
                         onClick={() => alert('Stream key imenakiliwa!')}
-                        className="px-3 py-2.5 rounded-xl bg-[#191E29] hover:bg-[#262E3E] text-white"
+                        className="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#191E29] hover:bg-slate-200 dark:hover:bg-[#262E3E] text-slate-800 dark:text-white border border-slate-200 dark:border-transparent"
                       >
                         <Copy className="w-4 h-4" />
                       </button>
@@ -2587,35 +2657,35 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               </div>
 
               {/* Right Col: Live Chat Moderation Simulator */}
-              <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] flex flex-col h-[520px]">
-                <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]/60">
-                  <span className="text-xs font-extrabold text-white flex items-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5 text-[#16C784]" />
+              <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none flex flex-col h-[520px]">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]/60">
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
                     Mazungumzo ya Moja kwa Moja (Live Chat)
                   </span>
-                  <span className="text-[10px] text-[#16C784] font-bold">Muda Halisi</span>
+                  <span className="text-[10px] text-emerald-700 dark:text-[#16C784] font-bold">Muda Halisi</span>
                 </div>
 
                 <div className="flex-1 overflow-y-auto space-y-3 py-3 text-xs">
-                  <div className="p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E]">
-                    <span className="text-[#16C784] font-bold">Amina Salum: </span>
-                    <span className="text-white">Wimbo wa pili uwe wa Sukari tafadhali! 🔥</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                    <span className="text-emerald-700 dark:text-[#16C784] font-bold">Amina Salum: </span>
+                    <span className="text-slate-900 dark:text-white">Wimbo wa pili uwe wa Sukari tafadhali! 🔥</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-[#10131B] border border-amber-500/30">
-                    <span className="text-amber-400 font-bold">Kelvin Mushi (VIP): </span>
-                    <span className="text-white">Ametuma zawadi ya Simba! TZS 5,000</span>
+                  <div className="p-2.5 rounded-xl bg-amber-50/70 dark:bg-[#10131B] border border-amber-300 dark:border-amber-500/30">
+                    <span className="text-amber-700 dark:text-amber-400 font-bold">Kelvin Mushi (VIP): </span>
+                    <span className="text-slate-900 dark:text-white">Ametuma zawadi ya Simba! TZS 5,000</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E]">
-                    <span className="text-blue-400 font-bold">Baraka Mrema: </span>
-                    <span className="text-white">Sauti inasikika vizuri sana kutoka Arusha 🇹🇿</span>
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                    <span className="text-blue-700 dark:text-blue-400 font-bold">Baraka Mrema: </span>
+                    <span className="text-slate-900 dark:text-white">Sauti inasikika vizuri sana kutoka Arusha 🇹🇿</span>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#262E3E]/60">
+                <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]/60">
                   <input
                     type="text"
                     placeholder="Tuma ujumbe kama Muumbaji..."
-                    className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0] text-xs focus:outline-none"
                   />
                 </div>
               </div>
@@ -2631,10 +2701,10 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'playlists' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#262E3E]">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div>
-                <h2 className="text-xl font-black text-white">Orodha za Video (Playlists)</h2>
-                <p className="text-xs text-[#A7B0C0]">Panga video zako katika mfululizo ili kuongeza muda wa watazamaji kukaa kwenye kituo.</p>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">Orodha za Video (Playlists)</h2>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Panga video zako katika mfululizo ili kuongeza muda wa watazamaji kukaa kwenye kituo.</p>
               </div>
 
               <button
@@ -2651,9 +2721,17 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {playlists.map((pl) => (
-                <div key={pl.id} className="p-4 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-3">
-                  <div className="relative aspect-video rounded-2xl overflow-hidden border border-[#262E3E]">
-                    <img src={pl.coverUrl} alt={pl.title} className="w-full h-full object-cover" />
+                <div key={pl.id} className="p-4 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-3">
+                  <div className="relative aspect-video rounded-2xl overflow-hidden border border-slate-200 dark:border-[#262E3E]">
+                    <img
+                      src={pl.coverUrl || createThumbnailSvgDataUri(pl.title, 'Playlist')}
+                      alt={pl.title}
+                      referrerPolicy="no-referrer"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = createThumbnailSvgDataUri(pl.title, 'Playlist');
+                      }}
+                      className="w-full h-full object-cover"
+                    />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                       <ListMusic className="w-8 h-8 text-white" />
                     </div>
@@ -2664,12 +2742,12 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
 
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h4 className="text-xs font-black text-white line-clamp-1">{pl.title}</h4>
-                      <p className="text-[10px] text-[#A7B0C0] line-clamp-1">{pl.description || 'Hakuna maelezo'}</p>
+                      <h4 className="text-xs font-black text-slate-900 dark:text-white line-clamp-1">{pl.title}</h4>
+                      <p className="text-[10px] text-slate-500 dark:text-[#A7B0C0] line-clamp-1">{pl.description || 'Hakuna maelezo'}</p>
                     </div>
                     <button
                       onClick={() => deletePlaylist(pl.id)}
-                      className="p-1 rounded text-[#A7B0C0] hover:text-red-400"
+                      className="p-1 rounded text-slate-500 dark:text-[#A7B0C0] hover:text-red-600 dark:hover:text-red-400"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -2687,19 +2765,19 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'subtitles' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#262E3E]">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div>
-                <h2 className="text-xl font-black text-white">Manukuu &amp; Tafsiri (Subtitles Studio)</h2>
-                <p className="text-xs text-[#A7B0C0]">Ongeza manukuu ya Kiswahili na Kiingereza ili kuongeza hadhira ya kimataifa.</p>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">Manukuu &amp; Tafsiri (Subtitles Studio)</h2>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Ongeza manukuu ya Kiswahili na Kiingereza ili kuongeza hadhira ya kimataifa.</p>
               </div>
             </div>
 
             {/* Subtitles list */}
-            <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs min-w-[650px]">
                   <thead>
-                    <tr className="border-b border-[#262E3E] text-[#A7B0C0]">
+                    <tr className="border-b border-slate-200 dark:border-[#262E3E] text-slate-500 dark:text-[#A7B0C0]">
                       <th className="pb-2.5">Video</th>
                       <th className="pb-2.5">Lugha</th>
                       <th className="pb-2.5">Muundo</th>
@@ -2708,22 +2786,22 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                       <th className="pb-2.5 text-right">Vitendo</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#262E3E]/50">
+                  <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/50">
                     {subtitles.map((sub) => (
                       <tr key={sub.id}>
-                        <td className="py-3 font-semibold text-white max-w-xs truncate">{sub.videoTitle}</td>
-                        <td className="py-3 text-white font-bold">{sub.languageLabel}</td>
-                        <td className="py-3 font-mono uppercase text-[#A7B0C0]">{sub.format}</td>
+                        <td className="py-3 font-semibold text-slate-900 dark:text-white max-w-xs truncate">{sub.videoTitle}</td>
+                        <td className="py-3 text-slate-900 dark:text-white font-bold">{sub.languageLabel}</td>
+                        <td className="py-3 font-mono uppercase text-slate-500 dark:text-[#A7B0C0]">{sub.format}</td>
                         <td className="py-3">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#16C784]/20 text-[#16C784]">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]">
                             Imechapishwa
                           </span>
                         </td>
-                        <td className="py-3 text-[11px] font-mono text-[#A7B0C0]">{new Date(sub.updatedAt).toLocaleDateString()}</td>
+                        <td className="py-3 text-[11px] font-mono text-slate-500 dark:text-[#A7B0C0]">{new Date(sub.updatedAt).toLocaleDateString()}</td>
                         <td className="py-3 text-right">
                           <button
                             onClick={() => deleteSubtitleTrack(sub.id)}
-                            className="p-1 rounded text-[#A7B0C0] hover:text-red-400"
+                            className="p-1 rounded text-slate-500 dark:text-[#A7B0C0] hover:text-red-600 dark:hover:text-red-400"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -2744,10 +2822,10 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'memberships' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#262E3E]">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div>
-                <h2 className="text-xl font-black text-white">Uanachama wa Kituo (Creator Memberships)</h2>
-                <p className="text-xs text-[#A7B0C0]">Weka ngazi za mashabiki wanaolipia kila mwezi ili kupata maudhui ya kipekee.</p>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">Uanachama wa Kituo (Creator Memberships)</h2>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Weka ngazi za mashabiki wanaolipia kila mwezi ili kupata maudhui ya kipekee.</p>
               </div>
             </div>
 
@@ -2755,7 +2833,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               {membershipTiers.map((tier) => (
                 <div 
                   key={tier.id}
-                  className="p-5 rounded-3xl bg-[#121622] border space-y-4 shadow-lg"
+                  className="p-5 rounded-3xl bg-white dark:bg-[#121622] border space-y-4 shadow-sm dark:shadow-lg"
                   style={{ borderColor: `${tier.badgeColor}40` }}
                 >
                   <div className="flex items-center justify-between">
@@ -2765,18 +2843,18 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                     >
                       {tier.name}
                     </span>
-                    <span className="text-xs font-mono font-bold text-white">{tier.memberCount} wanachama</span>
+                    <span className="text-xs font-mono font-bold text-slate-900 dark:text-white">{tier.memberCount} wanachama</span>
                   </div>
 
-                  <div className="text-xl font-black font-mono text-white">
-                    {formatTZS(tier.priceTZS)} <span className="text-xs text-[#A7B0C0] font-sans font-normal">/ mwezi</span>
+                  <div className="text-xl font-black font-mono text-slate-900 dark:text-white">
+                    {formatTZS(tier.priceTZS)} <span className="text-xs text-slate-500 dark:text-[#A7B0C0] font-sans font-normal">/ mwezi</span>
                   </div>
 
-                  <div className="space-y-2 pt-2 border-t border-[#262E3E]/60 text-xs text-[#A7B0C0]">
-                    <span className="font-bold text-white block">Faida za Ngazi Hii:</span>
+                  <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-[#262E3E]/60 text-xs text-slate-600 dark:text-[#A7B0C0]">
+                    <span className="font-bold text-slate-900 dark:text-white block">Faida za Ngazi Hii:</span>
                     {tier.perks.map((p, idx) => (
                       <div key={idx} className="flex items-center gap-2">
-                        <Check className="w-3.5 h-3.5 text-[#16C784] shrink-0" />
+                        <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784] shrink-0" />
                         <span>{p}</span>
                       </div>
                     ))}
@@ -2794,10 +2872,10 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'promotions' && (
           <div className="space-y-6 animate-in fade-in duration-200">
             
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#262E3E]">
+            <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div>
-                <h2 className="text-xl font-black text-white">Kutangaza Video &amp; Kampeni za Matangazo (Promotions &amp; Ads Studio)</h2>
-                <p className="text-xs text-[#A7B0C0]">Weka matangazo ya biashara (Skippable, Masthead, In-feed, Bumper) au tangaza video za kituo chako.</p>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">Kutangaza Video &amp; Kampeni za Matangazo (Promotions &amp; Ads Studio)</h2>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Weka matangazo ya biashara (Skippable, Masthead, In-feed, Bumper) au tangaza video za kituo chako.</p>
               </div>
 
               <button
@@ -2810,21 +2888,21 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             </div>
 
             {/* Section 1: Tazama Ad Campaigns (Created by user or channel) */}
-            <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-black text-white flex items-center gap-2">
-                    <Megaphone className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                    <Megaphone className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     Kampeni Zako za Tazama Ads (Matangazo Yaliyolipwa &amp; Idhini ya Admin)
                   </h3>
-                  <p className="text-[11px] text-[#A7B0C0]">Matangazo yote yanalipiwa kupitia Mobile Money kisha kukaguliwa na Admin kabla ya kwenda hewani.</p>
+                  <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">Matangazo yote yanalipiwa kupitia Mobile Money kisha kukaguliwa na Admin kabla ya kwenda hewani.</p>
                 </div>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs min-w-[700px]">
                   <thead>
-                    <tr className="border-b border-[#262E3E] text-[#A7B0C0]">
+                    <tr className="border-b border-slate-200 dark:border-[#262E3E] text-slate-500 dark:text-[#A7B0C0]">
                       <th className="pb-2.5">Jina la Kampeni</th>
                       <th className="pb-2.5">Aina ya Tangazo</th>
                       <th className="pb-2.5">Bajeti / Malipo</th>
@@ -2833,50 +2911,50 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                       <th className="pb-2.5">Hali ya Idhini</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#262E3E]/50">
+                  <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/50">
                     {adCampaigns.map((ad) => {
                       const isPending = ad.status === 'pending_approval';
                       const isActive = ad.status === 'active';
                       const isRejected = ad.status === 'rejected';
 
                       return (
-                        <tr key={ad.id} className="hover:bg-[#191E29]/50 transition-colors">
-                          <td className="py-3 font-semibold text-white max-w-xs">
+                        <tr key={ad.id} className="hover:bg-slate-50 dark:hover:bg-[#191E29]/50 transition-colors">
+                          <td className="py-3 font-semibold text-slate-900 dark:text-white max-w-xs">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-white truncate block">{ad.campaignName}</span>
+                              <span className="font-bold text-slate-900 dark:text-white truncate block">{ad.campaignName}</span>
                             </div>
-                            <span className="text-[10px] text-amber-300 block truncate font-normal">"{ad.headline}"</span>
+                            <span className="text-[10px] text-amber-700 dark:text-amber-300 block truncate font-normal">"{ad.headline}"</span>
                           </td>
                           <td className="py-3">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#191E29] text-cyan-300 border border-cyan-500/30 uppercase">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-50 dark:bg-[#191E29] text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-500/30 uppercase">
                               {ad.adFormat.replace('_', ' ')}
                             </span>
                           </td>
                           <td className="py-3">
-                            <span className="font-mono text-white font-bold block">{formatTZS(ad.budgetTZS)}</span>
-                            <span className="text-[10px] text-emerald-400 font-mono">Iliyolipwa: {ad.paymentProvider || 'M-Pesa'}</span>
+                            <span className="font-mono text-slate-900 dark:text-white font-bold block">{formatTZS(ad.budgetTZS)}</span>
+                            <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-mono">Iliyolipwa: {ad.paymentProvider || 'M-Pesa'}</span>
                           </td>
-                          <td className="py-3 font-mono text-[#A7B0C0] text-[11px]">
+                          <td className="py-3 font-mono text-slate-500 dark:text-[#A7B0C0] text-[11px]">
                             {ad.startDate} - {ad.endDate}
                           </td>
-                          <td className="py-3 font-mono text-white">
+                          <td className="py-3 font-mono text-slate-900 dark:text-white">
                             <span>{(ad.impressions || 0).toLocaleString()}</span>
-                            <span className="text-[#A7B0C0]"> / </span>
-                            <span className="text-amber-400">{(ad.clicks || 0).toLocaleString()}</span>
+                            <span className="text-slate-400 dark:text-[#A7B0C0]"> / </span>
+                            <span className="text-amber-600 dark:text-amber-400">{(ad.clicks || 0).toLocaleString()}</span>
                           </td>
                           <td className="py-3">
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
-                              isActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                              isPending ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse' :
-                              isRejected ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                              'bg-gray-500/20 text-gray-400'
+                              isActive ? 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30' :
+                              isPending ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 animate-pulse' :
+                              isRejected ? 'bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-500/30' :
+                              'bg-slate-200 dark:bg-gray-500/20 text-slate-600 dark:text-gray-400'
                             }`}>
                               {isActive ? '● Liko Hewani' :
                                isPending ? '⏳ Inasubiri Idhini ya Admin' :
                                isRejected ? '✕ Imekataliwa' : 'Imesitishwa'}
                             </span>
                             {isRejected && ad.rejectionReason && (
-                              <span className="text-[10px] text-red-400 block italic mt-0.5">
+                              <span className="text-[10px] text-red-600 dark:text-red-400 block italic mt-0.5">
                                 Sababu: {ad.rejectionReason}
                               </span>
                             )}
@@ -2890,12 +2968,12 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             </div>
 
             {/* Section 2: Creator Organic Promotions */}
-            <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-4">
-              <h3 className="text-sm font-black text-white">Ukuzaji wa Maudhui ya Video za Kituo (Video Boosts)</h3>
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-4">
+              <h3 className="text-sm font-black text-slate-900 dark:text-white">Ukuzaji wa Maudhui ya Video za Kituo (Video Boosts)</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs min-w-[700px]">
                   <thead>
-                    <tr className="border-b border-[#262E3E] text-[#A7B0C0]">
+                    <tr className="border-b border-slate-200 dark:border-[#262E3E] text-slate-500 dark:text-[#A7B0C0]">
                       <th className="pb-2.5">Video</th>
                       <th className="pb-2.5">Lengo</th>
                       <th className="pb-2.5">Bajeti</th>
@@ -2905,17 +2983,17 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                       <th className="pb-2.5 text-right">Kitendo</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#262E3E]/50">
+                  <tbody className="divide-y divide-slate-200/80 dark:divide-[#262E3E]/50">
                     {creatorPromotions.map((p) => (
                       <tr key={p.id}>
-                        <td className="py-3 font-semibold text-white max-w-xs truncate">{p.videoTitle}</td>
-                        <td className="py-3 capitalize text-white font-bold">{p.goal}</td>
-                        <td className="py-3 font-mono text-white">{formatTZS(p.budgetTZS)}</td>
-                        <td className="py-3 font-mono text-[#16C784] font-bold">{formatTZS(p.spentTZS)}</td>
-                        <td className="py-3 font-mono text-[#A7B0C0]">{p.impressions.toLocaleString()} / {p.clicks.toLocaleString()}</td>
+                        <td className="py-3 font-semibold text-slate-900 dark:text-white max-w-xs truncate">{p.videoTitle}</td>
+                        <td className="py-3 capitalize text-slate-900 dark:text-white font-bold">{p.goal}</td>
+                        <td className="py-3 font-mono text-slate-900 dark:text-white">{formatTZS(p.budgetTZS)}</td>
+                        <td className="py-3 font-mono text-emerald-700 dark:text-[#16C784] font-bold">{formatTZS(p.spentTZS)}</td>
+                        <td className="py-3 font-mono text-slate-600 dark:text-[#A7B0C0]">{p.impressions.toLocaleString()} / {p.clicks.toLocaleString()}</td>
                         <td className="py-3">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            p.status === 'active' ? 'bg-[#16C784]/20 text-[#16C784]' : 'bg-amber-500/20 text-amber-400'
+                            p.status === 'active' ? 'bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]' : 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
                           }`}>
                             {p.status === 'active' ? 'Inaonyeshwa' : 'Imesimamishwa'}
                           </span>
@@ -2923,7 +3001,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                         <td className="py-3 text-right">
                           <button
                             onClick={() => togglePromotionStatus(p.id)}
-                            className="px-3 py-1 rounded-xl bg-[#10131B] hover:bg-[#262E3E] text-white text-xs font-bold border border-[#262E3E]"
+                            className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-[#10131B] hover:bg-slate-200 dark:hover:bg-[#262E3E] text-slate-800 dark:text-white text-xs font-bold border border-slate-200 dark:border-[#262E3E]"
                           >
                             {p.status === 'active' ? 'Simamisha' : 'Washa'}
                           </button>
@@ -2944,14 +3022,14 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'ai_assistant' && (
           <div className="max-w-4xl mx-auto space-y-5 animate-in fade-in duration-200">
             
-            <div className="p-6 rounded-3xl bg-gradient-to-r from-[#191E29] via-[#1E2538] to-[#121622] border border-[#FF3040]/30 flex flex-wrap items-center justify-between gap-4">
+            <div className="p-6 rounded-3xl bg-gradient-to-r from-red-50 via-white to-orange-50 dark:from-[#191E29] dark:via-[#1E2538] dark:to-[#121622] border border-red-200 dark:border-[#FF3040]/30 shadow-sm dark:shadow-none flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FF3040] to-orange-500 text-white flex items-center justify-center shadow-lg shadow-[#FF3040]/30">
                   <Bot className="w-6 h-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-white">AI Creator Assistant (Mshauri Mahiri wa Takwimu)</h2>
-                  <p className="text-xs text-[#A7B0C0]">Ushauri unaotumia takwimu halisi za kituo chako, bila kubuni namba za uongo.</p>
+                  <h2 className="text-xl font-black text-slate-900 dark:text-white">AI Creator Assistant (Mshauri Mahiri wa Takwimu)</h2>
+                  <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Ushauri unaotumia takwimu halisi za kituo chako, bila kubuni namba za uongo.</p>
                 </div>
               </div>
             </div>
@@ -2967,7 +3045,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 <button
                   key={idx}
                   onClick={() => handleSendAiMessage(pill)}
-                  className="px-3 py-1.5 rounded-full bg-[#121622] hover:bg-[#191E29] border border-[#262E3E] text-white text-xs whitespace-nowrap transition-all shrink-0 active:scale-95"
+                  className="px-3 py-1.5 rounded-full bg-white dark:bg-[#121622] hover:bg-slate-100 dark:hover:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-slate-800 dark:text-white text-xs whitespace-nowrap transition-all shrink-0 active:scale-95"
                 >
                   💬 {pill}
                 </button>
@@ -2975,7 +3053,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
             </div>
 
             {/* Chat Box */}
-            <div className="p-5 rounded-3xl bg-[#121622] border border-[#262E3E] flex flex-col h-[460px]">
+            <div className="p-5 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none flex flex-col h-[460px]">
               
               <div className="flex-1 overflow-y-auto space-y-3.5 p-2">
                 {aiMessages.map((msg, idx) => (
@@ -2984,7 +3062,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                     className={`flex gap-3 max-w-2xl ${msg.sender === 'user' ? 'ml-auto flex-row-reverse' : ''}`}
                   >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                      msg.sender === 'user' ? 'bg-[#FF3040] text-white' : 'bg-[#191E29] text-amber-400 border border-[#262E3E]'
+                      msg.sender === 'user' ? 'bg-[#FF3040] text-white' : 'bg-amber-50 dark:bg-[#191E29] text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-[#262E3E]'
                     }`}>
                       {msg.sender === 'user' ? <Users className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
                     </div>
@@ -2992,16 +3070,16 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                     <div className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
                       msg.sender === 'user' 
                         ? 'bg-[#FF3040] text-white font-medium' 
-                        : 'bg-[#10131B] border border-[#262E3E] text-white whitespace-pre-line'
+                        : 'bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-800 dark:text-white whitespace-pre-line'
                     }`}>
                       {msg.text}
-                      <span className="block text-[10px] text-[#A7B0C0] mt-1 text-right font-mono">{msg.time}</span>
+                      <span className={`block text-[10px] mt-1 text-right font-mono ${msg.sender === 'user' ? 'text-white/80' : 'text-slate-400 dark:text-[#A7B0C0]'}`}>{msg.time}</span>
                     </div>
                   </div>
                 ))}
 
                 {isAiTyping && (
-                  <div className="flex items-center gap-2 text-xs text-[#A7B0C0] p-2">
+                  <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-[#A7B0C0] p-2">
                     <span className="w-2 h-2 rounded-full bg-[#FF3040] animate-bounce" />
                     <span className="w-2 h-2 rounded-full bg-[#FF3040] animate-bounce delay-150" />
                     <span className="w-2 h-2 rounded-full bg-[#FF3040] animate-bounce delay-300" />
@@ -3011,7 +3089,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               </div>
 
               {/* Input row */}
-              <div className="pt-3 border-t border-[#262E3E]/60 flex items-center gap-2">
+              <div className="pt-3 border-t border-slate-200 dark:border-[#262E3E]/60 flex items-center gap-2">
                 <input
                   type="text"
                   value={aiInputText}
@@ -3020,7 +3098,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                     if (e.key === 'Enter') handleSendAiMessage();
                   }}
                   placeholder="Uliza chochote kuhusu mwelekeo wa watazamaji, thumbnails, au mapato ya kituo..."
-                  className="flex-1 p-3 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none focus:border-[#FF3040]"
+                  className="flex-1 p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0] text-xs focus:outline-none focus:border-[#FF3040]"
                 />
                 <button
                   onClick={() => handleSendAiMessage()}
@@ -3041,31 +3119,31 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
         {activeTab === 'settings' && (
           <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-200">
             
-            <div className="p-6 rounded-3xl bg-[#121622] border border-[#262E3E] space-y-6">
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none space-y-6">
               
-              <div className="pb-4 border-b border-[#262E3E]">
-                <h2 className="text-xl font-black text-white">Mipangilio ya Kituo &amp; Akaunti (Creator Settings)</h2>
-                <p className="text-xs text-[#A7B0C0]">Usimamizi wa usalama, ruhusa za washirika (RBAC), arifa na njia chaguomsingi za malipo.</p>
+              <div className="pb-4 border-b border-slate-200 dark:border-[#262E3E]">
+                <h2 className="text-xl font-black text-slate-900 dark:text-white">Mipangilio ya Kituo &amp; Akaunti (Creator Settings)</h2>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Usimamizi wa usalama, ruhusa za washirika (RBAC), arifa na njia chaguomsingi za malipo.</p>
               </div>
 
               <div className="space-y-4 text-xs">
                 
                 {/* Permissions & Roles */}
-                <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-3">
-                  <div className="flex items-center justify-between font-bold text-white">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-3">
+                  <div className="flex items-center justify-between font-bold text-slate-900 dark:text-white">
                     <span>Ruhusa za Washirika (Channel Permissions)</span>
-                    <Users className="w-4 h-4 text-purple-400" />
+                    <Users className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <p className="text-[11px] text-[#A7B0C0]">
+                  <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">
                     Unaweza kuongeza Mameneja au Wahariri (Editors) kusaidia kupakia video bila kuwapa nenosiri lako.
                   </p>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-[#191E29] text-xs">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-transparent text-xs">
                       <div>
-                        <span className="font-bold text-white block">Diamond Platnumz (Wewe)</span>
-                        <span className="text-[10px] text-[#A7B0C0]">diamond@wasafi.co.tz</span>
+                        <span className="font-bold text-slate-900 dark:text-white block">Diamond Platnumz (Wewe)</span>
+                        <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">diamond@wasafi.co.tz</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FF3040]/20 text-[#FF3040]">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FF3040]/15 dark:bg-[#FF3040]/20 text-[#FF3040]">
                         Mmiliki Mkuu (Owner)
                       </span>
                     </div>
@@ -3073,42 +3151,42 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                 </div>
 
                 {/* Default Payout Provider */}
-                <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-3">
-                  <div className="flex items-center justify-between font-bold text-white">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-3">
+                  <div className="flex items-center justify-between font-bold text-slate-900 dark:text-white">
                     <span>Njia Chaguomsingi ya Malipo ya Moja kwa Moja</span>
-                    <Wallet className="w-4 h-4 text-[#16C784]" />
+                    <Wallet className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[#A7B0C0] mb-1">Mtandao wa Simu / Benki:</label>
-                      <select className="w-full p-2 rounded-xl bg-[#191E29] border border-[#262E3E] text-white text-xs">
-                        <option>Vodacom M-Pesa</option>
-                        <option>Tigo Pesa</option>
-                        <option>Airtel Money</option>
-                        <option>CRDB Bank PLC</option>
+                      <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1">Mtandao wa Simu / Benki:</label>
+                      <select className="w-full p-2 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs">
+                        <option className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Vodacom M-Pesa</option>
+                        <option className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Tigo Pesa</option>
+                        <option className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Airtel Money</option>
+                        <option className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">CRDB Bank PLC</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[#A7B0C0] mb-1">Namba Iliyothibitishwa:</label>
+                      <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1">Namba Iliyothibitishwa:</label>
                       <input 
                         type="text" 
                         readOnly 
                         value="0754 987 654" 
-                        className="w-full p-2 rounded-xl bg-[#191E29] border border-[#262E3E] text-white text-xs font-mono"
+                        className="w-full p-2 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs font-mono"
                       />
                     </div>
                   </div>
                 </div>
 
                 {/* Security & 2FA */}
-                <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-2">
-                  <div className="flex items-center justify-between font-bold text-white">
+                <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-2">
+                  <div className="flex items-center justify-between font-bold text-slate-900 dark:text-white">
                     <span>Uthibitishaji wa Hatua Mbili (2-Step Verification)</span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#16C784]/20 text-[#16C784]">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 dark:bg-[#16C784]/20 text-emerald-700 dark:text-[#16C784]">
                       Inatumika
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#A7B0C0]">
+                  <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">
                     Akaunti yako inalindwa kwa nambari ya siri ya SMS ya M-Pesa/Google Authenticator kabla ya kutoa fedha.
                   </p>
                 </div>
@@ -3128,59 +3206,59 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
 
       {/* Payout Modal */}
       {showPayoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md bg-[#191E29] border border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6">
-            <h3 className="text-base font-bold text-white mb-1">Omba Kutoa Mapato (Creator Payout)</h3>
-            <p className="text-xs text-[#A7B0C0] mb-4">Hamisha fedha zako moja kwa moja kwenda kwenye mtandao wa simu au benki</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Omba Kutoa Mapato (Creator Payout)</h3>
+            <p className="text-xs text-slate-600 dark:text-[#A7B0C0] mb-4">Hamisha fedha zako moja kwa moja kwenda kwenye mtandao wa simu au benki</p>
 
             {payoutSuccess ? (
               <div className="py-8 text-center space-y-2">
-                <CheckCircle2 className="w-12 h-12 text-[#16C784] mx-auto animate-bounce" />
-                <h4 className="text-sm font-bold text-white">Ombi la Malipo Limeidhinishwa!</h4>
-                <p className="text-xs text-[#A7B0C0]">Pesa zitatumwa kwenye {accountNumber} ({payoutProvider}) ndani ya saa 2.</p>
+                <CheckCircle2 className="w-12 h-12 text-emerald-600 dark:text-[#16C784] mx-auto animate-bounce" />
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">Ombi la Malipo Limeidhinishwa!</h4>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Pesa zitatumwa kwenye {accountNumber} ({payoutProvider}) ndani ya saa 2.</p>
               </div>
             ) : (
               <form onSubmit={handleRequestPayout} className="space-y-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-[#A7B0C0] mb-1">Njia ya Malipo:</label>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-[#A7B0C0] mb-1">Njia ya Malipo:</label>
                   <select
                     value={payoutProvider}
                     onChange={(e) => setPayoutProvider(e.target.value as any)}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   >
-                    <option value="M-Pesa">Vodacom M-Pesa</option>
-                    <option value="Tigo Pesa">Tigo Pesa / Yas</option>
-                    <option value="Airtel Money">Airtel Money</option>
-                    <option value="Halopesa">Halopesa</option>
-                    <option value="CRDB Bank">CRDB Bank PLC</option>
-                    <option value="NMB Bank">NMB Bank PLC</option>
+                    <option value="M-Pesa" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Vodacom M-Pesa</option>
+                    <option value="Tigo Pesa" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Tigo Pesa / Yas</option>
+                    <option value="Airtel Money" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Airtel Money</option>
+                    <option value="Halopesa" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Halopesa</option>
+                    <option value="CRDB Bank" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">CRDB Bank PLC</option>
+                    <option value="NMB Bank" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">NMB Bank PLC</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#A7B0C0] mb-1">Namba ya Simu / Akaunti:</label>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-[#A7B0C0] mb-1">Namba ya Simu / Akaunti:</label>
                   <input
                     type="text"
                     required
                     value={accountNumber}
                     onChange={(e) => setAccountNumber(e.target.value)}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white font-mono"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#A7B0C0] mb-1">Jina Lililosajiliwa:</label>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-[#A7B0C0] mb-1">Jina Lililosajiliwa:</label>
                   <input
                     type="text"
                     required
                     value={accountName}
                     onChange={(e) => setAccountName(e.target.value)}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#A7B0C0] mb-1">Kiasi cha Kutoa (TZS):</label>
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-[#A7B0C0] mb-1">Kiasi cha Kutoa (TZS):</label>
                   <input
                     type="number"
                     required
@@ -3189,15 +3267,15 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                     step={1000}
                     value={payoutAmount}
                     onChange={(e) => setPayoutAmount(parseInt(e.target.value) || 0)}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white font-mono"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono"
                   />
-                  <span className="text-[10px] text-[#A7B0C0] mt-1 block">
+                  <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] mt-1 block">
                     Salio linalopatikana: {formatTZS(availablePayoutTZS)}
                   </span>
                 </div>
 
                 {payoutError && (
-                  <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+                  <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-xs text-red-700 dark:text-red-400">
                     {payoutError}
                   </div>
                 )}
@@ -3206,7 +3284,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
                   <button
                     type="button"
                     onClick={() => setShowPayoutModal(false)}
-                    className="flex-1 py-2 rounded-xl border border-[#262E3E] text-xs text-[#A7B0C0]"
+                    className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-[#262E3E] text-xs text-slate-700 dark:text-[#A7B0C0] hover:bg-slate-100 dark:hover:bg-[#232A39]"
                   >
                     Ghairi
                   </button>
@@ -3225,13 +3303,13 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
 
       {/* Edit Video Modal */}
       {editingVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg bg-[#191E29] border border-[#262E3E] rounded-3xl shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]">
-              <h3 className="text-base font-bold text-white">Hariri Video (Edit Metadata)</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Hariri Video (Edit Metadata)</h3>
               <button 
                 onClick={() => setEditingVideo(null)}
-                className="text-[#A7B0C0] hover:text-white"
+                className="text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white"
               >
                 ✕
               </button>
@@ -3239,50 +3317,50 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-[#A7B0C0] mb-1 font-bold">Kichwa cha Video:</label>
+                <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1 font-bold">Kichwa cha Video:</label>
                 <input
                   type="text"
                   value={editingVideo.title}
                   onChange={(e) => setEditingVideo({ ...editingVideo, title: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-[#A7B0C0] mb-1 font-bold">Maelezo (Description):</label>
+                <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1 font-bold">Maelezo (Description):</label>
                 <textarea
                   rows={3}
                   value={editingVideo.description}
                   onChange={(e) => setEditingVideo({ ...editingVideo, description: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#A7B0C0] mb-1 font-bold">Ufikiaji (Visibility):</label>
+                  <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1 font-bold">Ufikiaji (Visibility):</label>
                   <select
                     value={editingVideo.visibility}
                     onChange={(e) => setEditingVideo({ ...editingVideo, visibility: e.target.value as any })}
-                    className="w-full p-2 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs capitalize"
+                    className="w-full p-2 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs capitalize"
                   >
-                    <option value="public">Public</option>
-                    <option value="unlisted">Unlisted</option>
-                    <option value="private">Private</option>
+                    <option value="public" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Public</option>
+                    <option value="unlisted" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Unlisted</option>
+                    <option value="private" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Private</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[#A7B0C0] mb-1 font-bold">Kundi (Category):</label>
+                  <label className="block text-slate-600 dark:text-[#A7B0C0] mb-1 font-bold">Kundi (Category):</label>
                   <select
                     value={editingVideo.category}
                     onChange={(e) => setEditingVideo({ ...editingVideo, category: e.target.value as any })}
-                    className="w-full p-2 rounded-xl bg-[#10131B] border border-[#262E3E] text-white text-xs"
+                    className="w-full p-2 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white text-xs"
                   >
-                    <option value="Muziki">Muziki</option>
-                    <option value="Vichekesho">Vichekesho</option>
-                    <option value="Habari">Habari</option>
-                    <option value="Elimu">Elimu</option>
-                    <option value="Michezo">Michezo</option>
+                    <option value="Muziki" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Muziki</option>
+                    <option value="Vichekesho" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Vichekesho</option>
+                    <option value="Habari" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Habari</option>
+                    <option value="Elimu" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Elimu</option>
+                    <option value="Michezo" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Michezo</option>
                   </select>
                 </div>
               </div>
@@ -3290,7 +3368,7 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
               <div className="flex justify-end gap-2 pt-3">
                 <button
                   onClick={() => setEditingVideo(null)}
-                  className="px-4 py-2 rounded-xl border border-[#262E3E] text-[#A7B0C0]"
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-[#262E3E] text-slate-700 dark:text-[#A7B0C0] hover:bg-slate-100 dark:hover:bg-[#232A39]"
                 >
                   Ghairi
                 </button>
@@ -3311,46 +3389,46 @@ Uchambuzi unaonyesha maudhui ya Exclusive Backstage & Live Performances yana uwe
 
       {/* Video Level Analytics Modal */}
       {analyzingVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg bg-[#191E29] border border-[#262E3E] rounded-3xl shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div>
-                <h3 className="text-sm font-extrabold text-white">Takwimu za Video: {analyzingVideo.title}</h3>
-                <span className="text-[10px] text-[#A7B0C0]">Uchambuzi wa kina wa video hii pekee</span>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Takwimu za Video: {analyzingVideo.title}</h3>
+                <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0]">Uchambuzi wa kina wa video hii pekee</span>
               </div>
               <button 
                 onClick={() => setAnalyzingVideo(null)}
-                className="text-[#A7B0C0] hover:text-white"
+                className="text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white"
               >
                 ✕
               </button>
             </div>
 
             <div className="grid grid-cols-3 gap-3 text-center text-xs">
-              <div className="p-3 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-                <span className="text-[10px] text-[#A7B0C0] block">Matazamio</span>
-                <span className="text-base font-black text-white font-mono">{formatViews(analyzingVideo.viewsCount, language)}</span>
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] block">Matazamio</span>
+                <span className="text-base font-black text-slate-900 dark:text-white font-mono">{formatViews(analyzingVideo.viewsCount, language)}</span>
               </div>
-              <div className="p-3 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-                <span className="text-[10px] text-[#A7B0C0] block">Likes</span>
-                <span className="text-base font-black text-[#16C784] font-mono">{analyzingVideo.likesCount}</span>
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] block">Likes</span>
+                <span className="text-base font-black text-emerald-700 dark:text-[#16C784] font-mono">{analyzingVideo.likesCount}</span>
               </div>
-              <div className="p-3 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-                <span className="text-[10px] text-[#A7B0C0] block">Retention</span>
-                <span className="text-base font-black text-amber-400 font-mono">71.2%</span>
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+                <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] block">Retention</span>
+                <span className="text-base font-black text-amber-600 dark:text-amber-400 font-mono">71.2%</span>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#10131B] border border-[#262E3E] space-y-2 text-xs">
-              <span className="font-bold text-white block">Matokeo ya Utafutaji na CTR:</span>
-              <p className="text-[11px] text-[#A7B0C0]">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] space-y-2 text-xs">
+              <span className="font-bold text-slate-900 dark:text-white block">Matokeo ya Utafutaji na CTR:</span>
+              <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">
                 Video hii inafanya vizuri sana kwenye mapendekezo ya jukwaa (Suggested Videos: 54%) na watu wanaotafuta neno #{analyzingVideo.category}.
               </p>
             </div>
 
             <button
               onClick={() => setAnalyzingVideo(null)}
-              className="w-full py-2.5 rounded-2xl bg-[#232A39] hover:bg-[#2c3548] text-white text-xs font-bold"
+              className="w-full py-2.5 rounded-2xl bg-slate-100 dark:bg-[#232A39] hover:bg-slate-200 dark:hover:bg-[#2c3548] text-slate-900 dark:text-white border border-slate-200 dark:border-transparent text-xs font-bold"
             >
               Funga Dirisha
             </button>

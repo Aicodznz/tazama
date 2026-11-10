@@ -24,6 +24,7 @@ import { useVideo } from '../../context/VideoContext';
 import { useAuth } from '../../context/AuthContext';
 import { formatTZS, translations } from '../../lib/i18n';
 import { AdCampaign, AdStatus } from '../../types';
+import { createThumbnailSvgDataUri } from '../../lib/mediaPlaceholders';
 
 interface AdminAdsManagerProps {
   onOpenCreateModal: () => void;
@@ -88,14 +89,14 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
 
       {/* Floating Toast Notification */}
       {toastMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 text-white flex items-center justify-between gap-3 shadow-xl shadow-emerald-500/10 animate-in slide-in-from-top-2">
-          <div className="flex items-center gap-2.5 text-xs font-bold text-emerald-300">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/50 text-emerald-900 dark:text-white flex items-center justify-between gap-3 shadow-xl shadow-emerald-500/10 animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-2.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
             <span>{toastMessage}</span>
           </div>
           <button 
             onClick={() => setToastMessage(null)}
-            className="text-xs text-[#A7B0C0] hover:text-white px-2 py-1"
+            className="text-xs text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white px-2 py-1"
           >
             ✕
           </button>
@@ -105,47 +106,47 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
       {/* Top Banner & KPI row */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 sm:gap-4">
         
-        <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-          <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+          <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
             <span>Zinasubiri Idhini ya Admin</span>
-            <Clock className="w-4 h-4 text-amber-400" />
+            <Clock className="w-4 h-4 text-amber-500 dark:text-amber-400" />
           </div>
-          <div className="text-2xl font-black font-mono text-amber-300 mt-1 flex items-center gap-2">
+          <div className="text-2xl font-black font-mono text-amber-600 dark:text-amber-300 mt-1 flex items-center gap-2">
             <span>{pendingCount}</span>
             {pendingCount > 0 && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-600/30 text-red-300 font-sans border border-red-500/40 animate-pulse">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/15 dark:bg-red-600/30 text-red-700 dark:text-red-300 font-sans border border-red-500/30 dark:border-red-500/40 animate-pulse">
                 Inahitaji Hatua
               </span>
             )}
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-          <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+          <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
             <span>Matangazo Yaliyo Hewani</span>
-            <CheckCircle2 className="w-4 h-4 text-[#16C784]" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
           </div>
-          <div className="text-2xl font-black font-mono text-[#16C784] mt-1">
+          <div className="text-2xl font-black font-mono text-emerald-700 dark:text-[#16C784] mt-1">
             {activeCount}
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-          <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+          <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
             <span>Jumla ya Fedha za Matangazo</span>
-            <DollarSign className="w-4 h-4 text-emerald-400" />
+            <DollarSign className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div className="text-2xl font-black font-mono text-white mt-1">
+          <div className="text-2xl font-black font-mono text-slate-900 dark:text-white mt-1">
             {formatTZS(totalRevenueCollectedTZS)}
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E]">
-          <div className="flex items-center justify-between text-xs text-[#A7B0C0]">
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+          <div className="flex items-center justify-between text-xs text-slate-600 dark:text-[#A7B0C0]">
             <span>Kampeni Zote Zilizoundwa</span>
-            <Megaphone className="w-4 h-4 text-purple-400" />
+            <Megaphone className="w-4 h-4 text-purple-600 dark:text-purple-400" />
           </div>
-          <div className="text-2xl font-black font-mono text-purple-300 mt-1">
+          <div className="text-2xl font-black font-mono text-purple-700 dark:text-purple-300 mt-1">
             {adCampaigns.length}
           </div>
         </div>
@@ -170,7 +171,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
               className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                 statusFilter === tab.id
                   ? 'bg-amber-500 text-black shadow-md shadow-amber-500/20'
-                  : 'bg-[#10131B] text-[#A7B0C0] hover:text-white hover:bg-[#191E29] border border-[#262E3E]'
+                  : 'bg-slate-50 dark:bg-[#10131B] text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#191E29] border border-slate-200 dark:border-[#262E3E]'
               }`}
             >
               {tab.alert && <span className="w-2 h-2 rounded-full bg-red-600 animate-ping" />}
@@ -182,13 +183,13 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
         {/* Right: Search & Create Button */}
         <div className="flex items-center gap-2">
           <div className="relative flex-1 sm:w-56">
-            <Search className="w-3.5 h-3.5 text-[#A7B0C0] absolute left-3 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-slate-400 dark:text-[#A7B0C0] absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tafuta kampeni, mtangazaji..."
-              className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-[#A7B0C0] focus:outline-none focus:border-amber-500"
+              className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0] focus:outline-none focus:border-amber-500"
             />
           </div>
 
@@ -205,10 +206,10 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
 
       {/* Campaigns List */}
       {filteredCampaigns.length === 0 ? (
-        <div className="p-8 rounded-3xl bg-[#10131B] border border-[#262E3E] text-center space-y-3">
-          <Megaphone className="w-10 h-10 text-[#A7B0C0] mx-auto opacity-40" />
-          <h4 className="text-sm font-bold text-white">Hakuna Matangazo Katika Sehemu Hii</h4>
-          <p className="text-xs text-[#A7B0C0]">
+        <div className="p-8 rounded-3xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-center space-y-3">
+          <Megaphone className="w-10 h-10 text-slate-400 dark:text-[#A7B0C0] mx-auto opacity-40" />
+          <h4 className="text-sm font-bold text-slate-900 dark:text-white">Hakuna Matangazo Katika Sehemu Hii</h4>
+          <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
             {statusFilter === 'pending_approval' 
               ? 'Hakuna tangazo linalosubiri idhini kwa sasa. Matangazo yote yaliyolipwa yamehakikiwa.' 
               : 'Hakuna rekodi zinazoendana na machaguo yako ya sasa.'}
@@ -226,8 +227,8 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
                 key={ad.id}
                 className={`p-5 rounded-3xl border transition-all ${
                   isPending 
-                    ? 'bg-gradient-to-r from-[#191E29] to-[#1e1b15] border-amber-500/50 shadow-xl shadow-amber-500/5' 
-                    : 'bg-[#10131B] border-[#262E3E]'
+                    ? 'bg-gradient-to-r from-amber-50/90 to-white dark:from-[#191E29] dark:to-[#1e1b15] border-amber-400 dark:border-amber-500/50 shadow-xl shadow-amber-500/5' 
+                    : 'bg-slate-50 dark:bg-[#10131B] border-slate-200 dark:border-[#262E3E]'
                 }`}
               >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -269,46 +270,46 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
                     {/* Texts */}
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-extrabold uppercase font-mono px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                        <span className="text-[10px] font-extrabold uppercase font-mono px-2.5 py-0.5 rounded-full bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
                           {ad.adFormat.replace('_', ' ')}
                         </span>
                         
                         <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                          isActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                          isPending ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse' :
-                          isRejected ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                          'bg-gray-500/20 text-gray-400'
+                          isActive ? 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30' :
+                          isPending ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 animate-pulse' :
+                          isRejected ? 'bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-500/30' :
+                          'bg-slate-200 dark:bg-gray-500/20 text-slate-600 dark:text-gray-400'
                         }`}>
                           {isActive ? '● Inaonyeshwa (Active)' :
                            isPending ? '⏳ Inasubiri Idhini ya Admin' :
                            isRejected ? '✕ Imekataliwa' : 'Imesitishwa'}
                         </span>
 
-                        <span className="text-[11px] text-[#A7B0C0] font-mono">
+                        <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0] font-mono">
                           ID: {ad.id}
                         </span>
                       </div>
 
-                      <h4 className="text-sm font-black text-white hover:text-amber-400 cursor-pointer" onClick={() => setPreviewingAd(ad)}>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white hover:text-amber-600 dark:hover:text-amber-400 cursor-pointer" onClick={() => setPreviewingAd(ad)}>
                         {ad.campaignName}
                       </h4>
 
-                      <p className="text-xs font-semibold text-amber-300">
+                      <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
                         "{ad.headline}"
                       </p>
 
-                      <p className="text-xs text-[#A7B0C0] line-clamp-1">
+                      <p className="text-xs text-slate-600 dark:text-[#A7B0C0] line-clamp-1">
                         {ad.description}
                       </p>
 
                       {/* Advertiser & Payment details */}
-                      <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-[#A7B0C0]">
-                        <span className="flex items-center gap-1 text-white">
-                          <User className="w-3 h-3 text-amber-400" />
+                      <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-slate-600 dark:text-[#A7B0C0]">
+                        <span className="flex items-center gap-1 text-slate-900 dark:text-white">
+                          <User className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                           <strong>{ad.creatorName}</strong> ({ad.creatorRole})
                         </span>
                         <span>•</span>
-                        <span className="text-emerald-400 font-bold font-mono">
+                        <span className="text-emerald-700 dark:text-emerald-400 font-bold font-mono">
                           {formatTZS(ad.budgetTZS)} ({ad.paymentProvider || 'M-Pesa'})
                         </span>
                         <span>•</span>
@@ -318,7 +319,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
                             href={ad.destinationUrl} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="text-blue-400 hover:underline flex items-center gap-0.5 ml-1"
+                            className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 ml-1"
                           >
                             <span>{ad.ctaText}: {ad.destinationUrl.replace('https://', '').slice(0, 20)}...</span>
                             <ExternalLink className="w-3 h-3" />
@@ -333,20 +334,20 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
                   <div className="flex flex-col sm:flex-row lg:flex-col items-end justify-between gap-3 shrink-0">
                     
                     {/* Performance metrics */}
-                    <div className="flex items-center gap-4 text-xs font-mono bg-[#191E29] px-3.5 py-1.5 rounded-2xl border border-[#262E3E]">
+                    <div className="flex items-center gap-4 text-xs font-mono bg-white dark:bg-[#191E29] px-3.5 py-1.5 rounded-2xl border border-slate-200 dark:border-[#262E3E]">
                       <div>
-                        <span className="text-[9px] text-[#A7B0C0] block font-sans">Impressions</span>
-                        <span className="font-bold text-white">{(ad.impressions || 0).toLocaleString()}</span>
+                        <span className="text-[9px] text-slate-500 dark:text-[#A7B0C0] block font-sans">Impressions</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{(ad.impressions || 0).toLocaleString()}</span>
                       </div>
-                      <div className="h-6 w-[1px] bg-[#262E3E]" />
+                      <div className="h-6 w-[1px] bg-slate-200 dark:bg-[#262E3E]" />
                       <div>
-                        <span className="text-[9px] text-[#A7B0C0] block font-sans">Clicks</span>
-                        <span className="font-bold text-amber-400">{(ad.clicks || 0).toLocaleString()}</span>
+                        <span className="text-[9px] text-slate-500 dark:text-[#A7B0C0] block font-sans">Clicks</span>
+                        <span className="font-bold text-amber-600 dark:text-amber-400">{(ad.clicks || 0).toLocaleString()}</span>
                       </div>
-                      <div className="h-6 w-[1px] bg-[#262E3E]" />
+                      <div className="h-6 w-[1px] bg-slate-200 dark:bg-[#262E3E]" />
                       <div>
-                        <span className="text-[9px] text-[#A7B0C0] block font-sans">Iliyotumika</span>
-                        <span className="font-bold text-[#16C784]">{formatTZS(ad.spendTZS || 0)}</span>
+                        <span className="text-[9px] text-slate-500 dark:text-[#A7B0C0] block font-sans">Iliyotumika</span>
+                        <span className="font-bold text-emerald-700 dark:text-[#16C784]">{formatTZS(ad.spendTZS || 0)}</span>
                       </div>
                     </div>
 
@@ -369,7 +370,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
                               setRejectingAd(ad);
                               setRejectionReason('');
                             }}
-                            className="px-3 py-2 rounded-xl bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-white border border-red-500/30 text-xs font-bold transition-all cursor-pointer"
+                            className="px-3 py-2 rounded-xl bg-red-600/15 dark:bg-red-600/20 hover:bg-red-600 hover:text-white text-red-700 dark:text-red-400 border border-red-500/30 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
                             title="Kataa tangazo kwa kutoa sababu"
                           >
                             <XCircle className="w-4 h-4" />
@@ -381,7 +382,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
                       {isActive && (
                         <button
                           onClick={() => updateAdCampaignStatus(ad.id, 'paused')}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#232A39] hover:bg-amber-500 hover:text-black text-white text-xs font-bold transition-all"
+                          className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-[#232A39] border border-slate-200 dark:border-transparent hover:bg-amber-500 hover:text-black text-slate-900 dark:text-white text-xs font-bold transition-all"
                         >
                           Sitisha (Pause)
                         </button>
@@ -398,7 +399,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
 
                       <button
                         onClick={() => setPreviewingAd(ad)}
-                        className="p-2 rounded-xl bg-[#191E29] hover:bg-[#232A39] text-[#A7B0C0] hover:text-white"
+                        className="p-2 rounded-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-transparent hover:bg-slate-100 dark:hover:bg-[#232A39] text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white"
                         title="Kagua muonekano wa tangazo"
                       >
                         <Eye className="w-4 h-4" />
@@ -407,7 +408,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
                     </div>
 
                     {isRejected && ad.rejectionReason && (
-                      <span className="text-[10px] text-red-400 block italic max-w-xs text-right">
+                      <span className="text-[10px] text-red-600 dark:text-red-400 block italic max-w-xs text-right">
                         Sababu: "{ad.rejectionReason}"
                       </span>
                     )}
@@ -423,19 +424,19 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
 
       {/* Rejection Modal with Reason input */}
       {rejectingAd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-[#191E29] border border-red-500/40 rounded-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white dark:bg-[#191E29] border border-red-300 dark:border-red-500/40 rounded-3xl p-6 shadow-2xl space-y-4">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400" />
               Kataa Tangazo: {rejectingAd.campaignName}
             </h3>
 
-            <p className="text-xs text-[#A7B0C0]">
+            <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
               Mtumiaji <strong>{rejectingAd.creatorName}</strong> ataarifiwa sababu ya kukataliwa na atapata nafasi ya kurekebisha tangazo lake.
             </p>
 
             <div>
-              <label className="text-xs text-[#A7B0C0] block mb-1">
+              <label className="text-xs text-slate-700 dark:text-[#A7B0C0] block mb-1">
                 Sababu ya kukataa (Admin Explanation):
               </label>
               <textarea
@@ -443,7 +444,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 placeholder="Mfano: Kiungo cha tovuti hakifanyi kazi, au picha inakiuka masharti ya maudhui..."
-                className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl p-3 text-xs text-white placeholder-[#A7B0C0] focus:outline-none focus:border-red-500"
+                className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0] focus:outline-none focus:border-red-500"
               />
             </div>
 
@@ -451,7 +452,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
               <button
                 type="button"
                 onClick={() => setRejectingAd(null)}
-                className="px-4 py-2 rounded-xl bg-[#10131B] text-xs font-bold text-white"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#10131B] border border-slate-200 dark:border-transparent text-xs font-bold text-slate-700 dark:text-white hover:bg-slate-200 dark:hover:bg-white/10"
               >
                 Ghairi
               </button>
@@ -469,21 +470,21 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
 
       {/* Ad Creative Deep Dive Preview Modal */}
       {previewingAd && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="w-full max-w-2xl bg-[#141824] border border-[#262E3E] rounded-3xl shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl bg-white dark:bg-[#141824] border border-slate-200 dark:border-[#262E3E] rounded-3xl shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             
-            <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]">
               <div>
-                <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold">
+                <span className="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 uppercase font-bold">
                   {previewingAd.adFormat.replace('_', ' ')}
                 </span>
-                <h3 className="text-base font-black text-white">{previewingAd.campaignName}</h3>
+                <h3 className="text-base font-black text-slate-900 dark:text-white">{previewingAd.campaignName}</h3>
               </div>
-              <button onClick={() => setPreviewingAd(null)} className="text-[#A7B0C0] hover:text-white p-1">✕</button>
+              <button onClick={() => setPreviewingAd(null)} className="text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white p-1">✕</button>
             </div>
 
             {/* Media playback preview */}
-            <div className="rounded-2xl overflow-hidden bg-black aspect-video border border-[#262E3E] relative">
+            <div className="rounded-2xl overflow-hidden bg-black aspect-video border border-slate-200 dark:border-[#262E3E] relative">
               {previewingAd.mediaType === 'video' && previewingAd.mediaUrl ? (
                 <video 
                   src={previewingAd.mediaUrl} 
@@ -496,17 +497,25 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
                   className="w-full h-full object-contain" 
                 />
               ) : (
-                <img src={previewingAd.mediaUrl || ''} alt={previewingAd.headline} className="w-full h-full object-contain" />
+                <img
+                  src={previewingAd.mediaUrl || createThumbnailSvgDataUri(previewingAd.headline, 'Tangazo')}
+                  alt={previewingAd.headline}
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = createThumbnailSvgDataUri(previewingAd.headline, 'Tangazo');
+                  }}
+                  className="w-full h-full object-contain"
+                />
               )}
             </div>
 
             {/* Ad text & CTA card */}
-            <div className="p-4 rounded-2xl bg-[#10131B] border border-[#262E3E] flex items-center justify-between gap-4">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] flex items-center justify-between gap-4">
               <div className="space-y-1">
                 <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-amber-500 text-black uppercase">Tangazo</span>
-                <h4 className="text-sm font-bold text-white">{previewingAd.headline}</h4>
-                <p className="text-xs text-[#A7B0C0]">{previewingAd.description}</p>
-                <span className="text-[11px] text-blue-400 font-mono block">{previewingAd.destinationUrl}</span>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">{previewingAd.headline}</h4>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">{previewingAd.description}</p>
+                <span className="text-[11px] text-blue-600 dark:text-blue-400 font-mono block">{previewingAd.destinationUrl}</span>
               </div>
 
               <a
@@ -523,7 +532,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
             {/* Approval bar if pending */}
             {previewingAd.status === 'pending_approval' && (
               <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-between">
-                <span className="text-xs text-amber-300 font-bold">Tangazo hili linasubiri idhini yako</span>
+                <span className="text-xs text-amber-800 dark:text-amber-300 font-bold">Tangazo hili linasubiri idhini yako</span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => {
@@ -540,7 +549,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
                       setPreviewingAd(null);
                       setRejectingAd(ad);
                     }}
-                    className="px-3 py-2 rounded-xl bg-red-600/30 text-red-300 text-xs font-bold"
+                    className="px-3 py-2 rounded-xl bg-red-600/20 dark:bg-red-600/30 text-red-700 dark:text-red-300 text-xs font-bold"
                   >
                     Kataa
                   </button>
@@ -551,7 +560,7 @@ export const AdminAdsManager: React.FC<AdminAdsManagerProps> = ({ onOpenCreateMo
             <div className="flex items-center justify-end pt-2">
               <button
                 onClick={() => setPreviewingAd(null)}
-                className="px-4 py-2 rounded-xl bg-[#10131B] text-xs font-bold text-white"
+                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#10131B] border border-slate-200 dark:border-transparent text-xs font-bold text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-white/10"
               >
                 Funga
               </button>

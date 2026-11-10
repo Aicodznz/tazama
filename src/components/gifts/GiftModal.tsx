@@ -65,23 +65,23 @@ export const GiftModal: React.FC<GiftModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-lg bg-[#191E29] border border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6 overflow-y-auto max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-lg bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6 overflow-y-auto max-h-[90vh]">
         
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#262E3E]">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-[#262E3E]">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#16C784] to-[#10B981] flex items-center justify-center text-white shadow-md shadow-[#16C784]/20">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#16C784] to-[#10B981] flex items-center justify-center text-black shadow-md shadow-[#16C784]/20">
               <Gift className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">{t.giftTitle}</h3>
-              <p className="text-xs text-[#A7B0C0]">Kwenda kwa <span className="text-white font-semibold">{channelName}</span></p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">{t.giftTitle}</h3>
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Kwenda kwa <span className="text-slate-900 dark:text-white font-semibold">{channelName}</span></p>
             </div>
           </div>
           <button 
             onClick={onClose} 
-            className="p-1.5 rounded-full text-[#A7B0C0] hover:text-white hover:bg-[#232A39] transition-colors"
+            className="p-1.5 rounded-full text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#232A39] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -90,27 +90,27 @@ export const GiftModal: React.FC<GiftModalProps> = ({
         {/* Success Screen */}
         {success ? (
           <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
-            <div className="w-16 h-16 rounded-full bg-[#16C784]/20 border border-[#16C784] flex items-center justify-center text-[#16C784] animate-bounce">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/15 dark:bg-[#16C784]/20 border border-[#16C784] flex items-center justify-center text-emerald-600 dark:text-[#16C784] animate-bounce">
               <CheckCircle className="w-8 h-8" />
             </div>
-            <h4 className="text-lg font-bold text-white">{t.giftSuccess}</h4>
-            <p className="text-xs text-[#A7B0C0]">
-              Umetuma <span className="text-[#16C784] font-bold">{selectedGift.name[language]}</span> ({formatTZS(selectedGift.priceTZS)}) kwa {channelName}!
+            <h4 className="text-lg font-bold text-slate-900 dark:text-white">{t.giftSuccess}</h4>
+            <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
+              Umetuma <span className="text-emerald-700 dark:text-[#16C784] font-bold">{selectedGift.name[language]}</span> ({formatTZS(selectedGift.priceTZS)}) kwa {channelName}!
             </p>
           </div>
         ) : (
           <div className="mt-4 space-y-4">
             
             {/* User Wallet Balance Bar */}
-            <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#10131B] border border-[#262E3E]">
-              <div className="flex items-center gap-2 text-xs text-[#A7B0C0]">
-                <Wallet className="w-4 h-4 text-[#16C784]" />
+            <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
+              <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-[#A7B0C0]">
+                <Wallet className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
                 <span>{t.balance}:</span>
-                <span className="text-white font-bold font-mono">{formatTZS(currentBalance)}</span>
+                <span className="text-slate-900 dark:text-white font-bold font-mono">{formatTZS(currentBalance)}</span>
               </div>
               <button
                 onClick={() => { onClose(); onOpenWallet(); }}
-                className="text-xs font-semibold text-[#16C784] hover:underline"
+                className="text-xs font-semibold text-emerald-700 dark:text-[#16C784] hover:underline"
               >
                 + {language === 'sw' ? 'Ongeza Salio' : 'Top Up'}
               </button>
@@ -118,7 +118,7 @@ export const GiftModal: React.FC<GiftModalProps> = ({
 
             {/* Gift Grid */}
             <div>
-              <label className="block text-xs font-semibold text-[#A7B0C0] mb-2">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] mb-2">
                 Chagua Zawadi ya Kipekee ya Tanzania:
               </label>
               <div className="grid grid-cols-3 gap-2.5 max-h-56 overflow-y-auto pr-1">
@@ -130,13 +130,13 @@ export const GiftModal: React.FC<GiftModalProps> = ({
                       onClick={() => setSelectedGift(g)}
                       className={`flex flex-col items-center p-3 rounded-2xl border text-center transition-all ${
                         isSelected 
-                          ? 'border-[#16C784] bg-[#16C784]/10 shadow-lg shadow-[#16C784]/15' 
-                          : 'border-[#262E3E] bg-[#10131B] hover:border-[#A7B0C0]/50'
+                          ? 'border-[#16C784] bg-emerald-50 dark:bg-[#16C784]/10 shadow-lg shadow-[#16C784]/15' 
+                          : 'border-slate-200 dark:border-[#262E3E] bg-slate-50 dark:bg-[#10131B] hover:border-slate-300 dark:hover:border-[#A7B0C0]/50'
                       }`}
                     >
                       <span className="text-3xl mb-1">{g.icon}</span>
-                      <span className="text-[11px] font-bold text-white line-clamp-1">{g.name[language]}</span>
-                      <span className="text-[11px] font-mono text-[#16C784] font-semibold mt-0.5">
+                      <span className="text-[11px] font-bold text-slate-900 dark:text-white line-clamp-1">{g.name[language]}</span>
+                      <span className="text-[11px] font-mono text-emerald-700 dark:text-[#16C784] font-semibold mt-0.5">
                         {formatTZS(g.priceTZS)}
                       </span>
                     </button>
@@ -146,14 +146,14 @@ export const GiftModal: React.FC<GiftModalProps> = ({
             </div>
 
             {/* Selected Gift Description */}
-            <div className="p-3 rounded-xl bg-[#232A39]/60 border border-[#262E3E] text-xs">
-              <span className="text-white font-semibold">{selectedGift.name[language]}: </span>
-              <span className="text-[#A7B0C0]">{selectedGift.description[language]}</span>
+            <div className="p-3 rounded-xl bg-slate-100 dark:bg-[#232A39]/60 border border-slate-200 dark:border-[#262E3E] text-xs">
+              <span className="text-slate-900 dark:text-white font-semibold">{selectedGift.name[language]}: </span>
+              <span className="text-slate-600 dark:text-[#A7B0C0]">{selectedGift.description[language]}</span>
             </div>
 
             {/* Custom Encouragement Message */}
             <div>
-              <label className="block text-xs font-semibold text-[#A7B0C0] mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] mb-1.5">
                 Ujumbe Maalum (Hiari):
               </label>
               <input
@@ -162,12 +162,12 @@ export const GiftModal: React.FC<GiftModalProps> = ({
                 onChange={(e) => setCustomMessage(e.target.value)}
                 placeholder="Mfano: Kazi nzuri sana! Endelea kutuwakilisha 🇹🇿"
                 maxLength={150}
-                className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3.5 py-2 text-xs text-white placeholder-[#A7B0C0]/60 focus:outline-none focus:border-[#16C784]"
+                className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0]/60 focus:outline-none focus:border-[#16C784]"
               />
             </div>
 
             {errorMsg && (
-              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-400">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{errorMsg}</span>
               </div>
@@ -178,7 +178,7 @@ export const GiftModal: React.FC<GiftModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl border border-[#262E3E] text-xs font-semibold text-[#A7B0C0] hover:text-white hover:bg-[#232A39] transition-colors"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#262E3E] text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#232A39] transition-colors"
               >
                 {t.cancel}
               </button>

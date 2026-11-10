@@ -27,6 +27,7 @@ import { useVideo } from '../../context/VideoContext';
 import { translations, formatTZS, formatRelativeTime } from '../../lib/i18n';
 import { UserRole } from '../../types';
 import { PWAInstallModal } from '../modals/PWAInstallModal';
+import { createAvatarSvgDataUri } from '../../lib/mediaPlaceholders';
 
 interface NavbarProps {
   onOpenUpload: () => void;
@@ -91,14 +92,14 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#262E3E] bg-[#10131B]/95 backdrop-blur-md px-3 sm:px-6 py-2.5 min-h-[64px] transition-colors">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-[#262E3E] bg-white/95 dark:bg-[#10131B]/95 backdrop-blur-md px-3 sm:px-6 py-2.5 min-h-[64px] transition-colors">
       <div className="flex items-center justify-between gap-2 md:gap-4">
         
         {/* Left: Mobile hamburger & Tazama Logo */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={onToggleSidebar}
-            className="hidden md:flex p-1.5 sm:p-2 rounded-lg text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors focus:outline-none"
+            className="hidden md:flex p-1.5 sm:p-2 rounded-lg text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#191E29] transition-colors focus:outline-none"
             title="Fungua Menyu"
             aria-label="Toggle navigation menu"
           >
@@ -116,11 +117,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             
             <div className="flex flex-col text-left justify-center">
-              <span className="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-1 leading-tight">
+              <span className="text-lg sm:text-xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-1 leading-tight">
                 TAZAMA
                 <span className="w-1.5 h-1.5 rounded-full bg-[#FF3040]" />
               </span>
-              <span className="hidden sm:inline text-[9px] font-medium tracking-wider text-[#A7B0C0] uppercase leading-none">
+              <span className="hidden sm:inline text-[9px] font-medium tracking-wider text-slate-500 dark:text-[#A7B0C0] uppercase leading-none">
                 {t.tagline}
               </span>
             </div>
@@ -135,20 +136,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder={t.searchPlaceholder}
-              className="w-full bg-[#191E29] border border-[#262E3E] rounded-full py-2 pl-4 pr-11 text-sm text-white placeholder-[#A7B0C0] focus:outline-none focus:border-[#FF3040] focus:ring-1 focus:ring-[#FF3040] transition-all"
+              className="w-full bg-slate-100 dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-full py-2 pl-4 pr-11 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0] focus:outline-none focus:border-[#FF3040] focus:ring-1 focus:ring-[#FF3040] transition-all"
             />
             {searchInput && (
               <button 
                 type="button" 
                 onClick={() => { setSearchInput(''); setSearchQuery(''); }}
-                className="absolute right-10 text-[#A7B0C0] hover:text-white p-1"
+                className="absolute right-10 text-slate-500 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white p-1"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
             <button
               type="submit"
-              className="absolute right-1 bg-[#232A39] hover:bg-[#FF3040] text-[#A7B0C0] hover:text-white p-2 rounded-full transition-colors"
+              className="absolute right-1 bg-slate-200 dark:bg-[#232A39] hover:bg-[#FF3040] text-slate-600 dark:text-[#A7B0C0] hover:text-white p-2 rounded-full transition-colors"
               title={t.searchPlaceholder}
             >
               <Search className="w-4 h-4" />
@@ -162,7 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Mobile Search Toggle Button */}
           <button
             onClick={() => setShowMobileSearch(!showMobileSearch)}
-            className="sm:hidden p-1.5 rounded-full text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors"
+            className="sm:hidden p-1.5 rounded-full text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#191E29] transition-colors"
             title="Tafuta"
           >
             <Search className="w-4 h-4" />
@@ -173,19 +174,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={toggleDataSaver}
             className={`hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 ${
               isDataSaver 
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-md shadow-amber-500/20' 
-                : 'bg-[#191E29] text-[#A7B0C0] hover:text-white border border-[#262E3E]'
+                ? 'bg-amber-50 text-amber-800 border border-amber-300 shadow-sm dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/50 dark:shadow-md dark:shadow-amber-500/20' 
+                : 'bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 dark:bg-[#191E29] dark:text-[#A7B0C0] dark:hover:text-white dark:border-[#262E3E]'
             }`}
             title={isDataSaver ? 'Hali ya Kubana Bando Imewashwa (360p)' : 'Washa Hali ya Kubana Bando (Data Saver)'}
           >
-            <Zap className={`w-3.5 h-3.5 ${isDataSaver ? 'text-amber-400 fill-amber-400' : ''}`} />
+            <Zap className={`w-3.5 h-3.5 ${isDataSaver ? 'text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400' : ''}`} />
             <span className="hidden md:inline text-[11px]">{isDataSaver ? 'Bando: 360p' : 'Bana Bando'}</span>
           </button>
 
           {/* Live Streaming Button (Hidden on small mobile to prevent clutter) */}
           <button
             onClick={() => onNavigate('live')}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 text-xs font-bold transition-all shrink-0"
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 dark:bg-red-600/20 dark:hover:bg-red-600/30 dark:border-red-500/30 dark:text-red-400 text-xs font-bold transition-all shrink-0"
             title="Tazama Mubashara (Live Streaming)"
           >
             <span className="w-2 h-2 rounded-full bg-[#FF3040] animate-pulse" />
@@ -205,10 +206,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Install PWA Button */}
           <button
             onClick={() => setShowPWAModal(true)}
-            className="hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#10131B] border border-[#262E3E] hover:border-white/30 text-[11px] font-semibold text-white/90 hover:text-white transition-all shrink-0"
+            className="hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-slate-100 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] hover:border-slate-300 dark:hover:border-white/30 text-[11px] font-semibold text-slate-700 dark:text-white/90 hover:text-slate-900 dark:hover:text-white transition-all shrink-0"
             title="Weka App ya Tazama kwenye Simu yako"
           >
-            <Download className="w-3.5 h-3.5 text-[#16C784]" />
+            <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
             <span>Weka App</span>
           </button>
 
@@ -216,10 +217,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           {profile && (
             <button
               onClick={onOpenWallet}
-              className="flex items-center gap-1.5 bg-[#191E29] border border-[#262E3E] hover:border-[#16C784] px-2 sm:px-2.5 py-1.5 rounded-full text-xs font-semibold text-[#16C784] transition-all shrink-0"
+              className="flex items-center gap-1.5 bg-emerald-50 dark:bg-[#191E29] border border-emerald-200 dark:border-[#262E3E] hover:border-emerald-400 dark:hover:border-[#16C784] px-2 sm:px-2.5 py-1.5 rounded-full text-xs font-semibold text-emerald-700 dark:text-[#16C784] transition-all shrink-0"
               title="Mfuko wa Pesa (Mobile Money)"
             >
-              <Wallet className="w-3.5 h-3.5 text-[#16C784]" />
+              <Wallet className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
               <span className="font-mono text-[11px] sm:text-xs">
                 {profile.balanceTZS 
                   ? (profile.balanceTZS >= 1000000 
@@ -234,10 +235,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           {profile && (role === 'admin' || profile.email === 'amytzee@gmail.com') && (
             <button
               onClick={() => onNavigate('admin')}
-              className="flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 text-amber-300 px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-amber-500/10 shrink-0 relative"
+              className="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 shadow-sm dark:bg-amber-500/20 dark:hover:bg-amber-500/30 dark:border-amber-500/50 dark:text-amber-300 px-3 py-1.5 rounded-full text-xs font-bold transition-all dark:shadow-md dark:shadow-amber-500/10 shrink-0 relative"
               title="Jopo la Msimamizi Mkuu (Admin Hub)"
             >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>Admin</span>
               {pendingAdsCount > 0 && (
                 <span className="w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center animate-bounce shadow">
@@ -251,10 +252,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           {profile && (role === 'creator' || profile.channelId) && (
             <button
               onClick={() => onNavigate('studio')}
-              className="flex items-center gap-1.5 bg-[#16C784]/20 hover:bg-[#16C784]/30 border border-[#16C784]/40 text-[#16C784] px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-md shadow-[#16C784]/15 shrink-0"
+              className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 shadow-sm dark:bg-[#16C784]/20 dark:hover:bg-[#16C784]/30 dark:border-[#16C784]/40 dark:text-[#16C784] px-3 py-1.5 rounded-full text-xs font-bold transition-all dark:shadow-md dark:shadow-[#16C784]/15 shrink-0"
               title="Dashibodi ya Studio ya Kituo Chako"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#16C784]" />
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
               <span>Studio</span>
             </button>
           )}
@@ -262,7 +263,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Language Switcher (Desktop) */}
           <button
             onClick={() => setLanguage(language === 'sw' ? 'en' : 'sw')}
-            className="hidden md:flex items-center gap-1 p-2 rounded-full text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors"
+            className="hidden md:flex items-center gap-1 p-2 rounded-full text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#191E29] transition-colors"
             title="Badili Lugha / Switch Language"
           >
             <Globe className="w-4 h-4" />
@@ -288,7 +289,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-1.5 sm:p-2 rounded-full text-[#A7B0C0] hover:text-white hover:bg-[#191E29] transition-colors focus:outline-none cursor-pointer"
+                className="relative p-1.5 sm:p-2 rounded-full text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#191E29] transition-colors focus:outline-none cursor-pointer"
                 title="Taarifa (Notifications)"
               >
                 <Bell className="w-4 h-4" />
@@ -300,12 +301,12 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-[#141824] border border-[#262E3E] rounded-3xl shadow-2xl p-3 sm:p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]">
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-[#141824] border border-slate-200 dark:border-[#262E3E] rounded-3xl shadow-2xl p-3 sm:p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-sm font-bold text-white">Taarifa Mpya</h4>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white">Taarifa Mpya</h4>
                       {unreadNotificationCount > 0 && (
-                        <span className="px-2 py-0.5 rounded-full bg-[#FF3040]/20 text-[#FF3040] font-mono text-[10px] font-extrabold">
+                        <span className="px-2 py-0.5 rounded-full bg-[#FF3040]/15 dark:bg-[#FF3040]/20 text-[#FF3040] font-mono text-[10px] font-extrabold">
                           {unreadNotificationCount} mpya
                         </span>
                       )}
@@ -313,7 +314,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     {unreadNotificationCount > 0 && (
                       <button
                         onClick={() => markAllNotificationsAsRead()}
-                        className="flex items-center gap-1 text-[11px] text-[#16C784] hover:underline font-semibold cursor-pointer"
+                        className="flex items-center gap-1 text-[11px] text-emerald-700 dark:text-[#16C784] hover:underline font-semibold cursor-pointer"
                         title="Weka zote zimesomwa"
                       >
                         <CheckCheck className="w-3.5 h-3.5" />
@@ -322,10 +323,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                     )}
                   </div>
 
-                  <div className="divide-y divide-[#262E3E]/60 max-h-[360px] overflow-y-auto no-scrollbar py-1">
+                  <div className="divide-y divide-slate-100 dark:divide-[#262E3E]/60 max-h-[360px] overflow-y-auto no-scrollbar py-1">
                     {notifications.length === 0 ? (
-                      <div className="py-8 text-center text-[#A7B0C0] space-y-2">
-                        <Bell className="w-8 h-8 mx-auto text-[#262E3E]" />
+                      <div className="py-8 text-center text-slate-500 dark:text-[#A7B0C0] space-y-2">
+                        <Bell className="w-8 h-8 mx-auto text-slate-300 dark:text-[#262E3E]" />
                         <p className="text-xs">Hakuna taarifa mpya kwa sasa.</p>
                       </div>
                     ) : (
@@ -345,25 +346,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                               setShowNotifications(false);
                             }}
                             className={`py-2.5 px-2 rounded-xl transition-colors cursor-pointer flex items-start gap-2.5 ${
-                              !n.isRead ? 'bg-[#191E29] hover:bg-[#202736]' : 'hover:bg-white/5 opacity-80 hover:opacity-100'
+                              !n.isRead ? 'bg-slate-50 hover:bg-slate-100 dark:bg-[#191E29] dark:hover:bg-[#202736]' : 'hover:bg-slate-50 dark:hover:bg-white/5 opacity-80 hover:opacity-100'
                             }`}
                           >
                             <div className="w-2 h-2 rounded-full mt-2 shrink-0 bg-[#FF3040]" style={{ visibility: n.isRead ? 'hidden' : 'visible' }} />
                             
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-1">
-                                <h5 className={`text-xs truncate ${!n.isRead ? 'font-bold text-white' : 'font-medium text-[#CBD5E1]'}`}>
+                                <h5 className={`text-xs truncate ${!n.isRead ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-700 dark:text-[#CBD5E1]'}`}>
                                   {n.title}
                                 </h5>
-                                <span className="text-[10px] text-[#A7B0C0] font-mono shrink-0">
+                                <span className="text-[10px] text-slate-500 dark:text-[#A7B0C0] font-mono shrink-0">
                                   {formatRelativeTime(n.createdAt, language)}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-[#A7B0C0] line-clamp-2 mt-0.5 leading-snug">
+                              <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0] line-clamp-2 mt-0.5 leading-snug">
                                 {n.message}
                               </p>
                               {n.actionLabel && (
-                                <span className="inline-block mt-1.5 text-[10px] font-bold text-[#16C784] hover:underline">
+                                <span className="inline-block mt-1.5 text-[10px] font-bold text-emerald-700 dark:text-[#16C784] hover:underline">
                                   {n.actionLabel} &rarr;
                                 </span>
                               )}
@@ -374,13 +375,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                     )}
                   </div>
 
-                  <div className="pt-2 border-t border-[#262E3E] text-center">
+                  <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E] text-center">
                     <button
                       onClick={() => {
                         setShowNotifications(false);
                         onNavigate('settings');
                       }}
-                      className="text-[11px] text-[#A7B0C0] hover:text-white transition-colors"
+                      className="text-[11px] text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white transition-colors"
                     >
                       Mipangilio ya Taarifa
                     </button>
@@ -398,9 +399,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className="flex items-center gap-1.5 p-1 rounded-full border border-transparent hover:border-[#FF3040] transition-colors focus:outline-none"
               >
                 <img
-                  src={profile.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'}
+                  src={profile.photoURL || createAvatarSvgDataUri(profile.displayName || 'Tazama')}
                   alt={profile.displayName}
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-2 ring-[#262E3E]"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = createAvatarSvgDataUri(profile.displayName || 'Tazama');
+                  }}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-2 ring-slate-200 dark:ring-[#262E3E] bg-slate-100 dark:bg-[#141824]"
                 />
               </button>
             ) : (
@@ -414,7 +419,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
                 <button
                   onClick={() => onNavigate('register')}
-                  className="hidden sm:flex items-center gap-1 bg-[#191E29] hover:bg-[#232A39] border border-[#262E3E] text-white px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
+                  className="hidden sm:flex items-center gap-1 bg-slate-100 hover:bg-slate-200 dark:bg-[#191E29] dark:hover:bg-[#232A39] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white px-3 py-1.5 rounded-full text-xs font-semibold transition-colors"
                 >
                   <span>Kujisajili</span>
                 </button>
@@ -423,47 +428,47 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Profile Dropdown Menu with Mobile Support */}
             {showProfileMenu && profile && (
-              <div className="absolute right-0 mt-2 w-72 max-w-[90vw] bg-[#191E29] border border-[#262E3E] rounded-2xl shadow-2xl p-2.5 z-50">
-                <div className="px-3 py-2 border-b border-[#262E3E] mb-2">
-                  <p className="text-sm font-bold text-white truncate">{profile.displayName}</p>
-                  <p className="text-xs text-[#A7B0C0] truncate font-mono">{profile.email}</p>
+              <div className="absolute right-0 mt-2 w-72 max-w-[90vw] bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-2xl shadow-2xl p-2.5 z-50">
+                <div className="px-3 py-2 border-b border-slate-200 dark:border-[#262E3E] mb-2">
+                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{profile.displayName}</p>
+                  <p className="text-xs text-slate-500 dark:text-[#A7B0C0] truncate font-mono">{profile.email}</p>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="text-[10px] bg-[#232A39] text-[#16C784] font-semibold px-2 py-0.5 rounded-full uppercase">
+                    <span className="text-[10px] bg-slate-100 dark:bg-[#232A39] text-emerald-700 dark:text-[#16C784] font-semibold px-2 py-0.5 rounded-full uppercase">
                       {role}
                     </span>
-                    <span className="text-xs font-bold font-mono text-[#16C784]">{formatTZS(profile.balanceTZS || 0)}</span>
+                    <span className="text-xs font-bold font-mono text-emerald-700 dark:text-[#16C784]">{formatTZS(profile.balanceTZS || 0)}</span>
                   </div>
                 </div>
 
                 {/* Mobile Quick Switches: Language & Theme */}
-                <div className="md:hidden flex items-center justify-between px-2 py-1.5 mb-2 border-b border-[#262E3E] text-xs text-[#A7B0C0]">
+                <div className="md:hidden flex items-center justify-between px-2 py-1.5 mb-2 border-b border-slate-200 dark:border-[#262E3E] text-xs text-slate-600 dark:text-[#A7B0C0]">
                   <button
                     onClick={() => setLanguage(language === 'sw' ? 'en' : 'sw')}
-                    className="flex items-center gap-1.5 hover:text-white"
+                    className="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white"
                   >
-                    <Globe className="w-4 h-4 text-amber-400" />
+                    <Globe className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                     <span>Lugha: {language.toUpperCase()}</span>
                   </button>
 
                   <button
                     onClick={toggleTheme}
-                    className="flex items-center gap-1.5 hover:text-white"
+                    className="flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white"
                   >
-                    {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+                    {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-purple-600" />}
                     <span>{theme === 'dark' ? 'Mchana' : 'Giza'}</span>
                   </button>
                 </div>
 
-                <div className="space-y-0.5 text-xs text-white">
+                <div className="space-y-0.5 text-xs text-slate-800 dark:text-white">
                   <button
                     onClick={() => {
                       if (onOpenPremium) onOpenPremium(role === 'creator' ? 'creator' : 'viewer');
                       setShowProfileMenu(false);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center justify-between text-amber-300 font-semibold"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#232A39] flex items-center justify-between text-amber-700 dark:text-amber-300 font-semibold"
                   >
                     <div className="flex items-center gap-2">
-                      <Crown className="w-4 h-4 text-amber-400" />
+                      <Crown className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                       <span>Tazama Premium Plans</span>
                     </div>
                     <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.2 rounded font-extrabold uppercase">VIP</span>
@@ -474,13 +479,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                       if (onOpenCreateAd) onOpenCreateAd();
                       setShowProfileMenu(false);
                     }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center justify-between text-white font-medium"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#232A39] flex items-center justify-between text-slate-800 dark:text-white font-medium"
                   >
                     <div className="flex items-center gap-2">
-                      <Megaphone className="w-4 h-4 text-amber-400" />
+                      <Megaphone className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                       <span>Weka Tangazo (Tazama Ads)</span>
                     </div>
-                    <span className="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold">Tangaza</span>
+                    <span className="text-[9px] bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30 px-1.5 py-0.5 rounded font-bold">Tangaza</span>
                   </button>
 
                   {/* If user hasn't created a channel, show Anza Kuwa Creator */}
@@ -490,10 +495,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setShowProfileMenu(false);
                         if (onStartCreator) onStartCreator();
                       }}
-                      className="w-full text-left px-3 py-2.5 rounded-xl bg-gradient-to-r from-[#16C784]/20 to-[#16C784]/10 hover:from-[#16C784]/30 hover:to-[#16C784]/20 border border-[#16C784]/40 text-[#16C784] font-bold flex items-center justify-between transition-colors"
+                      className="w-full text-left px-3 py-2.5 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border border-emerald-200 text-emerald-800 dark:from-[#16C784]/20 dark:to-[#16C784]/10 dark:hover:from-[#16C784]/30 dark:hover:to-[#16C784]/20 dark:border-[#16C784]/40 dark:text-[#16C784] font-bold flex items-center justify-between transition-colors"
                     >
                       <div className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-[#16C784]" />
+                        <Sparkles className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
                         <span>Anza Kuwa Creator</span>
                       </div>
                       <span className="text-[9px] bg-[#16C784] text-black px-1.5 py-0.5 rounded font-black uppercase">Fungua Channel</span>
@@ -505,17 +510,17 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <>
                       <button
                         onClick={() => { onNavigate('studio'); setShowProfileMenu(false); }}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2 text-white font-semibold"
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#232A39] flex items-center gap-2 text-slate-900 dark:text-white font-semibold"
                       >
-                        <Sparkles className="w-4 h-4 text-[#16C784]" />
+                        <Sparkles className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
                         <span>{t.creatorStudio}</span>
                       </button>
 
                       <button
                         onClick={() => { onNavigate('channel'); setShowProfileMenu(false); }}
-                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2 text-[#A7B0C0] hover:text-white"
+                        className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#232A39] flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white"
                       >
-                        <VideoIcon className="w-4 h-4 text-[#A7B0C0]" />
+                        <VideoIcon className="w-4 h-4 text-slate-500 dark:text-[#A7B0C0]" />
                         <span>Kituo Changu (My Channel)</span>
                       </button>
                     </>
@@ -524,7 +529,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {(role === 'admin' || profile.email === 'amytzee@gmail.com') && (
                     <button
                       onClick={() => { onNavigate('admin'); setShowProfileMenu(false); }}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2 text-amber-400 font-bold"
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#232A39] flex items-center gap-2 text-amber-700 dark:text-amber-400 font-bold"
                     >
                       <ShieldCheck className="w-4 h-4" />
                       <span>{t.adminPanel}</span>
@@ -533,30 +538,30 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                   <button
                     onClick={() => { setShowPWAModal(true); setShowProfileMenu(false); }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2 text-[#16C784] font-semibold"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#232A39] flex items-center gap-2 text-emerald-700 dark:text-[#16C784] font-semibold"
                   >
-                    <Download className="w-4 h-4 text-[#16C784]" />
+                    <Download className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
                     <span>Weka App kwenye Simu</span>
                   </button>
 
                   <button
                     onClick={() => { onNavigate('settings'); setShowProfileMenu(false); }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] flex items-center gap-2 text-[#A7B0C0]"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#232A39] flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white"
                   >
                     <span>{t.settings}</span>
                   </button>
 
-                  <div className="pt-1.5 border-t border-[#262E3E] space-y-1">
+                  <div className="pt-1.5 border-t border-slate-200 dark:border-[#262E3E] space-y-1">
                     <button
                       onClick={() => { onNavigate('login'); setShowProfileMenu(false); }}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-[#232A39] text-[#A7B0C0] hover:text-white flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#232A39] text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white flex items-center gap-2"
                     >
-                      <User className="w-4 h-4 text-purple-400" />
+                      <User className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                       <span>Badili Akaunti (Switch Account)</span>
                     </button>
                     <button
                       onClick={() => { logout(); onNavigate('login'); setShowProfileMenu(false); }}
-                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-500/20 text-red-400 flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center gap-2"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>{t.signOut}</span>
@@ -586,13 +591,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder={t.searchPlaceholder}
-              className="w-full bg-[#191E29] border border-[#FF3040]/70 rounded-full py-2 pl-4 pr-16 text-xs text-white placeholder-[#A7B0C0] focus:outline-none focus:ring-1 focus:ring-[#FF3040]"
+              className="w-full bg-slate-100 dark:bg-[#191E29] border border-[#FF3040]/70 rounded-full py-2 pl-4 pr-16 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0] focus:outline-none focus:ring-1 focus:ring-[#FF3040]"
             />
             {searchInput && (
               <button 
                 type="button" 
                 onClick={() => { setSearchInput(''); setSearchQuery(''); }}
-                className="absolute right-9 text-[#A7B0C0] hover:text-white p-1"
+                className="absolute right-9 text-slate-500 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white p-1"
               >
                 <X className="w-3.5 h-3.5" />
               </button>

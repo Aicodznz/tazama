@@ -27,21 +27,22 @@ const StoryItem: React.FC<{
       className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group"
     >
       <div className="relative w-15 h-15 sm:w-16 sm:h-16 rounded-full p-[2px] bg-gradient-to-tr from-[#FF3040] via-amber-400 to-[#16C784] group-hover:scale-105 transition-transform shadow-md">
-        <div className="w-full h-full rounded-full bg-[#10131B] p-[2px] overflow-hidden">
+        <div className="w-full h-full rounded-full bg-[#F4F6F9] dark:bg-[#10131B] p-[2px] overflow-hidden">
           <img
             src={avatarSrc}
             alt=""
+            referrerPolicy="no-referrer"
             onError={() => setImgError(true)}
-            className="w-full h-full rounded-full object-cover bg-[#1A1F2E]"
+            className="w-full h-full rounded-full object-cover bg-slate-200 dark:bg-[#1A1F2E]"
           />
         </div>
 
         {/* Online Green Indicator Dot */}
         {index < 4 && (
-          <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-[#16C784] border-2 border-[#10131B]" />
+          <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-[#16C784] border-2 border-[#F4F6F9] dark:border-[#10131B]" />
         )}
       </div>
-      <span className="text-[11px] font-medium text-white/90 truncate max-w-[64px] text-center">
+      <span className="text-[11px] font-medium text-slate-700 dark:text-white/90 truncate max-w-[64px] text-center">
         {channel.handle ? channel.handle.replace('@', '') : channel.name.split(' ')[0]}
       </span>
     </div>
@@ -63,16 +64,20 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({
         onClick={onNavigateShorts}
         className="flex flex-col items-center gap-1.5 shrink-0 cursor-pointer group"
       >
-        <div className="relative w-15 h-15 sm:w-16 sm:h-16 rounded-full bg-[#191E29] border border-[#262E3E] flex items-center justify-center p-0.5 group-hover:scale-105 transition-transform">
-          <div className="w-full h-full rounded-full bg-[#232A39] overflow-hidden flex items-center justify-center text-white/80">
+        <div className="relative w-15 h-15 sm:w-16 sm:h-16 rounded-full bg-slate-200 dark:bg-[#191E29] border border-slate-300 dark:border-[#262E3E] flex items-center justify-center p-0.5 group-hover:scale-105 transition-transform">
+          <div className="w-full h-full rounded-full bg-white dark:bg-[#232A39] overflow-hidden flex items-center justify-center text-slate-700 dark:text-white/80">
             {profile?.photoURL ? (
               <img 
                 src={profile.photoURL} 
                 alt="" 
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = createAvatarSvgDataUri(profile.displayName || 'U');
+                }}
                 className="w-full h-full object-cover" 
               />
             ) : (
-              <Film className="w-6 h-6 text-white group-hover:text-[#FF3040] transition-colors" />
+              <Film className="w-6 h-6 text-slate-700 dark:text-white group-hover:text-[#FF3040] transition-colors" />
             )}
           </div>
 
@@ -82,13 +87,13 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({
               e.stopPropagation();
               onOpenUpload();
             }}
-            className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-[#FF3040] text-white flex items-center justify-center border-2 border-[#10131B] shadow-md hover:scale-110 active:scale-95 transition-transform"
+            className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-[#FF3040] text-white flex items-center justify-center border-2 border-[#F4F6F9] dark:border-[#10131B] shadow-md hover:scale-110 active:scale-95 transition-transform"
             title="Unda Short / Pakia"
           >
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
           </button>
         </div>
-        <span className="text-[11px] font-semibold text-white/90 truncate max-w-[64px]">
+        <span className="text-[11px] font-semibold text-slate-800 dark:text-white/90 truncate max-w-[64px]">
           Shorts Zako
         </span>
       </div>

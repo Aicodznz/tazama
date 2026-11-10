@@ -37,7 +37,7 @@ export const MastheadAdBanner: React.FC<MastheadAdBannerProps> = ({ ad }) => {
 
   return (
     <div 
-      className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-[#0F131C] border border-amber-500/35 hover:border-amber-500/60 shadow-xl shadow-black/50 transition-all duration-300 group"
+      className="relative rounded-2xl sm:rounded-3xl overflow-hidden bg-[#0F131C] border border-amber-500/35 hover:border-amber-500/60 shadow-lg shadow-slate-900/15 dark:shadow-xl dark:shadow-black/50 transition-all duration-300 group"
     >
       {/* 1. Background Media (Responsive height filling the card) */}
       <div className="absolute inset-0 w-full h-full overflow-hidden bg-black pointer-events-none">

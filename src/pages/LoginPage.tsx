@@ -66,22 +66,22 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
 
   return (
     <div className="min-h-[85vh] flex items-center justify-center py-6 px-4 select-none">
-      <div className="w-full max-w-md bg-[#121622] border border-[#262E3E] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-md bg-white dark:bg-[#121622] border border-slate-200 dark:border-[#262E3E] rounded-3xl p-6 sm:p-8 shadow-xl dark:shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
         
         {/* Logo & Heading */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FF3040] to-orange-500 text-white shadow-xl shadow-[#FF3040]/30 mb-1">
             <Tv className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Ingia Tazama</h1>
-          <p className="text-xs text-[#A7B0C0]">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Ingia Tazama</h1>
+          <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
             Weka barua pepe au namba ya simu na nenosiri lako kuingia kwenye akaunti yako.
           </p>
         </div>
 
         {/* Error Alert */}
         {errorMsg && (
-          <div className="p-3 rounded-2xl bg-red-500/15 border border-red-500/30 text-xs text-red-400 flex items-center gap-2">
+          <div className="p-3 rounded-2xl bg-red-50 dark:bg-red-500/15 border border-red-200 dark:border-red-500/30 text-xs text-red-700 dark:text-red-400 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -91,23 +91,23 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
         <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
           
           <div>
-            <label className="block font-bold text-[#A7B0C0] mb-1">Barua Pepe au Namba ya Simu:</label>
+            <label className="block font-bold text-slate-700 dark:text-[#A7B0C0] mb-1">Barua Pepe au Namba ya Simu:</label>
             <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A7B0C0]" />
+              <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#A7B0C0]" />
               <input
                 type="text"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="mfano: diamond@wasafi.co.tz"
-                className="w-full pl-10 pr-3.5 py-3 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none focus:border-[#FF3040] transition-colors"
+                className="w-full pl-10 pr-3.5 py-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 text-xs focus:outline-none focus:border-[#FF3040] transition-colors"
               />
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="font-bold text-[#A7B0C0]">Nenosiri (Password):</label>
+              <label className="font-bold text-slate-700 dark:text-[#A7B0C0]">Nenosiri (Password):</label>
               <button 
                 type="button" 
                 onClick={() => alert('Wasiliana na huduma kwa wateja au weka barua pepe upya.')}
@@ -117,19 +117,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
               </button>
             </div>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A7B0C0]" />
+              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#A7B0C0]" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Weka nenosiri lako..."
-                className="w-full pl-10 pr-10 py-3 rounded-2xl bg-[#10131B] border border-[#262E3E] text-white text-xs focus:outline-none focus:border-[#FF3040] transition-colors"
+                className="w-full pl-10 pr-10 py-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-slate-900 dark:text-white placeholder-slate-400 text-xs focus:outline-none focus:border-[#FF3040] transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A7B0C0] hover:text-white"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:text-[#A7B0C0] dark:hover:text-white"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -137,7 +137,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
           </div>
 
           <div className="flex items-center justify-between text-xs">
-            <label className="flex items-center gap-2 text-[#A7B0C0] cursor-pointer">
+            <label className="flex items-center gap-2 text-slate-600 dark:text-[#A7B0C0] cursor-pointer">
               <input
                 type="checkbox"
                 checked={rememberMe}
@@ -168,7 +168,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            className="w-full py-3 rounded-2xl bg-[#10131B] hover:bg-[#191E29] border border-[#262E3E] text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors"
+            className="w-full py-3 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 dark:bg-[#10131B] dark:hover:bg-[#191E29] dark:border-[#262E3E] dark:text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-sm dark:shadow-none"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
@@ -194,8 +194,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigate, onLoginSuccess
         </form>
 
         {/* Link to Register */}
-        <div className="pt-4 border-t border-[#262E3E]/60 text-center text-xs">
-          <p className="text-[#A7B0C0]">
+        <div className="pt-4 border-t border-slate-200 dark:border-[#262E3E]/60 text-center text-xs">
+          <p className="text-slate-600 dark:text-[#A7B0C0]">
             Huna akaunti ya Tazama bado?{' '}
             <button
               onClick={() => onNavigate('register')}

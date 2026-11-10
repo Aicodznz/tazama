@@ -42,49 +42,49 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-[#191E29] border border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6 overflow-y-auto max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-md bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6 overflow-y-auto max-h-[90vh]">
         
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-[#262E3E]">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-[#262E3E]">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#16C784] to-[#10B981] flex items-center justify-center text-black font-bold shadow-md">
               <Wallet className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Mfuko wa Simu (Mobile Money)</h3>
-              <p className="text-xs text-[#A7B0C0]">Weka salio la kuwazawadia waumbaji</p>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Mfuko wa Simu (Mobile Money)</h3>
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">Weka salio la kuwazawadia waumbaji</p>
             </div>
           </div>
           <button 
             onClick={onClose} 
-            className="p-1.5 rounded-full text-[#A7B0C0] hover:text-white hover:bg-[#232A39] transition-colors"
+            className="p-1.5 rounded-full text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#232A39] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Current Balance Display */}
-        <div className="my-4 p-4 rounded-2xl bg-gradient-to-br from-[#10131B] to-[#1E2533] border border-[#262E3E] flex items-center justify-between">
+        <div className="my-4 p-4 rounded-2xl bg-gradient-to-br from-emerald-50 to-slate-100 dark:from-[#10131B] dark:to-[#1E2533] border border-emerald-200/70 dark:border-[#262E3E] flex items-center justify-between">
           <div>
-            <span className="text-[11px] text-[#A7B0C0] uppercase font-bold tracking-wider">Salio Lako la Sasa</span>
-            <div className="text-2xl font-mono font-extrabold text-[#16C784] mt-0.5">
+            <span className="text-[11px] text-slate-600 dark:text-[#A7B0C0] uppercase font-bold tracking-wider">Salio Lako la Sasa</span>
+            <div className="text-2xl font-mono font-extrabold text-emerald-700 dark:text-[#16C784] mt-0.5">
               {formatTZS(profile?.balanceTZS || 0)}
             </div>
           </div>
-          <div className="w-10 h-10 rounded-full bg-[#16C784]/15 flex items-center justify-center text-[#16C784]">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/15 dark:bg-[#16C784]/15 flex items-center justify-center text-emerald-600 dark:text-[#16C784]">
             <ArrowDownLeft className="w-5 h-5" />
           </div>
         </div>
 
         {success ? (
           <div className="py-8 flex flex-col items-center justify-center text-center space-y-3">
-            <div className="w-14 h-14 rounded-full bg-[#16C784]/20 border border-[#16C784] flex items-center justify-center text-[#16C784]">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/15 dark:bg-[#16C784]/20 border border-[#16C784] flex items-center justify-center text-emerald-600 dark:text-[#16C784]">
               <CheckCircle className="w-8 h-8" />
             </div>
-            <h4 className="text-base font-bold text-white">Salio Limeongezwa Kikamilifu!</h4>
-            <p className="text-xs text-[#A7B0C0]">
-              Umeweka <span className="text-[#16C784] font-bold">{formatTZS(amount)}</span> kupitia {selectedProvider}.
+            <h4 className="text-base font-bold text-slate-900 dark:text-white">Salio Limeongezwa Kikamilifu!</h4>
+            <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
+              Umeweka <span className="text-emerald-700 dark:text-[#16C784] font-bold">{formatTZS(amount)}</span> kupitia {selectedProvider}.
             </p>
           </div>
         ) : (
@@ -92,7 +92,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
             
             {/* Operator Selection */}
             <div>
-              <label className="block text-xs font-semibold text-[#A7B0C0] mb-2">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] mb-2">
                 Chagua Mtandao wa Simu:
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -108,8 +108,8 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                     onClick={() => setSelectedProvider(op.name as any)}
                     className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
                       selectedProvider === op.name 
-                        ? 'border-[#16C784] bg-[#16C784]/10 text-white' 
-                        : 'border-[#262E3E] bg-[#10131B] text-[#A7B0C0] hover:text-white'
+                        ? 'border-[#16C784] bg-emerald-50 dark:bg-[#16C784]/10 text-emerald-800 dark:text-white' 
+                        : 'border-slate-200 dark:border-[#262E3E] bg-slate-50 dark:bg-[#10131B] text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     {op.name}
@@ -120,7 +120,7 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
 
             {/* Mobile Number */}
             <div>
-              <label className="block text-xs font-semibold text-[#A7B0C0] mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] mb-1.5">
                 Namba ya Simu ya Malipo:
               </label>
               <div className="relative">
@@ -129,15 +129,15 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="0754 XXX XXX"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl pl-10 pr-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#16C784]"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl pl-10 pr-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-[#16C784]"
                 />
-                <Smartphone className="w-4 h-4 text-[#A7B0C0] absolute left-3 top-2.5" />
+                <Smartphone className="w-4 h-4 text-slate-500 dark:text-[#A7B0C0] absolute left-3 top-2.5" />
               </div>
             </div>
 
             {/* Quick Amounts */}
             <div>
-              <label className="block text-xs font-semibold text-[#A7B0C0] mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] mb-1.5">
                 Kiasi cha Kuweka (TZS):
               </label>
               <div className="grid grid-cols-3 gap-1.5 mb-2">
@@ -148,8 +148,8 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                     onClick={() => setAmount(q)}
                     className={`py-1.5 px-2 rounded-lg border text-[11px] font-mono font-bold transition-all ${
                       amount === q
-                        ? 'border-[#16C784] bg-[#16C784]/15 text-[#16C784]'
-                        : 'border-[#262E3E] bg-[#10131B] text-[#A7B0C0] hover:text-white'
+                        ? 'border-[#16C784] bg-emerald-50 dark:bg-[#16C784]/15 text-emerald-700 dark:text-[#16C784]'
+                        : 'border-slate-200 dark:border-[#262E3E] bg-slate-50 dark:bg-[#10131B] text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     {formatTZS(q)}
@@ -161,18 +161,18 @@ export const WalletModal: React.FC<WalletModalProps> = ({ isOpen, onClose }) => 
                 value={amount}
                 onChange={(e) => setAmount(parseInt(e.target.value) || 0)}
                 step={1000}
-                className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-[#16C784]"
+                className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:outline-none focus:border-[#16C784]"
               />
             </div>
 
             {/* Security Guarantee Notice */}
-            <div className="p-3 rounded-xl bg-[#232A39]/60 border border-[#262E3E] flex items-center gap-2.5 text-[11px] text-[#A7B0C0]">
-              <ShieldCheck className="w-4 h-4 text-[#16C784] shrink-0" />
+            <div className="p-3 rounded-xl bg-slate-100 dark:bg-[#232A39]/60 border border-slate-200 dark:border-[#262E3E] flex items-center gap-2.5 text-[11px] text-slate-600 dark:text-[#A7B0C0]">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-[#16C784] shrink-0" />
               <span>Usalama umehakikishwa. Tazama haihifadhi PIN yako ya simu.</span>
             </div>
 
             {errorMsg && (
-              <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+              <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-400">
                 {errorMsg}
               </div>
             )}

@@ -26,6 +26,7 @@ import { useVideo } from '../../context/VideoContext';
 import { VideoCategory, VideoItem } from '../../types';
 import { translations } from '../../lib/i18n';
 import { parseVideoSource, ParsedVideoSource, extractIframeSrc } from '../../lib/videoUtils';
+import { createThumbnailSvgDataUri } from '../../lib/mediaPlaceholders';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -52,7 +53,9 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   const [tags, setTags] = useState<string>('Tazama, Tanzania');
   const [visibility, setVisibility] = useState<'public' | 'unlisted' | 'private'>('public');
   const [isShort, setIsShort] = useState<boolean>(false);
-  const [thumbnailUrl, setThumbnailUrl] = useState<string>('https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80');
+  const [thumbnailUrl, setThumbnailUrl] = useState<string>(() =>
+    createThumbnailSvgDataUri('Maudhui Mapya ya Tazama', 'Burudani')
+  );
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [createdVideo, setCreatedVideo] = useState<VideoItem | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -159,10 +162,10 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   };
 
   const presetThumbnails = [
-    { label: 'Bongo Flava', url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80' },
-    { label: 'Tamasha Live', url: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80' },
-    { label: 'Habari & Studio', url: 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=600&auto=format&fit=crop&q=80' },
-    { label: 'Michezo & Soka', url: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=600&auto=format&fit=crop&q=80' }
+    { label: 'Bongo Flava', url: createThumbnailSvgDataUri('Bongo Flava Hits', 'Muziki') },
+    { label: 'Tamasha Live', url: createThumbnailSvgDataUri('Tamasha Live 2026', 'Burudani') },
+    { label: 'Habari & Studio', url: createThumbnailSvgDataUri('Habari za Leo', 'Habari') },
+    { label: 'Michezo & Soka', url: createThumbnailSvgDataUri('Mechi Kuu', 'Michezo') }
   ];
 
   const handleVideoLinkChange = (rawUrl: string) => {
@@ -256,7 +259,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
       if (uploadMode === 'link') {
         const parsed = parseVideoSource(videoLink.trim());
         let finalVideoUrl = parsed.streamUrl || videoLink.trim();
-        let finalThumbUrl = thumbnailUrl || parsed.suggestedThumbnail || 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&auto=format&fit=crop&q=80';
+        let finalThumbUrl = thumbnailUrl || parsed.suggestedThumbnail || createThumbnailSvgDataUri(title || 'Tazama Video', category);
         let duration = isShort ? 45 : 360;
 
         // If Cloudinary is selected and it's a direct file (e.g. mp4/webm), Cloudinary can pull remote URLs directly:
@@ -454,28 +457,28 @@ export const UploadModal: React.FC<UploadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl bg-[#191E29] border border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6 overflow-hidden max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-xl bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-3xl shadow-2xl p-5 md:p-6 overflow-hidden max-h-[90vh] flex flex-col">
         
         {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-[#262E3E]">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#262E3E]">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#FF3040] to-[#FF6B6B] flex items-center justify-center text-white shadow-md">
               <UploadCloud className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Studio ya Upakiaji wa Video</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Studio ya Upakiaji wa Video</h3>
               {isAdmin && (
-                <div className="flex items-center gap-2 text-[11px] text-[#A7B0C0]">
+                <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-[#A7B0C0]">
                   <span>Huduma ya Video:</span>
-                  <span className="text-[#16C784] font-bold capitalize">{selectedProvider}</span>
+                  <span className="text-emerald-700 dark:text-[#16C784] font-bold capitalize">{selectedProvider}</span>
                 </div>
               )}
             </div>
           </div>
           <button 
             onClick={handleReset} 
-            className="p-1.5 rounded-full text-[#A7B0C0] hover:text-white hover:bg-[#232A39] transition-colors"
+            className="p-1.5 rounded-full text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#232A39] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -483,7 +486,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
         {/* Video Provider Selector Pills - Admin Only */}
         {isAdmin && (
-          <div className="mt-3 p-2 rounded-2xl bg-[#10131B] border border-[#262E3E] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="mt-3 p-2 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
               <button
                 type="button"
@@ -491,7 +494,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   selectedProvider === 'cloudinary'
                     ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-[#A7B0C0] hover:text-white'
+                    : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <Cloud className="w-3.5 h-3.5" />
@@ -505,7 +508,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
                   selectedProvider === 'cloudflare'
                     ? 'bg-orange-600 text-white shadow-md'
-                    : 'text-[#A7B0C0] hover:text-white'
+                    : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
@@ -514,15 +517,15 @@ export const UploadModal: React.FC<UploadModalProps> = ({
             </div>
 
             {selectedProvider === 'cloudinary' && (
-              <div className="flex items-center justify-between sm:justify-end gap-1.5 pt-1 sm:pt-0 border-t sm:border-t-0 border-[#262E3E]">
-                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-[#16C784] font-semibold bg-[#16C784]/10 border border-[#16C784]/30 px-2 py-1 rounded-xl truncate">
+              <div className="flex items-center justify-between sm:justify-end gap-1.5 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-200 dark:border-[#262E3E]">
+                <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-emerald-700 dark:text-[#16C784] font-semibold bg-emerald-500/10 border border-emerald-500/30 dark:border-[#16C784]/30 px-2 py-1 rounded-xl truncate">
                   <CheckCircle2 className="w-3 h-3 shrink-0" />
                   <span className="truncate">{cloudName} ({uploadPreset || 'preset'})</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowCloudinarySetup(!showCloudinarySetup)}
-                  className="p-1.5 rounded-lg bg-[#232A39] text-[#A7B0C0] hover:text-white hover:border-[#FF3040] border border-[#262E3E] transition-colors shrink-0"
+                  className="p-1.5 rounded-lg bg-white dark:bg-[#232A39] text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:border-[#FF3040] border border-slate-200 dark:border-[#262E3E] transition-colors shrink-0"
                   title="Badilisha au sanidi Cloudinary"
                 >
                   <Settings className="w-3.5 h-3.5" />
@@ -534,57 +537,57 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
         {/* Cloudinary Quick Setup Drawer - Admin Only */}
         {isAdmin && showCloudinarySetup && (
-          <form onSubmit={handleSaveCloudinary} className="mt-3 p-3.5 rounded-2xl bg-[#232A39]/90 border border-blue-500/40 text-xs space-y-2.5 animate-in fade-in duration-150">
-            <div className="flex items-center justify-between font-bold text-white">
-              <span className="flex items-center gap-1.5 text-blue-400">
+          <form onSubmit={handleSaveCloudinary} className="mt-3 p-3.5 rounded-2xl bg-slate-100 dark:bg-[#232A39]/90 border border-blue-300 dark:border-blue-500/40 text-xs space-y-2.5 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between font-bold text-slate-900 dark:text-white">
+              <span className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400">
                 <Cloud className="w-4 h-4" />
                 Sanidi Cloudinary (console.cloudinary.com)
               </span>
-              <button type="button" onClick={() => setShowCloudinarySetup(false)} className="text-[#A7B0C0] hover:text-white">✕</button>
+              <button type="button" onClick={() => setShowCloudinarySetup(false)} className="text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white">✕</button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] text-[#A7B0C0] mb-0.5">Cloud Name (Jina la Wingu):</label>
+                <label className="block text-[11px] text-slate-600 dark:text-[#A7B0C0] mb-0.5">Cloud Name (Jina la Wingu):</label>
                 <input
                   type="text"
                   required
                   value={cloudName}
                   onChange={(e) => setCloudName(e.target.value)}
                   placeholder="mfano: ecsswynm"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-2.5 py-1.5 text-white font-mono text-xs focus:border-blue-500"
+                  className="w-full bg-white dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white font-mono text-xs focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-[11px] text-[#A7B0C0] mb-0.5">Upload Preset (Unsigned):</label>
+                <label className="block text-[11px] text-slate-600 dark:text-[#A7B0C0] mb-0.5">Upload Preset (Unsigned):</label>
                 <input
                   type="text"
                   required
                   value={uploadPreset}
                   onChange={(e) => setUploadPreset(e.target.value)}
                   placeholder="mfano: malimai12"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-2.5 py-1.5 text-white font-mono text-xs focus:border-blue-500"
+                  className="w-full bg-white dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white font-mono text-xs focus:border-blue-500"
                 />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-[11px] text-[#A7B0C0] mb-0.5">API Key (Hiari):</label>
+                <label className="block text-[11px] text-slate-600 dark:text-[#A7B0C0] mb-0.5">API Key (Hiari):</label>
                 <input
                   type="text"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="1234567890"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-2.5 py-1.5 text-white font-mono text-xs focus:border-blue-500"
+                  className="w-full bg-white dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white font-mono text-xs focus:border-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-[11px] text-[#A7B0C0] mb-0.5">API Secret (Hiari):</label>
+                <label className="block text-[11px] text-slate-600 dark:text-[#A7B0C0] mb-0.5">API Secret (Hiari):</label>
                 <input
                   type="password"
                   value={apiSecret}
                   onChange={(e) => setApiSecret(e.target.value)}
                   placeholder="••••••••••••"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-2.5 py-1.5 text-white font-mono text-xs focus:border-blue-500"
+                  className="w-full bg-white dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-2.5 py-1.5 text-slate-900 dark:text-white font-mono text-xs focus:border-blue-500"
                 />
               </div>
             </div>
@@ -605,14 +608,14 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               
               {/* Upload Mode Selector: Faili vs Linki - Link mode is STRICTLY Admin Only */}
               {isAdmin ? (
-                <div className="grid grid-cols-2 p-1 rounded-2xl bg-[#10131B] border border-[#262E3E] text-xs font-bold gap-1">
+                <div className="grid grid-cols-2 p-1 rounded-2xl bg-slate-100 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] text-xs font-bold gap-1">
                   <button
                     type="button"
                     onClick={() => setUploadMode('file')}
                     className={`flex items-center justify-center gap-2 py-2 rounded-xl transition-all ${
                       uploadMode === 'file'
                         ? 'bg-[#FF3040] text-white shadow-md shadow-[#FF3040]/30'
-                        : 'text-[#A7B0C0] hover:text-white hover:bg-white/5'
+                        : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/5'
                     }`}
                   >
                     <FileVideo className="w-4 h-4" />
@@ -624,24 +627,24 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                     className={`flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all ${
                       uploadMode === 'link'
                         ? 'bg-gradient-to-r from-amber-500 to-[#FF3040] text-white shadow-md shadow-amber-500/20'
-                        : 'text-[#A7B0C0] hover:text-white hover:bg-white/5'
+                        : 'text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-white/5'
                     }`}
                   >
                     <Link2 className="w-4 h-4" />
-                    <span>Linki & Streaming</span>
-                    <span className="px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-300 text-[9px] font-black uppercase tracking-wider border border-amber-400/40">
+                    <span>Linki &amp; Streaming</span>
+                    <span className="px-1.5 py-0.2 rounded bg-amber-400/20 text-amber-800 dark:text-amber-300 text-[9px] font-black uppercase tracking-wider border border-amber-400/40">
                       Admin
                     </span>
                   </button>
                 </div>
               ) : (
-                <div className="p-2.5 rounded-2xl bg-[#10131B] border border-[#262E3E] flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-xs font-bold text-white">
+                <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-900 dark:text-white">
                     <FileVideo className="w-4 h-4 text-[#FF3040]" />
                     <span>Pakia Faili la Video kutoka Kwenye Kifaa Chako</span>
                   </div>
-                  <div className="flex items-center gap-1 text-[10px] text-[#A7B0C0] bg-white/5 px-2 py-1 rounded-lg">
-                    <Lock className="w-3 h-3 text-amber-400" />
+                  <div className="flex items-center gap-1 text-[10px] text-slate-600 dark:text-[#A7B0C0] bg-slate-200/70 dark:bg-white/5 px-2 py-1 rounded-lg">
+                    <Lock className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                     <span>Linki za nje: Admin Pekee</span>
                   </div>
                 </div>
@@ -653,8 +656,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                   onClick={() => fileInputRef.current?.click()}
                   className={`p-4 border-2 border-dashed rounded-2xl text-center cursor-pointer transition-all ${
                     selectedFile 
-                      ? 'border-[#16C784] bg-[#16C784]/10' 
-                      : 'border-[#262E3E] bg-[#10131B] hover:border-[#FF3040]'
+                      ? 'border-[#16C784] bg-emerald-50 dark:bg-[#16C784]/10' 
+                      : 'border-slate-300 dark:border-[#262E3E] bg-slate-50 dark:bg-[#10131B] hover:border-[#FF3040]'
                   }`}
                 >
                   <input
@@ -664,32 +667,32 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                     accept="video/mp4,video/webm,video/quicktime,video/mkv"
                     className="hidden"
                   />
-                  <FileVideo className={`w-8 h-8 mx-auto mb-1.5 ${selectedFile ? 'text-[#16C784]' : 'text-[#A7B0C0]'}`} />
+                  <FileVideo className={`w-8 h-8 mx-auto mb-1.5 ${selectedFile ? 'text-emerald-600 dark:text-[#16C784]' : 'text-slate-400 dark:text-[#A7B0C0]'}`} />
                   {selectedFile ? (
                     <div>
-                      <span className="text-xs font-bold text-white block">{selectedFile.name}</span>
-                      <span className="text-[11px] text-[#16C784]">{(selectedFile.size / (1024 * 1024)).toFixed(1)} MB • Bonyeza kubadili faili</span>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">{selectedFile.name}</span>
+                      <span className="text-[11px] text-emerald-700 dark:text-[#16C784]">{(selectedFile.size / (1024 * 1024)).toFixed(1)} MB • Bonyeza kubadili faili</span>
                     </div>
                   ) : (
                     <div>
-                      <span className="text-xs font-bold text-white block">Chagua au buruta faili la video hapa</span>
-                      <span className="text-[11px] text-[#A7B0C0]">MP4, WebM, MOV au MKV</span>
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">Chagua au buruta faili la video hapa</span>
+                      <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">MP4, WebM, MOV au MKV</span>
                     </div>
                   )}
                 </div>
               ) : (
                 /* Mode 2: Video Link / URL Input Area (ADMIN ONLY) */
-                <div className="p-3.5 rounded-2xl bg-[#10131B] border border-amber-500/30 space-y-2.5">
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-amber-400/50 dark:border-amber-500/30 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Crown className="w-4 h-4 text-amber-400" />
+                    <label className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                       <span>Admin Streaming Integration (LuciferDonghua, DoodStream, Streamtape, n.k.)</span>
                     </label>
                     {videoLink && (
                       <button
                         type="button"
                         onClick={() => handleVideoLinkChange('')}
-                        className="text-[11px] text-[#A7B0C0] hover:text-white"
+                        className="text-[11px] text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white"
                       >
                         Futa
                       </button>
@@ -702,27 +705,27 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                       value={videoLink}
                       onChange={(e) => handleVideoLinkChange(e.target.value)}
                       placeholder="Paste link au <iframe> tag (mfano: LuciferDonghua, DoodStream, Streamtape, YouTube, MP4)"
-                      className="w-full bg-[#191E29] border border-[#262E3E] rounded-xl px-3 py-2.5 text-xs text-white placeholder-[#A7B0C0]/60 focus:outline-none focus:border-amber-400 font-mono"
+                      className="w-full bg-white dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0]/60 focus:outline-none focus:border-amber-400 font-mono"
                     />
                   </div>
 
                   {/* Supported formats helper badge row */}
-                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-[#A7B0C0]">
-                    <span className="text-white font-semibold">Mifumo Inayoungwa Mkono:</span>
-                    <span className="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono font-bold border border-purple-500/30">LuciferDonghua</span>
-                    <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono font-bold border border-blue-500/30">Streamtape</span>
-                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono font-bold border border-cyan-500/30">DoodStream</span>
-                    <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold border border-amber-500/30">Filemoon</span>
-                    <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 font-mono font-semibold">YouTube</span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-white/90 font-mono">MP4 / HLS (.m3u8)</span>
-                    <span className="px-1.5 py-0.5 rounded bg-[#232A39] text-[#16C784] font-mono">&lt;iframe&gt; Embed Code</span>
+                  <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-600 dark:text-[#A7B0C0]">
+                    <span className="text-slate-900 dark:text-white font-semibold">Mifumo Inayoungwa Mkono:</span>
+                    <span className="px-1.5 py-0.5 rounded bg-purple-500/15 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 font-mono font-bold border border-purple-500/30">LuciferDonghua</span>
+                    <span className="px-1.5 py-0.5 rounded bg-blue-500/15 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-mono font-bold border border-blue-500/30">Streamtape</span>
+                    <span className="px-1.5 py-0.5 rounded bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-mono font-bold border border-cyan-500/30">DoodStream</span>
+                    <span className="px-1.5 py-0.5 rounded bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 font-mono font-bold border border-amber-500/30">Filemoon</span>
+                    <span className="px-1.5 py-0.5 rounded bg-red-500/15 dark:bg-red-500/20 text-red-700 dark:text-red-300 font-mono font-semibold">YouTube</span>
+                    <span className="px-1.5 py-0.5 rounded bg-white dark:bg-[#232A39] border border-slate-200 dark:border-transparent text-slate-700 dark:text-white/90 font-mono">MP4 / HLS (.m3u8)</span>
+                    <span className="px-1.5 py-0.5 rounded bg-white dark:bg-[#232A39] border border-slate-200 dark:border-transparent text-emerald-700 dark:text-[#16C784] font-mono">&lt;iframe&gt; Embed Code</span>
                   </div>
 
                   {/* Detected format feedback & Preview */}
                   {parsedSource && parsedSource.sourceType !== 'unknown' && (
-                    <div className="p-2.5 rounded-xl bg-[#16C784]/10 border border-[#16C784]/30 space-y-2">
+                    <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-[#16C784]/10 border border-emerald-200 dark:border-[#16C784]/30 space-y-2">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-1.5 font-bold text-[#16C784]">
+                        <span className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-[#16C784]">
                           <Check className="w-3.5 h-3.5" />
                           {parsedSource.sourceType === 'youtube' && 'Video ya YouTube Imetambuliwa (Picha ya jalada imewekwa)'}
                           {parsedSource.sourceType === 'vimeo' && 'Video ya Vimeo Imetambuliwa'}
@@ -732,7 +735,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                         <button
                           type="button"
                           onClick={() => setShowLinkTestPlayer(!showLinkTestPlayer)}
-                          className="text-[11px] font-bold text-white hover:underline flex items-center gap-1"
+                          className="text-[11px] font-bold text-slate-900 dark:text-white hover:underline flex items-center gap-1"
                         >
                           <Play className="w-3 h-3 text-[#FF3040] fill-[#FF3040]" />
                           <span>{showLinkTestPlayer ? 'Ficha Hakiki' : 'Hakiki Video'}</span>
@@ -744,10 +747,11 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                         <div className="relative aspect-video rounded-xl overflow-hidden bg-black border border-[#262E3E]">
                           {parsedSource.sourceType === 'youtube' ? (
                             <iframe
-                              src={`${parsedSource.embedUrl}?autoplay=1&enablejsapi=1`}
+                              src={`${parsedSource.embedUrl}?autoplay=1&enablejsapi=1&origin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}`}
                               title="Hakiki ya Video"
                               className="w-full h-full border-0"
                               allow="autoplay; encrypted-media"
+                              referrerPolicy="strict-origin-when-cross-origin"
                             />
                           ) : parsedSource.sourceType === 'vimeo' ? (
                             <iframe
@@ -784,12 +788,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               )}
 
               {/* Short toggle */}
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-[#10131B] border border-[#262E3E]">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E]">
                 <div className="flex items-center gap-2.5">
                   <Film className="w-5 h-5 text-[#FF3040]" />
                   <div>
-                    <h4 className="text-xs font-bold text-white">Video Fupi (Tazama Shorts)</h4>
-                    <p className="text-[11px] text-[#A7B0C0]">Video ya wima chini ya sekunde 60</p>
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-white">Video Fupi (Tazama Shorts)</h4>
+                    <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0]">Video ya wima chini ya sekunde 60</p>
                   </div>
                 </div>
                 <input
@@ -803,13 +807,13 @@ export const UploadModal: React.FC<UploadModalProps> = ({
               {/* Title with AI Enhancer */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-semibold text-[#A7B0C0]">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-[#A7B0C0]">
                     Jina la Video (Title) *
                   </label>
                   <button
                     type="button"
                     onClick={enhanceTitle}
-                    className="text-[11px] text-[#16C784] font-bold hover:underline flex items-center gap-1 active:scale-95 transition-transform"
+                    className="text-[11px] text-emerald-700 dark:text-[#16C784] font-bold hover:underline flex items-center gap-1 active:scale-95 transition-transform"
                     title="Boresha jina kiotomatiki kwa ajili ya watazamaji wengi"
                   >
                     <Wand2 className="w-3 h-3" />
@@ -823,14 +827,14 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Mfano: Tamasha Kubwa la Singeli Dar es Salaam 2026"
                   maxLength={100}
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white placeholder-[#A7B0C0]/60 focus:outline-none focus:border-[#FF3040]"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0]/60 focus:outline-none focus:border-[#FF3040]"
                 />
               </div>
 
               {/* Thumbnail Selector & Presets */}
               <div>
-                <label className="block text-xs font-semibold text-[#A7B0C0] mb-1.5 flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-purple-400" />
+                <label className="block text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] mb-1.5 flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                   <span>Picha ya Mbele (Thumbnail / Cover):</span>
                 </label>
                 <div className="grid grid-cols-4 gap-2 mb-2">
@@ -844,10 +848,18 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                         className={`relative rounded-xl overflow-hidden aspect-video border text-center transition-all ${
                           isSelected 
                             ? 'border-[#FF3040] ring-2 ring-[#FF3040]/50 shadow-md scale-[1.02]' 
-                            : 'border-[#262E3E] opacity-70 hover:opacity-100'
+                            : 'border-slate-200 dark:border-[#262E3E] opacity-80 hover:opacity-100'
                         }`}
                       >
-                        <img src={preset.url} alt={preset.label} className="w-full h-full object-cover" />
+                        <img
+                          src={preset.url}
+                          alt={preset.label}
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = createThumbnailSvgDataUri(preset.label, preset.label);
+                          }}
+                          className="w-full h-full object-cover"
+                        />
                         <div className="absolute inset-x-0 bottom-0 bg-black/80 py-0.5 text-[9px] font-bold text-white truncate px-1">
                           {preset.label}
                         </div>
@@ -860,13 +872,13 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                   value={thumbnailUrl}
                   onChange={(e) => setThumbnailUrl(e.target.value)}
                   placeholder="Au weka link ya picha: https://..."
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-1.5 text-[11px] font-mono text-white placeholder-[#A7B0C0]/40 focus:outline-none focus:border-[#FF3040]"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-1.5 text-[11px] font-mono text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0]/40 focus:outline-none focus:border-[#FF3040]"
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-semibold text-[#A7B0C0] mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] mb-1">
                   Maelezo ya Video (Description)
                 </label>
                 <textarea
@@ -874,46 +886,46 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Eleza kile watazamaji watakachokiona katika video hii..."
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white placeholder-[#A7B0C0]/60 focus:outline-none focus:border-[#FF3040]"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0]/60 focus:outline-none focus:border-[#FF3040]"
                 />
               </div>
 
               {/* Category & Visibility Grid */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#A7B0C0] mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] mb-1">
                     Kipengele (Category)
                   </label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value as VideoCategory)}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF3040]"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#FF3040]"
                   >
                     {categories.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c} className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">{c}</option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-[#A7B0C0] mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] mb-1">
                     Ufikiaji (Visibility)
                   </label>
                   <select
                     value={visibility}
                     onChange={(e) => setVisibility(e.target.value as any)}
-                    className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF3040]"
+                    className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-[#FF3040]"
                   >
-                    <option value="public">Hadharani (Public)</option>
-                    <option value="unlisted">Bila Orodha (Unlisted)</option>
-                    <option value="private">Binafsi (Private)</option>
+                    <option value="public" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Hadharani (Public)</option>
+                    <option value="unlisted" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Bila Orodha (Unlisted)</option>
+                    <option value="private" className="bg-white text-slate-900 dark:bg-[#10131B] dark:text-white">Binafsi (Private)</option>
                   </select>
                 </div>
               </div>
 
               {/* Tags */}
               <div>
-                <label className="block text-xs font-semibold text-[#A7B0C0] mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] mb-1">
                   Lebo (Tags)
                 </label>
                 <input
@@ -921,12 +933,12 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                   placeholder="BongoFlava, DarEsSalaam, Sanaa"
-                  className="w-full bg-[#10131B] border border-[#262E3E] rounded-xl px-3 py-2 text-xs text-white placeholder-[#A7B0C0]/60 focus:outline-none focus:border-[#FF3040]"
+                  className="w-full bg-slate-50 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0]/60 focus:outline-none focus:border-[#FF3040]"
                 />
               </div>
 
               {errorMsg && (
-                <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+                <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-700 dark:text-red-400">
                   {errorMsg}
                 </div>
               )}
@@ -936,7 +948,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="flex-1 py-2.5 rounded-xl border border-[#262E3E] text-xs font-semibold text-[#A7B0C0] hover:text-white"
+                  className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-[#262E3E] text-xs font-semibold text-slate-700 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
                 >
                   {t.cancel}
                 </button>
@@ -957,10 +969,10 @@ export const UploadModal: React.FC<UploadModalProps> = ({
                 <UploadCloud className="w-8 h-8" />
               </div>
               <div>
-                <h4 className="text-base font-bold text-white">Inapakia kwenye {selectedProvider === 'cloudinary' ? 'Cloudinary Media CDN' : 'Cloudflare Stream'}...</h4>
-                <p className="text-xs text-[#A7B0C0] mt-1">{uploadProgress}% imekamilika</p>
+                <h4 className="text-base font-bold text-slate-900 dark:text-white">Inapakia kwenye {selectedProvider === 'cloudinary' ? 'Cloudinary Media CDN' : 'Cloudflare Stream'}...</h4>
+                <p className="text-xs text-slate-600 dark:text-[#A7B0C0] mt-1">{uploadProgress}% imekamilika</p>
               </div>
-              <div className="w-full max-w-xs h-2 bg-[#10131B] rounded-full overflow-hidden border border-[#262E3E]">
+              <div className="w-full max-w-xs h-2 bg-slate-200 dark:bg-[#10131B] rounded-full overflow-hidden border border-slate-300 dark:border-[#262E3E]">
                 <div 
                   className="h-full bg-[#FF3040] transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
@@ -971,11 +983,11 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
           {step === 'processing' && (
             <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
-              <div className="w-14 h-14 rounded-full bg-blue-500/20 border border-blue-500 flex items-center justify-center text-blue-400 animate-spin">
+              <div className="w-14 h-14 rounded-full bg-blue-500/15 dark:bg-blue-500/20 border border-blue-500 flex items-center justify-center text-blue-600 dark:text-blue-400 animate-spin">
                 <Clock className="w-7 h-7" />
               </div>
-              <h4 className="text-base font-bold text-white">Inachakata Ubora (Adaptive HD Transcoding)</h4>
-              <p className="text-xs text-[#A7B0C0]">
+              <h4 className="text-base font-bold text-slate-900 dark:text-white">Inachakata Ubora (Adaptive HD Transcoding)</h4>
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0]">
                 Mfumo unatengeneza miundo ya HLS na picha za thumbnail za kiotomatiki.
               </p>
             </div>
@@ -983,11 +995,11 @@ export const UploadModal: React.FC<UploadModalProps> = ({
 
           {step === 'done' && (
             <div className="py-8 flex flex-col items-center justify-center text-center space-y-3">
-              <div className="w-14 h-14 rounded-full bg-[#16C784]/20 border border-[#16C784] flex items-center justify-center text-[#16C784]">
+              <div className="w-14 h-14 rounded-full bg-emerald-500/15 dark:bg-[#16C784]/20 border border-[#16C784] flex items-center justify-center text-emerald-600 dark:text-[#16C784]">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
-              <h4 className="text-base font-bold text-white">Video Imepakiwa Kikamilifu!</h4>
-              <p className="text-xs text-[#A7B0C0] max-w-sm">
+              <h4 className="text-base font-bold text-slate-900 dark:text-white">Video Imepakiwa Kikamilifu!</h4>
+              <p className="text-xs text-slate-600 dark:text-[#A7B0C0] max-w-sm">
                 Video yako &ldquo;{createdVideo?.title}&rdquo; imesajiliwa na sasa inapatikana kwenye jukwaa la Tazama.
               </p>
               <button
