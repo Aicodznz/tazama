@@ -19,6 +19,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
 import { MiniPlayer } from './components/common/MiniPlayer';
+import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { UploadModal } from './components/upload/UploadModal';
 import { WalletModal } from './components/wallet/WalletModal';
 import { USSDPushModal } from './components/wallet/USSDPushModal';
@@ -498,6 +499,7 @@ const AppContent: React.FC = () => {
         </div>
       )}
 
+      <OfflineIndicator />
     </div>
   );
 };

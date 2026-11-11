@@ -52,6 +52,36 @@ interface AuthContextType {
   updateUserChannel: (channelData: Partial<Channel>) => void;
 }
 
+const safeStorageGet = (key: string): string | null => {
+  try {
+    return typeof window !== 'undefined' && window.localStorage
+      ? window.localStorage.getItem(key)
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+const safeStorageSet = (key: string, value: string): void => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {
+    // ignore storage quota or privacy restrictions
+  }
+};
+
+const safeStorageRemove = (key: string): void => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(key);
+    }
+  } catch {
+    // ignore
+  }
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -110,11 +140,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [theme]);
 
   useEffect(() => {
-    // Check saved preferences
-    const savedLang = localStorage.getItem('tazama_lang') as Language;
+    // Check saved preferences safely
+    const savedLang = safeStorageGet('tazama_lang') as Language;
     if (savedLang) setLanguageState(savedLang);
 
-    const savedTheme = localStorage.getItem('tazama_theme') as Theme;
+    const savedTheme = safeStorageGet('tazama_theme') as Theme;
     if (savedTheme === 'light' || savedTheme === 'dark') setTheme(savedTheme);
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -133,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const data = userSnap.data() as UserProfile;
             setProfile(data);
             setRole(data.role);
-            localStorage.setItem('tazama_session_profile', JSON.stringify(data));
+            safeStorageSet('tazama_session_profile', JSON.stringify(data));
           } else {
             // New user registration in Firestore
             const isAdminEmail = firebaseUser.email === 'amytzee@gmail.com';
@@ -151,11 +181,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await setDoc(userDocRef, newProfile);
             setProfile(newProfile);
             setRole(newProfile.role);
-            localStorage.setItem('tazama_session_profile', JSON.stringify(newProfile));
+            safeStorageSet('tazama_session_profile', JSON.stringify(newProfile));
           }
         } catch (err) {
           console.warn('Firestore user fetch note:', err);
-          const savedSession = localStorage.getItem('tazama_session_profile');
+          const savedSession = safeStorageGet('tazama_session_profile');
           if (savedSession) {
             try {
               const parsed = JSON.parse(savedSession);
@@ -179,12 +209,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
             setProfile(fallbackProfile);
             setRole(fallbackProfile.role);
-            localStorage.setItem('tazama_session_profile', JSON.stringify(fallbackProfile));
+            safeStorageSet('tazama_session_profile', JSON.stringify(fallbackProfile));
           }
         }
       } else {
         // If no Firebase Auth user, check if we have a locally stored active session
-        const savedSession = localStorage.getItem('tazama_session_profile');
+        const savedSession = safeStorageGet('tazama_session_profile');
         if (savedSession) {
           try {
             const parsed = JSON.parse(savedSession);
@@ -213,13 +243,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('tazama_lang', lang);
+    safeStorageSet('tazama_lang', lang);
   };
 
   const toggleTheme = () => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(nextTheme);
-    localStorage.setItem('tazama_theme', nextTheme);
+    safeStorageSet('tazama_theme', nextTheme);
   };
 
   const loginWithGoogle = async () => {
@@ -336,15 +366,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(newProfile);
     setRole(resolvedRole);
     setDemoMode(false);
-    localStorage.setItem('tazama_session_profile', JSON.stringify(newProfile));
+    safeStorageSet('tazama_session_profile', JSON.stringify(newProfile));
     
     // Add to real registered users
     try {
-      const existingRaw = localStorage.getItem('tazama_registered_users');
+      const existingRaw = safeStorageGet('tazama_registered_users');
       const list: UserProfile[] = existingRaw ? JSON.parse(existingRaw) : [];
       if (!list.some(u => (u?.email || '').toLowerCase() === cleanEmail)) {
         list.push(newProfile);
-        localStorage.setItem('tazama_registered_users', JSON.stringify(list));
+        safeStorageSet('tazama_registered_users', JSON.stringify(list));
       }
     } catch {}
 
@@ -388,15 +418,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(newProfile);
     setRole(assignedRole);
     setDemoMode(false);
-    localStorage.setItem('tazama_session_profile', JSON.stringify(newProfile));
+    safeStorageSet('tazama_session_profile', JSON.stringify(newProfile));
 
     // Persist real registered user
     try {
-      const existingRaw = localStorage.getItem('tazama_registered_users');
+      const existingRaw = safeStorageGet('tazama_registered_users');
       const list: UserProfile[] = existingRaw ? JSON.parse(existingRaw) : [];
       if (!list.some(u => (u?.email || '').toLowerCase() === cleanEmail)) {
         list.push(newProfile);
-        localStorage.setItem('tazama_registered_users', JSON.stringify(list));
+        safeStorageSet('tazama_registered_users', JSON.stringify(list));
       }
     } catch {}
 
@@ -409,7 +439,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err) {
       console.error(err);
     }
-    localStorage.removeItem('tazama_session_profile');
+    safeStorageRemove('tazama_session_profile');
     setUser(null);
     setProfile(null);
     setChannel(null);
@@ -422,7 +452,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (profile) {
       const updated = { ...profile, role: newRole };
       setProfile(updated);
-      localStorage.setItem('tazama_session_profile', JSON.stringify(updated));
+      safeStorageSet('tazama_session_profile', JSON.stringify(updated));
     }
   };
 
@@ -467,14 +497,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setChannel(newChannel);
     setProfile(updated);
     setRole('creator');
-    localStorage.setItem('tazama_session_profile', JSON.stringify(updated));
-    localStorage.setItem('tazama_user_channel', JSON.stringify(newChannel));
+    safeStorageSet('tazama_session_profile', JSON.stringify(updated));
+    safeStorageSet('tazama_user_channel', JSON.stringify(newChannel));
     
     try {
-      const storedChannels = localStorage.getItem('tazama_custom_channels');
+      const storedChannels = safeStorageGet('tazama_custom_channels');
       const list: Channel[] = storedChannels ? JSON.parse(storedChannels) : [];
       list.push(newChannel);
-      localStorage.setItem('tazama_custom_channels', JSON.stringify(list));
+      safeStorageSet('tazama_custom_channels', JSON.stringify(list));
     } catch {}
 
     try {
@@ -493,7 +523,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(prev => {
       if (!prev) return null;
       const updated = { ...prev, balanceTZS: prev.balanceTZS + cleanAmount };
-      localStorage.setItem('tazama_session_profile', JSON.stringify(updated));
+      safeStorageSet('tazama_session_profile', JSON.stringify(updated));
       return updated;
     });
     return true;
@@ -505,7 +535,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(prev => {
       if (!prev) return null;
       const updated = { ...prev, balanceTZS: prev.balanceTZS - cleanAmount };
-      localStorage.setItem('tazama_session_profile', JSON.stringify(updated));
+      safeStorageSet('tazama_session_profile', JSON.stringify(updated));
       return updated;
     });
     return true;

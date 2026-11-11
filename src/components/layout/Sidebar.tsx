@@ -30,6 +30,7 @@ import { useAuth } from '../../context/AuthContext';
 import { translations } from '../../lib/i18n';
 import { PWAInstallModal } from '../modals/PWAInstallModal';
 import { createAvatarSvgDataUri } from '../../lib/mediaPlaceholders';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenCreateAd
 }) => {
   const { language, role, profile, upgradeToCreator, logout } = useAuth();
+  const { isInstalled } = usePWAInstall();
   const [showPWAModal, setShowPWAModal] = useState(false);
   const t = translations[language];
 
@@ -520,20 +522,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-extrabold uppercase">Ads</span>
               </button>
 
-              {/* Install PWA App Button */}
-              <button
-                onClick={() => {
-                  if (onClose) onClose();
-                  setShowPWAModal(true);
-                }}
-                className="w-full flex items-center justify-between p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 dark:bg-[#16C784]/15 dark:border-[#16C784]/30 dark:text-[#16C784] font-bold text-xs dark:hover:bg-[#16C784]/25 transition-all"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Download className="w-5 h-5 text-emerald-600 dark:text-[#16C784]" />
-                  <span>Weka App kwenye Simu</span>
-                </div>
-                <span className="text-[9px] bg-[#16C784] text-black px-1.5 py-0.5 rounded font-extrabold uppercase">BURE</span>
-              </button>
+              {/* Install PWA App Button (suppressed when already in standalone mode) */}
+              {!isInstalled && (
+                <button
+                  onClick={() => {
+                    if (onClose) onClose();
+                    setShowPWAModal(true);
+                  }}
+                  className="w-full flex items-center justify-between p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 dark:bg-[#16C784]/15 dark:border-[#16C784]/30 dark:text-[#16C784] font-bold text-xs dark:hover:bg-[#16C784]/25 transition-all"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Download className="w-5 h-5 text-emerald-600 dark:text-[#16C784]" />
+                    <span>Weka App kwenye Simu</span>
+                  </div>
+                  <span className="text-[9px] bg-[#16C784] text-black px-1.5 py-0.5 rounded font-extrabold uppercase">BURE</span>
+                </button>
+              )}
             </div>
 
             {/* Creator Economy Mobile - Strictly guarded */}

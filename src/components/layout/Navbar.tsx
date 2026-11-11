@@ -25,6 +25,7 @@ import { useVideo } from '../../context/VideoContext';
 import { translations, formatTZS, formatRelativeTime } from '../../lib/i18n';
 import { PWAInstallModal } from '../modals/PWAInstallModal';
 import { createAvatarSvgDataUri } from '../../lib/mediaPlaceholders';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 interface NavbarProps {
   onOpenUpload: () => void;
@@ -72,6 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     return (adCampaigns || []).filter(a => a && a.status === 'pending_approval').length;
   }, [adCampaigns]);
 
+  const { isInstalled } = usePWAInstall();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -244,16 +246,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="hidden lg:inline">{t.create}</span>
           </button>
 
-          {/* Install PWA Button (Desktop inline; Mobile uses Row 2 bar) */}
-          <button
-            type="button"
-            onClick={() => setShowPWAModal(true)}
-            className="hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-slate-100 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] hover:border-slate-300 dark:hover:border-white/30 text-[11px] font-semibold text-slate-700 dark:text-white/90 hover:text-slate-900 dark:hover:text-white transition-all shrink-0 cursor-pointer"
-            title="Weka App ya Tazama kwenye Simu yako"
-          >
-            <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
-            <span>Weka App</span>
-          </button>
+          {/* Install PWA Button (Desktop inline; suppressed when already installed in standalone mode) */}
+          {!isInstalled && (
+            <button
+              type="button"
+              onClick={() => setShowPWAModal(true)}
+              className="hidden xl:flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-slate-100 dark:bg-[#10131B] border border-slate-200 dark:border-[#262E3E] hover:border-slate-300 dark:hover:border-white/30 text-[11px] font-semibold text-slate-700 dark:text-white/90 hover:text-slate-900 dark:hover:text-white transition-all shrink-0 cursor-pointer"
+              title="Weka App ya Tazama kwenye Simu yako"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
+              <span>Weka App</span>
+            </button>
+          )}
 
           {/* Wallet Balance Badge (Desktop/Tablet inline; Mobile uses Row 2 bar) */}
           {profile && (
@@ -598,14 +602,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </button>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={() => { setShowPWAModal(true); setShowProfileMenu(false); }}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#232A39] flex items-center gap-2 text-emerald-700 dark:text-[#16C784] font-semibold cursor-pointer"
-                  >
-                    <Download className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
-                    <span>Weka App kwenye Simu</span>
-                  </button>
+                  {!isInstalled && (
+                    <button
+                      type="button"
+                      onClick={() => { setShowPWAModal(true); setShowProfileMenu(false); }}
+                      className="w-full text-left px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#232A39] flex items-center gap-2 text-emerald-700 dark:text-[#16C784] font-semibold cursor-pointer"
+                    >
+                      <Download className="w-4 h-4 text-emerald-600 dark:text-[#16C784]" />
+                      <span>Weka App kwenye Simu</span>
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -702,14 +708,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span>{isDataSaver ? 'Bando: 360p' : 'Bana Bando'}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setShowPWAModal(true)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-[11px] font-semibold text-slate-700 dark:text-white/90 shrink-0 whitespace-nowrap cursor-pointer"
-          >
-            <Download className="w-3 h-3 text-emerald-600 dark:text-[#16C784]" />
-            <span>Weka App</span>
-          </button>
+          {!isInstalled && (
+            <button
+              type="button"
+              onClick={() => setShowPWAModal(true)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#191E29] border border-slate-200 dark:border-[#262E3E] text-[11px] font-semibold text-slate-700 dark:text-white/90 shrink-0 whitespace-nowrap cursor-pointer"
+            >
+              <Download className="w-3 h-3 text-emerald-600 dark:text-[#16C784]" />
+              <span>Weka App</span>
+            </button>
+          )}
         </div>
       )}
 

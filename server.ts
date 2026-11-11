@@ -1302,12 +1302,56 @@ async function startServer() {
   // Serve built static files if dist/index.html exists, or fallback to Vite middleware
   const distDir = path.resolve(__dirname, 'dist');
   const distIndexHtml = path.join(distDir, 'index.html');
+  const staticAssetExtRegex = /\.(js|mjs|css|map|png|jpe?g|gif|svg|webp|ico|json|webmanifest|woff2?|ttf|eot|wasm|txt)$/i;
 
   if (fs.existsSync(distIndexHtml)) {
     console.log(`[Production Mode] Serving static assets from: ${distDir}`);
-    app.use(express.static(distDir));
+    app.use(
+      express.static(distDir, {
+        setHeaders: (res, filePath) => {
+          const base = path.basename(filePath);
+          if (
+            base === 'index.html' ||
+            base === 'sw.js' ||
+            base === 'registerSW.js' ||
+            base === 'manifest.json' ||
+            base === 'manifest.webmanifest' ||
+            base.startsWith('workbox-')
+          ) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          } else if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          }
+          if (base === 'manifest.webmanifest' || base === 'manifest.json') {
+            res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+          }
+        },
+      })
+    );
+
+    // Ensure both /manifest.json and /manifest.webmanifest resolve cleanly in production
+    app.get(['/manifest.json', '/manifest.webmanifest'], (req, res) => {
+      const candidates = [
+        path.join(distDir, req.path === '/manifest.webmanifest' ? 'manifest.webmanifest' : 'manifest.json'),
+        path.join(distDir, 'manifest.webmanifest'),
+        path.join(distDir, 'manifest.json'),
+        path.join(__dirname, 'public', 'manifest.json'),
+      ];
+      const hit = candidates.find((p) => fs.existsSync(p));
+      if (hit) {
+        res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        return res.sendFile(hit);
+      }
+      return res.status(404).end();
+    });
+
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api')) return next();
+      if (req.path.startsWith('/assets/') || staticAssetExtRegex.test(req.path)) {
+        return res.status(404).type('text/plain').send('Asset not found');
+      }
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.sendFile(distIndexHtml);
     });
   } else {
@@ -1323,12 +1367,21 @@ async function startServer() {
     app.use(vite.middlewares);
     app.use('*', async (req, res, next) => {
       if (req.path.startsWith('/api')) return next();
+      if (req.path.startsWith('/assets/') || staticAssetExtRegex.test(req.path)) {
+        return res.status(404).type('text/plain').send('Asset not found');
+      }
       const url = req.originalUrl;
       try {
         const rootIndexHtml = path.resolve(__dirname, 'index.html');
         let template = fs.readFileSync(rootIndexHtml, 'utf-8');
         template = await vite.transformIndexHtml(url, template);
-        res.status(200).set({ 'Content-Type': 'text/html' }).end(template);
+        res
+          .status(200)
+          .set({
+            'Content-Type': 'text/html',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+          })
+          .end(template);
       } catch (e) {
         next(e);
       }
