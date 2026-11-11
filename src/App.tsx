@@ -27,7 +27,8 @@ import { PremiumPlansModal } from './components/modals/PremiumPlansModal';
 import { CreateChannelModal } from './components/channel/CreateChannelModal';
 import { CreateAdModal } from './components/ads/CreateAdModal';
 import { VideoItem, VideoCategory, UserRole } from './types';
-import { Sparkles, Shield, Info, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Shield, Info, CheckCircle2, X } from 'lucide-react';
+import { TazamaActionToastPayload } from './components/video/VideoActionsMenu';
 
 const AppContent: React.FC = () => {
   const { role, profile, switchDemoRole, upgradeToCreator } = useAuth();
@@ -52,6 +53,8 @@ const AppContent: React.FC = () => {
   const [isCreateAdOpen, setIsCreateAdOpen] = useState<boolean>(false);
   const [premiumTarget, setPremiumTarget] = useState<'viewer' | 'creator'>('viewer');
   const [authActionPrompt, setAuthActionPrompt] = useState<string | null>(null);
+  const [actionToast, setActionToast] = useState<TazamaActionToastPayload | null>(null);
+  const deepLinkHandledRef = React.useRef(false);
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -71,6 +74,44 @@ const AppContent: React.FC = () => {
     window.addEventListener('tazama_show_auth_modal', handleAuthReq);
     return () => window.removeEventListener('tazama_show_auth_modal', handleAuthReq);
   }, []);
+
+  React.useEffect(() => {
+    let timerId: number | undefined;
+    const handleActionToast = (e: Event) => {
+      const detail = (e as CustomEvent<TazamaActionToastPayload>).detail;
+      if (!detail || !detail.message) return;
+      setActionToast(detail);
+      if (timerId) window.clearTimeout(timerId);
+      timerId = window.setTimeout(() => {
+        setActionToast(null);
+      }, 4500);
+    };
+    window.addEventListener('tazama_action_toast', handleActionToast);
+    return () => {
+      window.removeEventListener('tazama_action_toast', handleActionToast);
+      if (timerId) window.clearTimeout(timerId);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (deepLinkHandledRef.current || typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const sharedVideoId = params.get('v');
+    if (!sharedVideoId) {
+      deepLinkHandledRef.current = true;
+      return;
+    }
+    const found =
+      videos.find((v) => v.id === sharedVideoId) ||
+      (shorts && shorts.find((s) => s.id === sharedVideoId));
+    if (found) {
+      deepLinkHandledRef.current = true;
+      setSelectedVideo(found);
+      setMinimizedVideo(found);
+      setIsMiniPlaying(true);
+      setActivePage('watch');
+    }
+  }, [videos, shorts]);
 
   const handleSelectVideo = (video: VideoItem) => {
     setSelectedVideo(video);
@@ -495,6 +536,52 @@ const AppContent: React.FC = () => {
                 Baadaye (Ghairi)
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global Action / Undo Toast */}
+      {actionToast && (
+        <div
+          key={actionToast.id}
+          className="fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 z-[90] w-[calc(100%-2rem)] max-w-md bg-slate-900 dark:bg-[#191E29] text-white border border-slate-700/80 dark:border-[#2E3748] rounded-2xl px-4 py-3 shadow-2xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-3 duration-200 select-none"
+        >
+          <span className="text-xs font-semibold leading-snug flex-1">
+            {actionToast.message}
+          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            {actionToast.undoLabel && actionToast.onUndo && (
+              <button
+                type="button"
+                onClick={() => {
+                  actionToast.onUndo?.();
+                  setActionToast(null);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-[#FF3040]/20 hover:bg-[#FF3040]/30 text-[#FF5C69] font-extrabold text-xs cursor-pointer transition-colors"
+              >
+                {actionToast.undoLabel}
+              </button>
+            )}
+            {actionToast.actionLabel && actionToast.onAction && (
+              <button
+                type="button"
+                onClick={() => {
+                  actionToast.onAction?.();
+                  setActionToast(null);
+                }}
+                className="px-2.5 py-1 rounded-lg bg-[#16C784]/20 hover:bg-[#16C784]/30 text-[#16C784] font-extrabold text-xs cursor-pointer transition-colors"
+              >
+                {actionToast.actionLabel}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setActionToast(null)}
+              className="p-1 rounded-full text-slate-400 hover:text-white cursor-pointer"
+              aria-label="Funga"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       )}

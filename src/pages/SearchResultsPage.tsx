@@ -18,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatViews, formatDuration, formatRelativeTime, translations } from '../lib/i18n';
 import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
 import { VideoThumbnailPreview } from '../components/video/VideoThumbnailPreview';
+import { VideoActionsMenu } from '../components/video/VideoActionsMenu';
 
 interface SearchResultsPageProps {
   onSelectVideo: (video: VideoItem) => void;
@@ -39,7 +40,9 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
     shorts, 
     channels, 
     userSubscriptions, 
-    toggleSubscribe 
+    toggleSubscribe,
+    notInterestedIds,
+    hiddenChannelIds
   } = useVideo();
   const { language } = useAuth();
   const t = translations[language];
@@ -52,8 +55,11 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
   // Filter Videos
   const matchingVideos = React.useMemo(() => {
     if (!videos) return [];
-    if (!queryClean) return videos.filter(Boolean);
-    return videos.filter(v => 
+    const base = videos.filter((v) =>
+      Boolean(v && v.id && !notInterestedIds.includes(v.id) && !hiddenChannelIds.includes(v.channelId))
+    );
+    if (!queryClean) return base;
+    return base.filter(v => 
       v && (
         v.title?.toLowerCase().includes(queryClean) ||
         v.channelName?.toLowerCase().includes(queryClean) ||
@@ -62,7 +68,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
         v.description?.toLowerCase().includes(queryClean)
       )
     );
-  }, [videos, queryClean]);
+  }, [videos, queryClean, notInterestedIds, hiddenChannelIds]);
 
   // Filter Shorts
   const matchingShorts = React.useMemo(() => {
@@ -381,9 +387,17 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({
                   {/* Video Meta Info */}
                   <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
                     <div>
-                      <h3 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#FF3040] transition-colors line-clamp-2 leading-snug">
-                        {video.title}
-                      </h3>
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="text-xs sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#FF3040] transition-colors line-clamp-2 leading-snug">
+                          {video.title}
+                        </h3>
+                        <VideoActionsMenu
+                          video={video}
+                          onSelectVideo={onSelectVideo}
+                          onSelectChannel={onSelectChannel}
+                          variant="vertical"
+                        />
+                      </div>
 
                       <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-[#A7B0C0] font-mono mt-1">
                         <span>{formatViews(video.viewsCount, language)} {language === 'sw' ? 'matazamio' : 'views'}</span>

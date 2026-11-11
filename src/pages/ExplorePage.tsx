@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { VideoItem } from '../types';
 import { formatViews, formatRelativeTime } from '../lib/i18n';
 import { VideoThumbnailPreview } from '../components/video/VideoThumbnailPreview';
+import { VideoActionsMenu } from '../components/video/VideoActionsMenu';
 
 interface ExplorePageProps {
   onSelectVideo: (video: VideoItem) => void;
@@ -28,7 +29,7 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
   onSelectChannel,
   onNavigateHome,
 }) => {
-  const { videos } = useVideo();
+  const { videos, notInterestedIds, hiddenChannelIds } = useVideo();
   const { language } = useAuth();
 
   const [activeCategory, setActiveCategory] = useState<string>('trend');
@@ -45,7 +46,9 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
   ];
 
   // Filter & sort
-  let filtered = (videos || []).filter(Boolean);
+  let filtered = (videos || []).filter((v) =>
+    Boolean(v && v.id && !notInterestedIds.includes(v.id) && !hiddenChannelIds.includes(v.channelId))
+  );
 
   if (activeCategory === 'music') {
     filtered = filtered.filter(v => v && v.category === 'Muziki');
@@ -215,14 +218,12 @@ export const ExplorePage: React.FC<ExplorePageProps> = ({
                 </div>
 
                 <div className="flex justify-end">
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                    className="p-1 text-slate-400 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
+                  <VideoActionsMenu
+                    video={video}
+                    onSelectVideo={onSelectVideo}
+                    onSelectChannel={onSelectChannel}
+                    variant="vertical"
+                  />
                 </div>
               </div>
 

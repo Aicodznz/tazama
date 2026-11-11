@@ -38,7 +38,9 @@ export const HomePage: React.FC<HomePageProps> = ({
     watchHistory,
     userSubscriptions,
     toggleSubscribe,
-    adCampaigns
+    adCampaigns,
+    notInterestedIds,
+    hiddenChannelIds
   } = useVideo();
   
   const { language, profile, role } = useAuth();
@@ -77,16 +79,37 @@ export const HomePage: React.FC<HomePageProps> = ({
   }, [videos, shorts]);
 
   const filteredVideos = React.useMemo(() => {
-    const validOnly = allContent.filter(v => Boolean(v && v.id && v.videoUrl && v.title));
+    const isAllowed = (v: VideoItem) =>
+      Boolean(
+        v &&
+          v.id &&
+          v.videoUrl &&
+          v.title &&
+          !notInterestedIds.includes(v.id) &&
+          !hiddenChannelIds.includes(v.channelId)
+      );
+
+    const validOnly = allContent.filter(isAllowed);
     if (selectedCategory === 'Zote') {
-      const validVideos = (videos || []).filter(v => Boolean(v && v.id && v.videoUrl && v.title));
+      const validVideos = (videos || []).filter(isAllowed);
       if (validVideos.length > 0) {
         return validVideos;
       }
       return validOnly;
     }
-    return validOnly.filter(v => Boolean(v && v.category === selectedCategory));
-  }, [selectedCategory, videos, allContent]);
+    return validOnly.filter((v) => v.category === selectedCategory);
+  }, [selectedCategory, videos, allContent, notInterestedIds, hiddenChannelIds]);
+
+  const visibleShorts = React.useMemo(() => {
+    return (shorts || []).filter((s) =>
+      Boolean(
+        s &&
+          s.id &&
+          !notInterestedIds.includes(s.id) &&
+          !hiddenChannelIds.includes(s.channelId)
+      )
+    );
+  }, [shorts, notInterestedIds, hiddenChannelIds]);
 
   return (
     <div className="space-y-3 sm:space-y-5 pb-6 select-none">
@@ -207,7 +230,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       </div>
 
       {/* Shorts Vertical Reels Section (Below Recommended Videos; only if real shorts exist) */}
-      {shorts.length > 0 && (
+      {visibleShorts.length > 0 && (
         <div className="pt-4 sm:pt-5">
           <div className="flex items-center justify-between mb-3.5">
             <div className="flex items-center gap-2">
@@ -226,7 +249,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            {shorts.slice(0, 4).map((short) => (
+            {visibleShorts.slice(0, 4).map((short) => (
               <div
                 key={short.id}
                 className="group flex flex-col gap-1.5 cursor-pointer select-none"

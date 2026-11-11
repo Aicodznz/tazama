@@ -24,14 +24,15 @@ import {
   Copy,
   SlidersHorizontal,
   ChevronRight,
-  MoreVertical,
   CornerDownRight,
   AlertCircle,
-  Sparkles
+  Sparkles,
+  ListVideo
 } from 'lucide-react';
 import { VideoItem, VideoCategory } from '../types';
 import { VideoPlayer } from '../components/video/VideoPlayer';
 import { VideoThumbnailPreview } from '../components/video/VideoThumbnailPreview';
+import { VideoActionsMenu } from '../components/video/VideoActionsMenu';
 import { GiftModal } from '../components/gifts/GiftModal';
 import { MembershipModal } from '../components/membership/MembershipModal';
 import { ReportModal } from '../components/modals/ReportModal';
@@ -77,7 +78,12 @@ export const WatchPage: React.FC<WatchPageProps> = ({
     playlists,
     addToPlaylist,
     removeFromPlaylist,
-    createPlaylist
+    createPlaylist,
+    playbackQueue,
+    removeFromQueue,
+    clearQueue,
+    notInterestedIds,
+    hiddenChannelIds
   } = useVideo();
   
   const { profile, language } = useAuth();
@@ -112,15 +118,35 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   const [newPlaylistTitle, setNewPlaylistTitle] = useState<string>('');
   const [isCreatingPlaylist, setIsCreatingPlaylist] = useState<boolean>(false);
 
-  // Next video calculation for autoplay
+  // Next video calculation for autoplay (prioritize Playback Queue)
+  const nextQueuedVideo = useMemo(() => {
+    return (
+      playbackQueue.find((v) => Boolean(v && v.id && v.id !== liveVideo?.id)) || null
+    );
+  }, [playbackQueue, liveVideo?.id]);
+
   const nextVideo = useMemo(() => {
-    return (videos && videos.find(v => Boolean(v && v.id !== liveVideo?.id))) || null;
-  }, [videos, liveVideo?.id]);
+    if (nextQueuedVideo) return nextQueuedVideo;
+    return (
+      (videos &&
+        videos.find((v) =>
+          Boolean(
+            v &&
+              v.id !== liveVideo?.id &&
+              !notInterestedIds.includes(v.id) &&
+              !hiddenChannelIds.includes(v.channelId)
+          )
+        )) ||
+      null
+    );
+  }, [nextQueuedVideo, videos, liveVideo?.id, notInterestedIds, hiddenChannelIds]);
 
   const handleNextVideo = () => {
-    if (nextVideo) {
-      onSelectVideo(nextVideo);
+    if (!nextVideo) return;
+    if (nextQueuedVideo && nextVideo.id === nextQueuedVideo.id) {
+      removeFromQueue(nextQueuedVideo.id);
     }
+    onSelectVideo(nextVideo);
   };
 
   // Guest Auth Prompt Modal
@@ -332,16 +358,36 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
   const allRecommendations: VideoItem[] = [...otherVideos, ...fallbackShortsAsVideos];
 
-  // Filter recommendations by selected sidebar filter chip
+  // Filter recommendations by feed preferences and selected sidebar filter chip
   const filteredRecommendations = useMemo(() => {
+    const visible = allRecommendations.filter((v) => {
+      if (notInterestedIds.includes(v.id)) return false;
+      if (
+        selectedSidebarFilter !== `Kutoka kwa ${video.channelName}` &&
+        hiddenChannelIds.includes(v.channelId)
+      ) {
+        return false;
+      }
+      return true;
+    });
+
     if (selectedSidebarFilter === 'Zote') {
-      return allRecommendations;
+      return visible;
     }
     if (selectedSidebarFilter === `Kutoka kwa ${video.channelName}`) {
-      return allRecommendations.filter(v => v.channelId === video.channelId || v.channelName === video.channelName);
+      return visible.filter(
+        (v) => v.channelId === video.channelId || v.channelName === video.channelName
+      );
     }
-    return allRecommendations.filter(v => v.category === selectedSidebarFilter);
-  }, [allRecommendations, selectedSidebarFilter, video.channelId, video.channelName]);
+    return visible.filter((v) => v.category === selectedSidebarFilter);
+  }, [
+    allRecommendations,
+    selectedSidebarFilter,
+    video.channelId,
+    video.channelName,
+    notInterestedIds,
+    hiddenChannelIds,
+  ]);
 
   const sidebarChips = [
     'Zote',
@@ -698,13 +744,13 @@ export const WatchPage: React.FC<WatchPageProps> = ({
               </button>
 
               {/* 6. More Actions (⋯) */}
-              <button
-                onClick={() => setShowReportModal(true)}
-                className="shrink-0 p-2 sm:p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-900 dark:bg-[#1F2533] dark:hover:bg-[#262E3E] dark:border-white/10 dark:text-white transition-all active:scale-95 cursor-pointer"
-                title="Mengineyo"
-              >
-                <MoreVertical className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </button>
+              <VideoActionsMenu
+                video={liveVideo}
+                onSelectVideo={onSelectVideo}
+                onSelectChannel={onSelectChannel}
+                variant="vertical"
+                buttonClassName="shrink-0 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-900 dark:bg-[#1F2533] dark:hover:bg-[#262E3E] dark:border-white/10 dark:text-white transition-all active:scale-95 cursor-pointer"
+              />
             </div>
 
             {/* Bell Toast Notification */}
@@ -898,9 +944,87 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
         </div>
 
-        {/* RIGHT SECONDARY COLUMN: Filter Chips & Suggested Videos List */}
+        {/* RIGHT SECONDARY COLUMN: Queue, Filter Chips & Suggested Videos List */}
         <div className="w-full lg:w-[360px] xl:w-[400px] shrink-0 space-y-4 px-3 sm:px-0">
-          
+
+          {/* Playback Queue Panel (Shown when Queue has items) */}
+          {playbackQueue.length > 0 && (
+            <div className="rounded-2xl bg-white dark:bg-[#181C26] border border-slate-200 dark:border-[#262E3E] shadow-sm dark:shadow-none overflow-hidden">
+              <div className="px-3.5 py-2.5 bg-slate-50 dark:bg-[#141824] border-b border-slate-200 dark:border-[#262E3E] flex items-center justify-between">
+                <div className="flex items-center gap-2 min-w-0">
+                  <ListVideo className="w-4 h-4 text-[#FF3040] shrink-0" />
+                  <h3 className="text-xs font-extrabold text-slate-900 dark:text-white truncate">
+                    {language === 'en' ? 'Up Next Queue' : 'Foleni ya Kucheza'} ({playbackQueue.length})
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={clearQueue}
+                  className="text-[11px] font-bold text-slate-500 hover:text-red-600 dark:text-[#A7B0C0] dark:hover:text-red-400 cursor-pointer shrink-0"
+                >
+                  {language === 'en' ? 'Clear' : 'Futa zote'}
+                </button>
+              </div>
+              <div className="divide-y divide-slate-100 dark:divide-[#262E3E]/70 max-h-56 overflow-y-auto">
+                {playbackQueue.map((qItem, qIdx) => {
+                  const isCurrent = qItem.id === liveVideo?.id;
+                  return (
+                    <div
+                      key={qItem.id}
+                      onClick={() => {
+                        if (!isCurrent) {
+                          removeFromQueue(qItem.id);
+                          onSelectVideo(qItem);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }}
+                      className={`flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-colors ${
+                        isCurrent
+                          ? 'bg-[#FF3040]/10 dark:bg-[#FF3040]/15'
+                          : 'hover:bg-slate-50 dark:hover:bg-white/5'
+                      }`}
+                    >
+                      <span className="text-[10px] font-mono text-slate-400 w-3.5 shrink-0 text-center">
+                        {qIdx + 1}
+                      </span>
+                      <img
+                        src={qItem.thumbnailUrl || createThumbnailSvgDataUri(qItem.title, qItem.category)}
+                        alt=""
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = createThumbnailSvgDataUri(
+                            qItem.title,
+                            qItem.category
+                          );
+                        }}
+                        className="w-14 h-9 rounded-lg object-cover shrink-0 bg-slate-200 dark:bg-[#10131B]"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-slate-900 dark:text-white line-clamp-1">
+                          {qItem.title}
+                        </p>
+                        <p className="text-[10px] text-slate-500 dark:text-[#A7B0C0] truncate">
+                          {qItem.channelName}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFromQueue(qItem.id);
+                        }}
+                        className="p-1 rounded-full text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-200/60 dark:hover:bg-white/10 shrink-0 cursor-pointer"
+                        title={language === 'en' ? 'Remove from queue' : 'Ondoa kwenye foleni'}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Horizontal Category Chips Bar */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
             {sidebarChips.map((chip) => {
@@ -942,66 +1066,67 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                     />
                   </div>
 
-                  {/* Video Meta Info */}
-                  <div 
-                    onClick={() => {
-                      onSelectVideo(item);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    className="min-w-0 flex-1 flex items-start gap-2.5 sm:gap-0 sm:flex-col justify-start py-0.5 cursor-pointer"
-                  >
-                    {/* Mobile Avatar */}
-                    <img
-                      src={item.channelAvatar || createAvatarSvgDataUri(item.channelName)}
-                      alt={item.channelName}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = createAvatarSvgDataUri(item.channelName);
+                  {/* Video Meta Info + Actions */}
+                  <div className="min-w-0 flex-1 flex items-start gap-2 sm:gap-1 justify-between py-0.5">
+                    <div
+                      onClick={() => {
+                        onSelectVideo(item);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="w-9 h-9 rounded-full object-cover shrink-0 sm:hidden ring-1 ring-slate-200 dark:ring-white/10 bg-slate-100 dark:bg-[#141824] mt-0.5"
-                    />
+                      className="min-w-0 flex-1 flex items-start gap-2.5 sm:gap-0 sm:flex-col justify-start cursor-pointer"
+                    >
+                      {/* Mobile Avatar */}
+                      <img
+                        src={item.channelAvatar || createAvatarSvgDataUri(item.channelName)}
+                        alt={item.channelName}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = createAvatarSvgDataUri(item.channelName);
+                        }}
+                        className="w-9 h-9 rounded-full object-cover shrink-0 sm:hidden ring-1 ring-slate-200 dark:ring-white/10 bg-slate-100 dark:bg-[#141824] mt-0.5"
+                      />
 
-                    <div className="min-w-0 flex-1">
-                      <h4 className="text-sm sm:text-xs md:text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#FF3040] transition-colors">
-                        {item.title}
-                      </h4>
-                      
-                      {/* Mobile stats row */}
-                      <div className="flex sm:hidden items-center flex-wrap gap-1 mt-1 text-xs text-slate-600 dark:text-[#A7B0C0]">
-                        <span className="truncate text-slate-700 dark:text-white/80 font-medium">{item.channelName}</span>
-                        {item.isChannelVerified && (
-                          <CheckCircle2 className="w-3 h-3 text-slate-500 dark:text-[#A7B0C0] shrink-0" />
-                        )}
-                        <span>•</span>
-                        <span>{formatViews(item.viewsCount, language)} views</span>
-                        <span>•</span>
-                        <span>{formatRelativeTime(item.createdAt, language)}</span>
-                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm sm:text-xs md:text-sm font-semibold text-slate-900 dark:text-white line-clamp-2 leading-snug group-hover:text-[#FF3040] transition-colors">
+                          {item.title}
+                        </h4>
 
-                      {/* Desktop stats rows */}
-                      <div className="hidden sm:flex items-center gap-1 mt-1 text-[11px] text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white transition-colors">
-                        <span className="truncate">{item.channelName}</span>
-                        {item.isChannelVerified && (
-                          <CheckCircle2 className="w-3 h-3 text-slate-500 dark:text-[#A7B0C0] shrink-0" />
-                        )}
-                      </div>
-                      <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-500 dark:text-[#A7B0C0] mt-0.5">
-                        <span>{formatViews(item.viewsCount, language)} views</span>
-                        <span>•</span>
-                        <span>{formatRelativeTime(item.createdAt, language)}</span>
+                        {/* Mobile stats row */}
+                        <div className="flex sm:hidden items-center flex-wrap gap-1 mt-1 text-xs text-slate-600 dark:text-[#A7B0C0]">
+                          <span className="truncate text-slate-700 dark:text-white/80 font-medium">{item.channelName}</span>
+                          {item.isChannelVerified && (
+                            <CheckCircle2 className="w-3 h-3 text-slate-500 dark:text-[#A7B0C0] shrink-0" />
+                          )}
+                          <span>•</span>
+                          <span>{formatViews(item.viewsCount, language)} views</span>
+                          <span>•</span>
+                          <span>{formatRelativeTime(item.createdAt, language)}</span>
+                        </div>
+
+                        {/* Desktop stats rows */}
+                        <div className="hidden sm:flex items-center gap-1 mt-1 text-[11px] text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white transition-colors">
+                          <span className="truncate">{item.channelName}</span>
+                          {item.isChannelVerified && (
+                            <CheckCircle2 className="w-3 h-3 text-slate-500 dark:text-[#A7B0C0] shrink-0" />
+                          )}
+                        </div>
+                        <div className="hidden sm:flex items-center gap-1 text-[11px] text-slate-500 dark:text-[#A7B0C0] mt-0.5">
+                          <span>{formatViews(item.viewsCount, language)} views</span>
+                          <span>•</span>
+                          <span>{formatRelativeTime(item.createdAt, language)}</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* 3-dots button on mobile */}
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowReportModal(true);
+                    {/* 3-dots Action Menu (Mobile & Desktop) */}
+                    <VideoActionsMenu
+                      video={item}
+                      onSelectVideo={(v) => {
+                        onSelectVideo(v);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="sm:hidden p-1.5 rounded-full text-slate-500 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white transition-colors cursor-pointer shrink-0"
-                      title="Mengineyo"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
+                      onSelectChannel={onSelectChannel}
+                      variant="vertical"
+                    />
                   </div>
                 </div>
               ))

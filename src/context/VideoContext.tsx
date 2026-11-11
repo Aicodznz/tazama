@@ -158,11 +158,26 @@ interface VideoContextType {
   // Data Saver
   isDataSaver: boolean;
   toggleDataSaver: () => void;
+  // Playback Queue
+  playbackQueue: VideoItem[];
+  addToQueue: (video: VideoItem) => void;
+  removeFromQueue: (videoId: string) => void;
+  clearQueue: () => void;
+  isInQueue: (videoId: string) => boolean;
+  // Feed Preferences (Not Interested / Hide Channel)
+  notInterestedIds: string[];
+  hiddenChannelIds: string[];
+  markNotInterested: (videoId: string) => void;
+  undoNotInterested: (videoId: string) => void;
+  hideChannelRecommendations: (channelId: string) => void;
+  unhideChannelRecommendations: (channelId: string) => void;
   // Playlists
   playlists: Playlist[];
   createPlaylist: (title: string, description?: string) => string;
   addToPlaylist: (playlistId: string, videoId: string) => void;
   removeFromPlaylist: (playlistId: string, videoId: string) => void;
+  toggleWatchLater: (videoId: string) => boolean;
+  isInWatchLater: (videoId: string) => boolean;
   deletePlaylist: (playlistId: string) => void;
   // Live Streams
   liveStreams: LiveStream[];
@@ -679,13 +694,22 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setMiniPlayerVideo(null);
   };
 
-  // Offline Downloads State
-  const [offlineDownloads, setOfflineDownloads] = useState<OfflineDownload[]>([]);
+  // Offline Downloads State (Persisted locally)
+  const [offlineDownloads, setOfflineDownloads] = useState<OfflineDownload[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_offline_downloads');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter((d: any) => Boolean(d && d.videoId && d.video));
+      }
+    } catch {}
+    return [];
+  });
 
   const downloadVideo = (video: VideoItem) => {
     setOfflineDownloads(prev => {
       if (prev.some(d => d.videoId === video.id)) return prev;
-      return [
+      const next = [
         {
           videoId: video.id,
           video,
@@ -694,11 +718,17 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         },
         ...prev
       ];
+      try { localStorage.setItem('tazama_offline_downloads', JSON.stringify(next)); } catch {}
+      return next;
     });
   };
 
   const removeDownload = (videoId: string) => {
-    setOfflineDownloads(prev => prev.filter(d => d.videoId !== videoId));
+    setOfflineDownloads(prev => {
+      const next = prev.filter(d => d.videoId !== videoId);
+      try { localStorage.setItem('tazama_offline_downloads', JSON.stringify(next)); } catch {}
+      return next;
+    });
   };
 
   const isDownloaded = (videoId: string) => {
@@ -712,8 +742,115 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsDataSaver(prev => !prev);
   };
 
-  // Playlists State
-  const [playlists, setPlaylists] = useState<Playlist[]>(INITIAL_PLAYLISTS);
+  // Playback Queue State (Persisted locally)
+  const [playbackQueue, setPlaybackQueue] = useState<VideoItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_playback_queue');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter((v: any) => Boolean(v && v.id && v.videoUrl));
+      }
+    } catch {}
+    return [];
+  });
+
+  const addToQueue = (video: VideoItem) => {
+    if (!video || !video.id) return;
+    setPlaybackQueue(prev => {
+      if (prev.some(v => v.id === video.id)) return prev;
+      const next = [...prev, video];
+      try { localStorage.setItem('tazama_playback_queue', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const removeFromQueue = (videoId: string) => {
+    setPlaybackQueue(prev => {
+      const next = prev.filter(v => v.id !== videoId);
+      try { localStorage.setItem('tazama_playback_queue', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const clearQueue = () => {
+    setPlaybackQueue([]);
+    try { localStorage.setItem('tazama_playback_queue', JSON.stringify([])); } catch {}
+  };
+
+  const isInQueue = (videoId: string) => {
+    return playbackQueue.some(v => v.id === videoId);
+  };
+
+  // Feed Preferences: Not Interested & Don't Recommend Channel
+  const [notInterestedIds, setNotInterestedIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_not_interested_ids');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+
+  const [hiddenChannelIds, setHiddenChannelIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_hidden_channel_ids');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+
+  const markNotInterested = (videoId: string) => {
+    if (!videoId) return;
+    setNotInterestedIds(prev => {
+      if (prev.includes(videoId)) return prev;
+      const next = [...prev, videoId];
+      try { localStorage.setItem('tazama_not_interested_ids', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const undoNotInterested = (videoId: string) => {
+    setNotInterestedIds(prev => {
+      const next = prev.filter(id => id !== videoId);
+      try { localStorage.setItem('tazama_not_interested_ids', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const hideChannelRecommendations = (channelId: string) => {
+    if (!channelId) return;
+    setHiddenChannelIds(prev => {
+      if (prev.includes(channelId)) return prev;
+      const next = [...prev, channelId];
+      try { localStorage.setItem('tazama_hidden_channel_ids', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const unhideChannelRecommendations = (channelId: string) => {
+    setHiddenChannelIds(prev => {
+      const next = prev.filter(id => id !== channelId);
+      try { localStorage.setItem('tazama_hidden_channel_ids', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  // Playlists State (Persisted locally, ensures Watch Later works automatically)
+  const [playlists, setPlaylists] = useState<Playlist[]>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_playlists');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.filter((p: any) => Boolean(p && p.id && p.title));
+      }
+    } catch {}
+    return INITIAL_PLAYLISTS;
+  });
 
   const createPlaylist = (title: string, description?: string): string => {
     const newId = `pl-${Date.now()}`;
@@ -725,30 +862,89 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       videoIds: [],
       createdAt: new Date().toISOString()
     };
-    setPlaylists(prev => [newPlaylist, ...prev]);
+    setPlaylists(prev => {
+      const next = [newPlaylist, ...prev];
+      try { localStorage.setItem('tazama_playlists', JSON.stringify(next)); } catch {}
+      return next;
+    });
     return newId;
   };
 
   const addToPlaylist = (playlistId: string, videoId: string) => {
-    setPlaylists(prev => prev.map(p => {
-      if (p.id === playlistId && !p.videoIds.includes(videoId)) {
-        return { ...p, videoIds: [...p.videoIds, videoId] };
-      }
-      return p;
-    }));
+    setPlaylists(prev => {
+      const next = prev.map(p => {
+        if (p.id === playlistId && !p.videoIds.includes(videoId)) {
+          return { ...p, videoIds: [...p.videoIds, videoId] };
+        }
+        return p;
+      });
+      try { localStorage.setItem('tazama_playlists', JSON.stringify(next)); } catch {}
+      return next;
+    });
   };
 
   const removeFromPlaylist = (playlistId: string, videoId: string) => {
-    setPlaylists(prev => prev.map(p => {
-      if (p.id === playlistId) {
-        return { ...p, videoIds: p.videoIds.filter(id => id !== videoId) };
+    setPlaylists(prev => {
+      const next = prev.map(p => {
+        if (p.id === playlistId) {
+          return { ...p, videoIds: p.videoIds.filter(id => id !== videoId) };
+        }
+        return p;
+      });
+      try { localStorage.setItem('tazama_playlists', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const toggleWatchLater = (videoId: string): boolean => {
+    if (!videoId) return false;
+    const existing = playlists.find(p => p.id === 'pl-watch-later');
+    const willAdd = !(existing?.videoIds.includes(videoId));
+
+    setPlaylists(prev => {
+      const target = prev.find(p => p.id === 'pl-watch-later');
+      let next: Playlist[];
+      if (!target) {
+        const watchLaterList: Playlist = {
+          id: 'pl-watch-later',
+          title: 'Tazama Baadaye',
+          description: 'Video zilizohifadhiwa kutazama baadaye',
+          coverUrl: '',
+          videoIds: [videoId],
+          createdAt: new Date().toISOString()
+        };
+        next = [watchLaterList, ...prev];
+      } else {
+        const hasVideo = target.videoIds.includes(videoId);
+        next = prev.map(p =>
+          p.id === 'pl-watch-later'
+            ? {
+                ...p,
+                videoIds: hasVideo
+                  ? p.videoIds.filter(id => id !== videoId)
+                  : [...p.videoIds, videoId]
+              }
+            : p
+        );
       }
-      return p;
-    }));
+      try { localStorage.setItem('tazama_playlists', JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    return willAdd;
+  };
+
+  const isInWatchLater = (videoId: string): boolean => {
+    const watchLater = playlists.find(p => p.id === 'pl-watch-later');
+    return Boolean(watchLater && watchLater.videoIds.includes(videoId));
   };
 
   const deletePlaylist = (playlistId: string) => {
-    setPlaylists(prev => prev.filter(p => p.id !== playlistId));
+    setPlaylists(prev => {
+      const next = prev.filter(p => p.id !== playlistId);
+      try { localStorage.setItem('tazama_playlists', JSON.stringify(next)); } catch {}
+      return next;
+    });
   };
 
   // Live Streams State
@@ -2149,11 +2345,26 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         // Data Saver
         isDataSaver,
         toggleDataSaver,
+        // Playback Queue
+        playbackQueue,
+        addToQueue,
+        removeFromQueue,
+        clearQueue,
+        isInQueue,
+        // Feed Preferences
+        notInterestedIds,
+        hiddenChannelIds,
+        markNotInterested,
+        undoNotInterested,
+        hideChannelRecommendations,
+        unhideChannelRecommendations,
         // Playlists
         playlists,
         createPlaylist,
         addToPlaylist,
         removeFromPlaylist,
+        toggleWatchLater,
+        isInWatchLater,
         deletePlaylist,
         // Live Streams
         liveStreams,
