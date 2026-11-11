@@ -490,8 +490,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               })}
             </div>
 
-            {/* Tazama Premium Action */}
-            <div className="pb-3 border-b border-slate-200 dark:border-[#262E3E]">
+            {/* Tazama Premium & Ads Actions */}
+            <div className="pb-3 border-b border-slate-200 dark:border-[#262E3E] space-y-2">
               <button
                 onClick={() => {
                   if (onClose) onClose();
@@ -506,13 +506,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-extrabold uppercase">VIP</span>
               </button>
 
+              <button
+                onClick={() => {
+                  if (onClose) onClose();
+                  if (onOpenCreateAd) onOpenCreateAd();
+                }}
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 dark:bg-amber-500/15 dark:border-amber-500/30 dark:text-amber-300 font-bold text-xs transition-all"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Megaphone className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <span>Weka Tangazo</span>
+                </div>
+                <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded font-extrabold uppercase">Ads</span>
+              </button>
+
               {/* Install PWA App Button */}
               <button
                 onClick={() => {
                   if (onClose) onClose();
                   setShowPWAModal(true);
                 }}
-                className="w-full mt-2 flex items-center justify-between p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 dark:bg-[#16C784]/15 dark:border-[#16C784]/30 dark:text-[#16C784] font-bold text-xs dark:hover:bg-[#16C784]/25 transition-all"
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 dark:bg-[#16C784]/15 dark:border-[#16C784]/30 dark:text-[#16C784] font-bold text-xs dark:hover:bg-[#16C784]/25 transition-all"
               >
                 <div className="flex items-center gap-2.5">
                   <Download className="w-5 h-5 text-emerald-600 dark:text-[#16C784]" />

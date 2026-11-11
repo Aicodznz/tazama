@@ -13,7 +13,7 @@ import {
   Bell, 
   BellRing, 
   BellOff, 
-  Settings, 
+  Flag, 
   Download, 
   Play, 
   Plus, 
@@ -388,7 +388,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
                 className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-[#191E29] text-slate-600 hover:text-slate-900 dark:text-[#A7B0C0] dark:hover:text-white transition-colors cursor-pointer"
                 title="Ripoti Video"
               >
-                <Settings className="w-4 h-4" />
+                <Flag className="w-4 h-4" />
               </button>
             </div>
           </div>

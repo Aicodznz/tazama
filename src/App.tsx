@@ -41,7 +41,9 @@ const AppContent: React.FC = () => {
   const [minimizedVideo, setMinimizedVideo] = useState<VideoItem | null>(null);
   const [isMiniPlaying, setIsMiniPlaying] = useState<boolean>(true);
   const [selectedChannelId, setSelectedChannelId] = useState<string>('ch-lucifer-donghua-tz');
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : false
+  );
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
   const [isWalletOpen, setIsWalletOpen] = useState<boolean>(false);
   const [isPremiumOpen, setIsPremiumOpen] = useState<boolean>(false);
@@ -49,6 +51,16 @@ const AppContent: React.FC = () => {
   const [isCreateAdOpen, setIsCreateAdOpen] = useState<boolean>(false);
   const [premiumTarget, setPremiumTarget] = useState<'viewer' | 'creator'>('viewer');
   const [authActionPrompt, setAuthActionPrompt] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   React.useEffect(() => {
     const handleAuthReq = (e: any) => {

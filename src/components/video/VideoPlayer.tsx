@@ -7,7 +7,6 @@ import {
   Maximize, 
   Minimize, 
   Settings, 
-  Subtitles, 
   RotateCcw,
   RotateCw,
   Tv,
@@ -17,8 +16,9 @@ import {
   AlertCircle,
   ExternalLink,
   Check,
-  Radio,
-  Sliders
+  PictureInPicture2,
+  Copy,
+  Wifi
 } from 'lucide-react';
 import { VideoItem, AdCampaign } from '../../types';
 import { formatDuration } from '../../lib/i18n';
@@ -43,7 +43,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { syncServerViews, recordView, adCampaigns, recordAdImpression, recordAdClick } = useVideo();
+  const { syncServerViews, recordView, adCampaigns, recordAdImpression, recordAdClick, isDataSaver, toggleDataSaver } = useVideo();
   const { profile } = useAuth();
 
   // In-Stream Video Ad State
@@ -61,26 +61,37 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
-  const [showSpeedMenu, setShowSpeedMenu] = useState<boolean>(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState<boolean>(false);
-  const [selectedQuality, setSelectedQuality] = useState<string>('Auto (1080p)');
+  const [selectedQuality, setSelectedQuality] = useState<string>(isDataSaver ? '360p' : 'Auto (1080p)');
   const [showCaptions, setShowCaptions] = useState<boolean>(false);
   const [captionLang, setCaptionLang] = useState<'sw' | 'en'>('sw');
-  const [isDataSaverActive, setIsDataSaverActive] = useState<boolean>(false);
   const [hasRecordedView, setHasRecordedView] = useState<boolean>(false);
   const [videoError, setVideoError] = useState<boolean>(false);
   const [ambientImgError, setAmbientImgError] = useState<boolean>(false);
   const [showControls, setShowControls] = useState<boolean>(true);
   const controlsTimeoutRef = useRef<any>(null);
 
-  // Modern Mobile YouTube Controls State (Matching screenshot with red arrows)
+  // Modern Mobile YouTube Controls State
   const [autoplayNext, setAutoplayNext] = useState<boolean>(true);
   const [showChaptersDrawer, setShowChaptersDrawer] = useState<boolean>(false);
   const [showCastModal, setShowCastModal] = useState<boolean>(false);
-  const [isScanningCast, setIsScanningCast] = useState<boolean>(true);
+  const [castNotice, setCastNotice] = useState<string | null>(null);
   const [connectedCastDevice, setConnectedCastDevice] = useState<string | null>(null);
+  const [isPiPActive, setIsPiPActive] = useState<boolean>(false);
+  const [copiedCastLink, setCopiedCastLink] = useState<boolean>(false);
   const [playerToast, setPlayerToast] = useState<string | null>(null);
   const toastTimeoutRef = useRef<any>(null);
+
+  useEffect(() => {
+    setSelectedQuality(isDataSaver ? '360p' : 'Auto (1080p)');
+  }, [isDataSaver]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+      if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+    };
+  }, []);
 
   const triggerToast = (msg: string) => {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
@@ -420,6 +431,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration || video.durationSeconds);
+      videoRef.current.playbackRate = playbackSpeed;
       if (autoPlay) {
         videoRef.current.play()
           .then(() => setIsPlaying(true))
@@ -468,7 +480,80 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (videoRef.current) {
       videoRef.current.playbackRate = speed;
     }
-    setShowSpeedMenu(false);
+  };
+
+  const handleNativeCastPrompt = async () => {
+    setCastNotice(null);
+    const el = videoRef.current as any;
+    if (isEmbedVideo || !el) {
+      setCastNotice('Video hii inachezwa kutoka kwa mtoa huduma wa nje (embed). Tumia ikoni ya Cast ndani ya kicheza video au nakili kiungo kufungua kwenye Smart TV.');
+      return;
+    }
+
+    if (typeof el.webkitShowPlaybackTargetPicker === 'function') {
+      try {
+        el.webkitShowPlaybackTargetPicker();
+        setConnectedCastDevice('AirPlay TV');
+        triggerToast('AirPlay imefunguliwa');
+        return;
+      } catch {
+        setCastNotice('AirPlay haipatikani kwenye kifaa hiki kwa sasa.');
+        return;
+      }
+    }
+
+    if (el.remote && typeof el.remote.prompt === 'function') {
+      try {
+        await el.remote.prompt();
+        setConnectedCastDevice('Runinga / Chromecast');
+        setShowCastModal(false);
+        triggerToast('Imeunganishwa na Runinga');
+      } catch (err: any) {
+        const msg = err?.name === 'NotFoundError'
+          ? 'Hakuna runinga yenye Chromecast iliyopatikana kwenye mtandao huu wa Wi-Fi.'
+          : err?.name === 'NotAllowedError' || err?.name === 'NotSupportedError'
+          ? 'Kivinjari kimezuia kutuma moja kwa moja ndani ya dirisha hili. Tumia Picture-in-Picture au nakili kiungo kwa Smart TV.'
+          : 'Imeshindwa kutafuta vifaa vya TV kwenye mtandao huu.';
+        setCastNotice(msg);
+      }
+      return;
+    }
+
+    setCastNotice('Kivinjari hiki hakiauni kutuma video moja kwa moja (Cast). Tumia Picture-in-Picture au nakili kiungo kucheza kwenye Smart TV.');
+  };
+
+  const handleTogglePictureInPicture = async () => {
+    setCastNotice(null);
+    const el = videoRef.current;
+    if (isEmbedVideo || !el) {
+      setCastNotice('Picture-in-Picture inafanya kazi kwenye video za moja kwa moja za Tazama.');
+      return;
+    }
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        setIsPiPActive(false);
+        triggerToast('Imetoka Picture-in-Picture');
+      } else if (document.pictureInPictureEnabled && typeof el.requestPictureInPicture === 'function') {
+        await el.requestPictureInPicture();
+        setIsPiPActive(true);
+        setShowCastModal(false);
+        triggerToast('Inacheza kwenye dirisha dogo');
+      } else {
+        setCastNotice('Picture-in-Picture haipatikani kwenye kivinjari au dirisha hili.');
+      }
+    } catch {
+      setCastNotice('Imeshindwa kuwasha Picture-in-Picture kwa sasa.');
+    }
+  };
+
+  const handleCopyCastLink = () => {
+    if (typeof window !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href).catch(() => {});
+    }
+    setCopiedCastLink(true);
+    triggerToast('Kiungo kimenakiliwa');
+    setTimeout(() => setCopiedCastLink(false), 1800);
   };
 
   const toggleFullscreen = () => {
@@ -528,8 +613,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const handleVideoEndFullscreen = () => {
       setIsFullscreen(false);
     };
+    const handleEnterPiP = () => setIsPiPActive(true);
+    const handleLeavePiP = () => setIsPiPActive(false);
+
     if (videoEl) {
       videoEl.addEventListener('webkitendfullscreen', handleVideoEndFullscreen);
+      videoEl.addEventListener('enterpictureinpicture', handleEnterPiP);
+      videoEl.addEventListener('leavepictureinpicture', handleLeavePiP);
     }
 
     return () => {
@@ -537,6 +627,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       document.removeEventListener('webkitfullscreenchange', handleNativeFullscreenChange);
       if (videoEl) {
         videoEl.removeEventListener('webkitendfullscreen', handleVideoEndFullscreen);
+        videoEl.removeEventListener('enterpictureinpicture', handleEnterPiP);
+        videoEl.removeEventListener('leavepictureinpicture', handleLeavePiP);
       }
     };
   }, [isFullscreen]);
@@ -827,13 +919,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       {/* Top Bar Video Controls (Minimalist YouTube Mobile overlay: ChevronDown, Autoplay toggle, Cast, CC, Settings) */}
       {!isAdPlaying && (
         <div 
-          className={`absolute top-0 left-0 right-0 p-3 sm:p-4 flex items-center justify-between z-30 transition-opacity duration-300 pointer-events-auto bg-gradient-to-b from-black/85 via-black/40 to-transparent ${
+          onClick={(e) => e.stopPropagation()}
+          className={`absolute top-0 left-0 right-0 p-2.5 sm:p-4 flex items-center justify-between z-30 transition-opacity duration-300 pointer-events-auto bg-gradient-to-b from-black/85 via-black/40 to-transparent ${
             showControls || !isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
         >
           {/* Top Left: Down Chevron (Minimize / Rudi) */}
           <button
-            onClick={() => {
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
               if (onMinimize) onMinimize();
               else if (window.history.length > 1) window.history.back();
             }}
@@ -845,9 +940,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
           {/* Top Right Controls: Autoplay pill, Cast, CC, Settings */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* 1. Autoplay Toggle Switch Pill: [ ▶ | ● ] */}
+            {/* 1. Autoplay Toggle Switch Pill */}
             <button
-              onClick={() => {
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
                 setAutoplayNext(prev => {
                   const next = !prev;
                   triggerToast(next ? 'Autoplay imewashwa' : 'Autoplay imezimwa');
@@ -869,22 +966,36 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
             {/* 2. Cast / TV Button */}
             <button
-              onClick={() => {
-                setIsScanningCast(true);
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCastNotice(null);
+                setShowSettingsMenu(false);
+                setShowChaptersDrawer(false);
                 setShowCastModal(true);
               }}
-              className="p-1.5 sm:p-2 rounded-full bg-black/60 hover:bg-black/90 backdrop-blur-md text-white border border-white/20 transition-all active:scale-90 cursor-pointer shadow-lg"
-              title="Tuma kwenye TV (Cast / AirPlay)"
+              className={`p-1.5 sm:p-2 rounded-full backdrop-blur-md border transition-all active:scale-90 cursor-pointer shadow-lg ${
+                connectedCastDevice || isPiPActive
+                  ? 'bg-[#16C784] border-[#16C784] text-black'
+                  : 'bg-black/60 hover:bg-black/90 text-white border-white/20'
+              }`}
+              title="Tuma kwenye TV / Dirisha Dogo (Cast & PiP)"
             >
               <Tv className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </button>
 
             {/* 3. CC (Subtitles) Button */}
             <button
-              onClick={() => {
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isEmbedVideo) {
+                  triggerToast('Tumia alama ya CC ndani ya kicheza video chini kulia');
+                  return;
+                }
                 setShowCaptions(prev => {
                   const next = !prev;
-                  triggerToast(next ? 'Manukuu (CC): Kiswahili' : 'Manukuu yamezimwa');
+                  triggerToast(next ? `Manukuu (CC): ${captionLang === 'sw' ? 'Kiswahili' : 'English'}` : 'Manukuu yamezimwa');
                   return next;
                 });
               }}
@@ -899,22 +1010,23 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             </button>
 
             {/* 4. Settings Gear Button */}
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setShowSettingsMenu(prev => !prev);
-                  setShowSpeedMenu(false);
-                }}
-                className={`p-1.5 sm:p-2 rounded-full backdrop-blur-md text-white border transition-all active:scale-90 cursor-pointer shadow-lg ${
-                  showSettingsMenu 
-                    ? 'bg-[#FF3040] border-[#FF3040]' 
-                    : 'bg-black/60 hover:bg-black/90 border-white/20'
-                }`}
-                title="Mipangilio ya Video (Settings)"
-              >
-                <Settings className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowCastModal(false);
+                setShowChaptersDrawer(false);
+                setShowSettingsMenu(prev => !prev);
+              }}
+              className={`p-1.5 sm:p-2 rounded-full backdrop-blur-md text-white border transition-all active:scale-90 cursor-pointer shadow-lg ${
+                showSettingsMenu 
+                  ? 'bg-[#FF3040] border-[#FF3040]' 
+                  : 'bg-black/60 hover:bg-black/90 border-white/20'
+              }`}
+              title="Mipangilio ya Video (Settings)"
+            >
+              <Settings className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            </button>
           </div>
         </div>
       )}
@@ -1099,7 +1211,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
 
         {/* Bottom Control Bar: Time, Chapter Chip, Fullscreen */}
-        <div className="flex items-center justify-between text-white text-xs px-1 sm:px-2 py-0.5 sm:py-1 max-w-full">
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center justify-between text-white text-xs px-1 sm:px-2 py-0.5 sm:py-1 max-w-full"
+        >
           {/* 1. Time Stamp */}
           <div className="text-[11px] sm:text-xs font-mono tabular-nums font-bold text-[#A7B0C0] shrink-0 whitespace-nowrap">
             <span className="text-white">{formatDuration(currentTime)}</span>
@@ -1107,10 +1222,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             <span>{formatDuration(duration || video.durationSeconds || 0)}</span>
           </div>
 
-          {/* 2. Active Chapter / Scene Pill Chip (Find a model that fits your RAM >) */}
+          {/* 2. Active Chapter / Scene Pill Chip */}
           <button 
-            onClick={() => setShowChaptersDrawer(true)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-[11px] sm:text-xs font-medium tracking-tight transition-all truncate max-w-[170px] sm:max-w-xs border border-white/10 active:scale-95 cursor-pointer shadow-md"
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowSettingsMenu(false);
+              setShowCastModal(false);
+              setShowChaptersDrawer(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md text-white text-[11px] sm:text-xs font-medium tracking-tight transition-all truncate max-w-[165px] sm:max-w-xs border border-white/10 active:scale-95 cursor-pointer shadow-md"
             title="Angalia Vipande vya Video (Chapters)"
           >
             <span className="truncate">{activeSceneTitle}</span>
@@ -1120,14 +1241,22 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           {/* 3. Fullscreen & Volume */}
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <button 
-              onClick={toggleMute}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMute();
+              }}
               className="p-1.5 rounded-lg hover:bg-white/10 text-white/90 hover:text-white transition-colors cursor-pointer"
               title={isMuted ? 'Washa Sauti' : 'Zima Sauti'}
             >
               {isMuted || volume === 0 ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4" />}
             </button>
             <button
-              onClick={toggleFullscreen}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFullscreen();
+              }}
               className="p-1.5 rounded-lg hover:bg-white/10 text-white/90 hover:text-white transition-all active:scale-95 cursor-pointer"
               title={isFullscreen ? 'Toka Skrini Nzima' : 'Weka Skrini Nzima'}
             >
@@ -1135,159 +1264,278 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             </button>
           </div>
         </div>
+      </div>
+      )}
 
-        {/* Speed & Settings Flyout (kept accessible when user clicks Settings gear) */}
-        {showSettingsMenu && (
-          <div className="absolute bottom-14 right-2 bg-[#191E29] border border-[#262E3E] rounded-2xl shadow-2xl p-3.5 w-60 z-50 text-left animate-in fade-in zoom-in-95 duration-150 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#262E3E]">
-              <span className="text-xs font-black text-white flex items-center gap-1.5">
-                <Settings className="w-3.5 h-3.5 text-[#FF3040]" />
+      {/* Viewport-Safe Video Settings Sheet (Never clipped on mobile; works for both direct and embed videos) */}
+      {showSettingsMenu && (
+        <div
+          onClick={() => setShowSettingsMenu(false)}
+          className="fixed inset-0 z-[100000] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full sm:max-w-sm bg-white dark:bg-[#191E29] border-t sm:border border-slate-200 dark:border-[#262E3E] rounded-t-3xl sm:rounded-3xl shadow-2xl p-4 sm:p-5 max-h-[85dvh] overflow-y-auto text-left space-y-4 animate-in slide-in-from-bottom sm:zoom-in-95 duration-200"
+          >
+            <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-[#262E3E]">
+              <span className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <Settings className="w-4 h-4 text-[#FF3040]" />
                 Mipangilio ya Video
               </span>
               <button
+                type="button"
                 onClick={() => setShowSettingsMenu(false)}
-                className="text-[#A7B0C0] hover:text-white text-xs px-1 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-sm cursor-pointer"
+                aria-label="Funga"
               >
                 ✕
               </button>
             </div>
 
-            {/* Quality Selection */}
-            <div>
-              <label className="text-[10px] font-bold text-[#A7B0C0] uppercase tracking-wider block mb-1">
-                Ubora wa Picha (Quality)
-              </label>
-              <div className="grid grid-cols-2 gap-1">
-                {['Auto (1080p)', '1080p HD', '720p', '480p', '360p'].map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => {
-                      setSelectedQuality(q);
-                      if (q === '360p') setIsDataSaverActive(true);
-                      setShowSettingsMenu(false);
-                      triggerToast(`Ubora: ${q}`);
-                    }}
-                    className={`text-left px-2 py-1 rounded-lg text-[11px] font-medium transition-colors cursor-pointer ${
-                      selectedQuality === q 
-                        ? 'bg-[#FF3040] text-white font-bold' 
-                        : 'bg-[#10131B] text-[#A7B0C0] hover:text-white hover:bg-[#232A39]'
-                    }`}
-                  >
-                    {q}
-                  </button>
-                ))}
+            {isEmbedVideo && (
+              <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed">
+                Video hii inachezwa kutoka kwa mtoa huduma wa nje; kwa ubora na manukuu tumia pia ikoni ya gia ndani ya kicheza video chini kulia.
               </div>
-            </div>
+            )}
+
+            {/* Quality Selection */}
+            {!isEmbedVideo && (
+              <div>
+                <label className="text-[11px] font-bold text-slate-500 dark:text-[#A7B0C0] uppercase tracking-wider block mb-2">
+                  Ubora wa Picha (Quality)
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {['Auto (1080p)', '1080p HD', '720p', '480p', '360p'].map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => {
+                        setSelectedQuality(q);
+                        if (q === '360p' && !isDataSaver) toggleDataSaver();
+                        else if (q !== '360p' && isDataSaver) toggleDataSaver();
+                        setShowSettingsMenu(false);
+                        triggerToast(`Ubora: ${q}`);
+                      }}
+                      className={`px-2.5 py-2 rounded-xl text-xs font-semibold text-center transition-colors cursor-pointer ${
+                        selectedQuality === q 
+                          ? 'bg-[#FF3040] text-white font-bold shadow-md shadow-[#FF3040]/25' 
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#10131B] dark:text-[#A7B0C0] dark:hover:text-white dark:hover:bg-[#232A39]'
+                      }`}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Speed Selection */}
-            <div className="pt-2 border-t border-[#262E3E]/70">
-              <label className="text-[10px] font-bold text-[#A7B0C0] uppercase tracking-wider block mb-1">
-                Kasi ya Video (Speed)
-              </label>
-              <div className="grid grid-cols-3 gap-1">
-                {[0.75, 1, 1.25, 1.5, 2].map((s) => (
+            {!isEmbedVideo && (
+              <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]/70">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-[#A7B0C0] uppercase tracking-wider block mb-2">
+                  Kasi ya Video (Playback Speed)
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[0.5, 0.75, 1, 1.25, 1.5, 2].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => {
+                        changeSpeed(s);
+                        setShowSettingsMenu(false);
+                        triggerToast(`Kasi: ${s}x`);
+                      }}
+                      className={`px-2 py-2 rounded-xl text-center text-xs font-mono font-bold cursor-pointer transition-colors ${
+                        playbackSpeed === s
+                          ? 'bg-[#FF3040] text-white shadow-md shadow-[#FF3040]/25'
+                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#10131B] dark:text-[#A7B0C0] dark:hover:text-white'
+                      }`}
+                    >
+                      {s === 1 ? '1x (Kawaida)' : `${s}x`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Captions Language */}
+            {!isEmbedVideo && (
+              <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]/70">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-[#A7B0C0] uppercase tracking-wider block mb-2">
+                  Manukuu (Subtitles / CC)
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
                   <button
-                    key={s}
+                    type="button"
                     onClick={() => {
-                      changeSpeed(s);
+                      setShowCaptions(false);
                       setShowSettingsMenu(false);
-                      triggerToast(`Kasi: ${s}x`);
+                      triggerToast('Manukuu yamezimwa');
                     }}
-                    className={`px-1.5 py-1 rounded-lg text-center text-[10px] font-mono font-bold cursor-pointer transition-colors ${
-                      playbackSpeed === s ? 'bg-[#FF3040] text-white' : 'bg-[#10131B] text-[#A7B0C0] hover:text-white'
+                    className={`px-2 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
+                      !showCaptions
+                        ? 'bg-slate-900 text-white dark:bg-white dark:text-black'
+                        : 'bg-slate-100 text-slate-700 dark:bg-[#10131B] dark:text-[#A7B0C0]'
                     }`}
                   >
-                    {s === 1 ? '1x (Kawaida)' : `${s}x`}
+                    Zima
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCaptionLang('sw');
+                      setShowCaptions(true);
+                      setShowSettingsMenu(false);
+                      triggerToast('Manukuu: Kiswahili');
+                    }}
+                    className={`px-2 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
+                      showCaptions && captionLang === 'sw'
+                        ? 'bg-[#FF3040] text-white'
+                        : 'bg-slate-100 text-slate-700 dark:bg-[#10131B] dark:text-[#A7B0C0]'
+                    }`}
+                  >
+                    Kiswahili
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCaptionLang('en');
+                      setShowCaptions(true);
+                      setShowSettingsMenu(false);
+                      triggerToast('Captions: English');
+                    }}
+                    className={`px-2 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
+                      showCaptions && captionLang === 'en'
+                        ? 'bg-[#FF3040] text-white'
+                        : 'bg-slate-100 text-slate-700 dark:bg-[#10131B] dark:text-[#A7B0C0]'
+                    }`}
+                  >
+                    English
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Data Saver Toggle */}
-            <div className="pt-2 border-t border-[#262E3E]/70 flex items-center justify-between">
+            {/* Data Saver Toggle (Synced globally with VideoContext) */}
+            <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]/70 flex items-center justify-between gap-3">
               <div>
-                <span className="text-xs font-bold text-white block">Bana Bando (Data Saver)</span>
-                <span className="text-[10px] text-[#A7B0C0]">360p kuokoa MBs</span>
+                <span className="text-xs font-bold text-slate-900 dark:text-white block">Bana Bando (Data Saver)</span>
+                <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">360p kuokoa MBs kote kwenye app</span>
               </div>
               <button
+                type="button"
                 onClick={() => {
-                  const next = !isDataSaverActive;
-                  setIsDataSaverActive(next);
-                  if (next) setSelectedQuality('360p');
-                  else setSelectedQuality('Auto (1080p)');
-                  triggerToast(next ? 'Bana Bando: Imewashwa' : 'Bana Bando: Imezimwa');
+                  const willEnable = !isDataSaver;
+                  toggleDataSaver();
+                  setSelectedQuality(willEnable ? '360p' : 'Auto (1080p)');
+                  triggerToast(willEnable ? 'Bana Bando: Imewashwa' : 'Bana Bando: Imezimwa');
                 }}
-                className={`w-9 h-5 rounded-full p-0.5 transition-colors cursor-pointer ${
-                  isDataSaverActive ? 'bg-[#16C784]' : 'bg-[#262E3E]'
+                className={`w-11 h-6 rounded-full p-0.5 transition-colors shrink-0 cursor-pointer ${
+                  isDataSaver ? 'bg-[#16C784]' : 'bg-slate-300 dark:bg-[#262E3E]'
                 }`}
               >
-                <div className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                  isDataSaverActive ? 'translate-x-4' : 'translate-x-0'
+                <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                  isDataSaver ? 'translate-x-5' : 'translate-x-0'
+                }`} />
+              </button>
+            </div>
+
+            {/* Autoplay Next Video Toggle */}
+            <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]/70 flex items-center justify-between gap-3">
+              <div>
+                <span className="text-xs font-bold text-slate-900 dark:text-white block">Cheza Video Inayofuata</span>
+                <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">Autoplay video ikiisha</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setAutoplayNext(prev => {
+                    const next = !prev;
+                    triggerToast(next ? 'Autoplay imewashwa' : 'Autoplay imezimwa');
+                    return next;
+                  });
+                }}
+                className={`w-11 h-6 rounded-full p-0.5 transition-colors shrink-0 cursor-pointer ${
+                  autoplayNext ? 'bg-[#FF3040]' : 'bg-slate-300 dark:bg-[#262E3E]'
+                }`}
+              >
+                <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                  autoplayNext ? 'translate-x-5' : 'translate-x-0'
                 }`} />
               </button>
             </div>
           </div>
-        )}
-
-      </div>
+        </div>
       )}
 
-      {/* Chapters / Scenes Drawer Modal */}
+      {/* Viewport-Safe Chapters / Scenes Bottom Sheet */}
       {showChaptersDrawer && (
-        <div className="absolute inset-0 z-50 bg-black/85 backdrop-blur-md flex flex-col justify-end animate-in fade-in">
-          <div className="bg-[#141824] border-t border-white/15 rounded-t-3xl max-h-[75%] flex flex-col p-4 shadow-2xl animate-in slide-in-from-bottom duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+        <div
+          onClick={() => setShowChaptersDrawer(false)}
+          className="fixed inset-0 z-[100000] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full sm:max-w-md bg-white dark:bg-[#141824] border-t sm:border border-slate-200 dark:border-white/15 rounded-t-3xl sm:rounded-3xl max-h-[75dvh] flex flex-col p-4 shadow-2xl animate-in slide-in-from-bottom sm:zoom-in-95 duration-200"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
               <div>
-                <h4 className="text-sm font-black text-white flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  Vipande vya Video (Chapters & Scenes)
+                <h4 className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                  Vipande vya Video (Chapters)
                 </h4>
-                <p className="text-[11px] text-[#A7B0C0]">
+                <p className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">
                   Bofya kipande chochote kuruka moja kwa moja
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setShowChaptersDrawer(false)}
-                className="p-1.5 rounded-full hover:bg-white/10 text-white/70 hover:text-white cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-sm cursor-pointer"
+                aria-label="Funga"
               >
                 ✕
               </button>
             </div>
 
-            <div className="overflow-y-auto py-2 space-y-1.5 flex-1 pr-1">
+            <div className="overflow-y-auto py-3 space-y-2 flex-1 pr-1">
               {scenes.map((sc, idx) => {
                 const isActive = activeScene?.timeSeconds === sc.timeSeconds;
                 return (
                   <button
                     key={idx}
+                    type="button"
                     onClick={() => {
-                      if (videoRef.current) {
+                      if (!isEmbedVideo && videoRef.current) {
                         videoRef.current.currentTime = sc.timeSeconds;
                         setCurrentTime(sc.timeSeconds);
+                        if (videoRef.current.paused) {
+                          videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+                        }
                       }
                       setShowChaptersDrawer(false);
                       triggerToast(`Kipande: ${sc.title}`);
                     }}
-                    className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left transition-all cursor-pointer ${
+                    className={`w-full p-3 rounded-2xl flex items-center justify-between text-left transition-all cursor-pointer ${
                       isActive 
-                        ? 'bg-[#FF3040]/20 border border-[#FF3040]/50 text-white' 
-                        : 'bg-[#10131B] hover:bg-[#1C2232] border border-white/5 text-[#D1D7E0]'
+                        ? 'bg-[#FF3040]/15 border border-[#FF3040]/50 text-slate-900 dark:text-white' 
+                        : 'bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-800 dark:bg-[#10131B] dark:hover:bg-[#1C2232] dark:border-white/5 dark:text-[#D1D7E0]'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 pr-2">
                       <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0 ${
-                        isActive ? 'bg-[#FF3040] text-white' : 'bg-white/10 text-[#A7B0C0]'
+                        isActive ? 'bg-[#FF3040] text-white' : 'bg-slate-200 text-slate-700 dark:bg-white/10 dark:text-[#A7B0C0]'
                       }`}>
                         {idx + 1}
                       </div>
-                      <div className="min-w-0 truncate">
-                        <div className="text-xs font-bold truncate text-white">{sc.title}</div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold truncate text-slate-900 dark:text-white">{sc.title}</div>
                         {sc.description && (
-                          <div className="text-[10px] text-[#A7B0C0] truncate">{sc.description}</div>
+                          <div className="text-[11px] text-slate-500 dark:text-[#A7B0C0] truncate">{sc.description}</div>
                         )}
                       </div>
                     </div>
-                    <div className="px-2 py-0.5 rounded-md bg-white/10 text-[11px] font-mono font-bold text-white shrink-0">
+                    <div className="px-2 py-0.5 rounded-md bg-slate-200 text-slate-800 dark:bg-white/10 text-[11px] font-mono font-bold dark:text-white shrink-0">
                       {formatDuration(sc.timeSeconds)}
                     </div>
                   </button>
@@ -1298,73 +1546,126 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       )}
 
-      {/* Cast to TV Modal */}
+      {/* Viewport-Safe Cast to TV, Picture-in-Picture & Link Share Bottom Sheet (Real browser capabilities) */}
       {showCastModal && (
-        <div className="absolute inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-[#181E29] border border-white/15 rounded-3xl p-5 max-w-sm w-full shadow-2xl text-white space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-full bg-[#FF3040]/20 text-[#FF3040] flex items-center justify-center">
+        <div
+          onClick={() => setShowCastModal(false)}
+          className="fixed inset-0 z-[100000] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full sm:max-w-sm bg-white dark:bg-[#181E29] border-t sm:border border-slate-200 dark:border-white/15 rounded-t-3xl sm:rounded-3xl p-4 sm:p-5 shadow-2xl text-slate-900 dark:text-white space-y-3.5 max-h-[85dvh] overflow-y-auto animate-in slide-in-from-bottom sm:zoom-in-95 duration-200"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-[#FF3040]/15 text-[#FF3040] flex items-center justify-center shrink-0">
                   <Tv className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-black">Tuma Kwenye Runinga</h4>
-                  <p className="text-[10px] text-[#A7B0C0]">Cast / AirPlay / Smart TV</p>
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white">Tazama Kwenye Skrini Nyingine</h4>
+                  <p className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">Cast, AirPlay &amp; Picture-in-Picture</p>
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowCastModal(false)}
-                className="p-1 rounded-full hover:bg-white/10 text-white/70 hover:text-white cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-sm cursor-pointer"
+                aria-label="Funga"
               >
                 ✕
               </button>
             </div>
 
-            {/* Scanning & Devices */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-[#A7B0C0] px-1">
-                <span>Vifaa vilivyopatikana:</span>
-                <span className="flex items-center gap-1 text-[#16C784] font-medium text-[11px]">
-                  <span className="w-2 h-2 rounded-full bg-[#16C784] animate-pulse" />
-                  Inatafuta...
-                </span>
+            {castNotice && (
+              <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+                {castNotice}
               </div>
+            )}
 
-              {[
-                { id: 'dev-1', name: 'Samsung Crystal 4K UHD TV', room: 'Sebuleni', type: 'Smart TV' },
-                { id: 'dev-2', name: 'LG webOS AI ThinQ 55"', room: 'Chumba cha Wageni', type: 'AirPlay 2' },
-                { id: 'dev-3', name: 'Chromecast with Google TV', room: 'HDMI 1', type: 'Google Cast' }
-              ].map(dev => (
-                <button
-                  key={dev.id}
-                  onClick={() => {
-                    setConnectedCastDevice(dev.name);
-                    setShowCastModal(false);
-                    triggerToast(`Imeunganishwa na ${dev.name}`);
-                  }}
-                  className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                    connectedCastDevice === dev.name
-                      ? 'bg-[#16C784]/20 border-[#16C784] text-white'
-                      : 'bg-[#121622] hover:bg-[#202737] border-white/10 text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Tv className="w-5 h-5 text-amber-400 shrink-0" />
-                    <div>
-                      <div className="text-xs font-bold">{dev.name}</div>
-                      <div className="text-[10px] text-[#A7B0C0]">{dev.room} &bull; {dev.type}</div>
+            <div className="space-y-2">
+              {/* 1. Native Cast / AirPlay Trigger */}
+              <button
+                type="button"
+                onClick={handleNativeCastPrompt}
+                className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                  connectedCastDevice
+                    ? 'bg-emerald-50 border-emerald-400 text-emerald-900 dark:bg-[#16C784]/20 dark:border-[#16C784] dark:text-white'
+                    : 'bg-slate-50 hover:bg-slate-100 border-slate-200 dark:bg-[#121622] dark:hover:bg-[#202737] dark:border-white/10'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <Wifi className="w-5 h-5 text-[#FF3040] shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                      {connectedCastDevice ? `Imeunganishwa: ${connectedCastDevice}` : 'Tafuta Runinga (Cast / AirPlay)'}
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-[#A7B0C0] truncate">
+                      Chagua Smart TV au Chromecast kwenye Wi-Fi
                     </div>
                   </div>
-                  <span className="text-[11px] font-bold text-[#FF3040]">
-                    {connectedCastDevice === dev.name ? 'Imeunganishwa' : 'Unganisha'}
-                  </span>
-                </button>
-              ))}
+                </div>
+                <span className="text-[11px] font-bold text-[#FF3040] shrink-0">
+                  {connectedCastDevice ? 'Badili' : 'Tafuta'}
+                </span>
+              </button>
+
+              {/* 2. Real Picture-in-Picture Trigger */}
+              <button
+                type="button"
+                onClick={handleTogglePictureInPicture}
+                className={`w-full p-3 rounded-2xl border text-left flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                  isPiPActive
+                    ? 'bg-emerald-50 border-emerald-400 dark:bg-[#16C784]/20 dark:border-[#16C784]'
+                    : 'bg-slate-50 hover:bg-slate-100 border-slate-200 dark:bg-[#121622] dark:hover:bg-[#202737] dark:border-white/10'
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <PictureInPicture2 className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">
+                      {isPiPActive ? 'Funga Dirisha Dogo (PiP)' : 'Dirisha Dogo (Picture-in-Picture)'}
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">
+                      Endelea kutazama video ikielea juu ya skrini
+                    </div>
+                  </div>
+                </div>
+                <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 shrink-0">
+                  {isPiPActive ? 'Funga' : 'Washa'}
+                </span>
+              </button>
+
+              {/* 3. Real Copy Link for Smart TV Browser */}
+              <button
+                type="button"
+                onClick={handleCopyCastLink}
+                className="w-full p-3 rounded-2xl border bg-slate-50 hover:bg-slate-100 border-slate-200 dark:bg-[#121622] dark:hover:bg-[#202737] dark:border-white/10 text-left flex items-center justify-between gap-2 transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {copiedCastLink ? (
+                    <Check className="w-5 h-5 text-emerald-600 dark:text-[#16C784] shrink-0" />
+                  ) : (
+                    <Copy className="w-5 h-5 text-slate-600 dark:text-[#A7B0C0] shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 dark:text-white">
+                      {copiedCastLink ? 'Kiungo Kimenakiliwa!' : 'Nakili Kiungo cha Video kwa TV'}
+                    </div>
+                    <div className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">
+                      Fungua kiungo hiki moja kwa moja kwenye kivinjari cha TV
+                    </div>
+                  </div>
+                </div>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-[#CBD5E1] shrink-0">
+                  {copiedCastLink ? 'Tayari' : 'Nakili'}
+                </span>
+              </button>
             </div>
 
             <button
+              type="button"
               onClick={() => setShowCastModal(false)}
-              className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-bold text-white transition-colors cursor-pointer"
+              className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-xs font-bold text-slate-800 dark:text-white transition-colors cursor-pointer"
             >
               Funga
             </button>
