@@ -70,8 +70,12 @@ export const WatchPage: React.FC<WatchPageProps> = ({
     likedVideoIds, 
     toggleLike, 
     recordView,
-    comments, 
+    comments,
+    commentVotes,
     addComment,
+    toggleLikeComment,
+    toggleDislikeComment,
+    addCommentReply,
     isDownloaded,
     setMiniPlayerVideo,
     isDataSaver,
@@ -106,6 +110,9 @@ export const WatchPage: React.FC<WatchPageProps> = ({
   const [commentSort, setCommentSort] = useState<'top' | 'newest'>('top');
   const [showSortDropdown, setShowSortDropdown] = useState<boolean>(false);
   const [showCommentsMobile, setShowCommentsMobile] = useState<boolean>(false);
+  const [replyingToCommentId, setReplyingToCommentId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState<string>('');
+  const [expandedRepliesIds, setExpandedRepliesIds] = useState<string[]>([]);
 
   // Modals state
   const [showGiftModal, setShowGiftModal] = useState<boolean>(false);
@@ -311,9 +318,57 @@ export const WatchPage: React.FC<WatchPageProps> = ({
       return;
     }
     if (!commentText.trim()) return;
-    addComment(video.id, commentText);
+    addComment(liveVideo?.id || video.id, commentText);
     setCommentText('');
     setIsCommentFocused(false);
+  };
+
+  const toggleCommentReplies = (commentId: string) => {
+    setExpandedRepliesIds((prev) =>
+      prev.includes(commentId) ? prev.filter((id) => id !== commentId) : [...prev, commentId]
+    );
+  };
+
+  const handleCommentLike = (commentId: string) => {
+    if (!profile) {
+      setAuthModalAction(language === 'en' ? 'like this comment' : 'kupenda maoni haya');
+      setShowAuthModal(true);
+      return;
+    }
+    toggleLikeComment(liveVideo?.id || video.id, commentId);
+  };
+
+  const handleCommentDislike = (commentId: string) => {
+    if (!profile) {
+      setAuthModalAction(language === 'en' ? 'dislike this comment' : 'kutopenda maoni haya');
+      setShowAuthModal(true);
+      return;
+    }
+    toggleDislikeComment(liveVideo?.id || video.id, commentId);
+  };
+
+  const handleStartReply = (commentId: string) => {
+    if (!profile) {
+      setAuthModalAction(language === 'en' ? 'reply to comments' : 'kujibu maoni');
+      setShowAuthModal(true);
+      return;
+    }
+    setReplyingToCommentId((prev) => (prev === commentId ? null : commentId));
+    setReplyText('');
+  };
+
+  const handleSubmitReply = (e: React.FormEvent, parentCommentId: string) => {
+    e.preventDefault();
+    if (!profile) {
+      setAuthModalAction(language === 'en' ? 'reply to comments' : 'kujibu maoni');
+      setShowAuthModal(true);
+      return;
+    }
+    if (!replyText.trim()) return;
+    addCommentReply(liveVideo?.id || video.id, parentCommentId, replyText.trim());
+    setExpandedRepliesIds((prev) => (prev.includes(parentCommentId) ? prev : [...prev, parentCommentId]));
+    setReplyText('');
+    setReplyingToCommentId(null);
   };
 
   const handleMinimize = () => {
@@ -917,17 +972,165 @@ export const WatchPage: React.FC<WatchPageProps> = ({
 
                       {/* Comment Interactions */}
                       <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500 dark:text-[#A7B0C0]">
-                        <button className="flex items-center gap-1 hover:text-slate-900 dark:hover:text-white cursor-pointer">
-                          <ThumbsUp className="w-3.5 h-3.5" />
-                          <span>{c.likesCount || 0}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleCommentLike(c.id)}
+                          className={`flex items-center gap-1 cursor-pointer transition-colors ${
+                            commentVotes[c.id] === 'like'
+                              ? 'text-[#FF3040] font-bold'
+                              : 'hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                          aria-label={language === 'en' ? 'Like comment' : 'Penda maoni'}
+                        >
+                          <ThumbsUp className={`w-3.5 h-3.5 ${commentVotes[c.id] === 'like' ? 'fill-[#FF3040]' : ''}`} />
+                          <span className="tabular-nums">{c.likesCount || 0}</span>
                         </button>
-                        <button className="hover:text-slate-900 dark:hover:text-white cursor-pointer">
-                          <ThumbsDown className="w-3.5 h-3.5" />
+                        <button
+                          type="button"
+                          onClick={() => handleCommentDislike(c.id)}
+                          className={`cursor-pointer transition-colors ${
+                            commentVotes[c.id] === 'dislike'
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : 'hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                          aria-label={language === 'en' ? 'Dislike comment' : 'Usipende maoni'}
+                        >
+                          <ThumbsDown className={`w-3.5 h-3.5 ${commentVotes[c.id] === 'dislike' ? 'fill-amber-600 dark:fill-amber-400' : ''}`} />
                         </button>
-                        <button className="font-semibold hover:text-slate-900 dark:hover:text-white cursor-pointer">
-                          Jibu
+                        <button
+                          type="button"
+                          onClick={() => handleStartReply(c.id)}
+                          className={`font-semibold cursor-pointer transition-colors ${
+                            replyingToCommentId === c.id
+                              ? 'text-[#FF3040]'
+                              : 'hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          {language === 'en' ? 'Reply' : 'Jibu'}
                         </button>
                       </div>
+
+                      {/* Inline Reply Composer */}
+                      {replyingToCommentId === c.id && (
+                        <form onSubmit={(e) => handleSubmitReply(e, c.id)} className="mt-2.5 flex items-start gap-2.5">
+                          <img
+                            src={profile?.photoURL || createAvatarSvgDataUri(profile?.displayName || 'User')}
+                            alt=""
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = createAvatarSvgDataUri(profile?.displayName || 'User');
+                            }}
+                            className="w-7 h-7 rounded-full object-cover shrink-0 ring-1 ring-slate-200 dark:ring-white/10"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <input
+                              type="text"
+                              autoFocus
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              placeholder={language === 'en' ? `Reply to ${c.userName}...` : `Mjibu ${c.userName}...`}
+                              className="w-full bg-transparent border-b border-slate-300 dark:border-white/20 pb-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#A7B0C0]/70 focus:outline-none focus:border-[#FF3040]"
+                            />
+                            <div className="flex items-center justify-end gap-2 mt-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setReplyingToCommentId(null);
+                                  setReplyText('');
+                                }}
+                                className="px-3 py-1 rounded-full text-[11px] font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-[#A7B0C0] dark:hover:text-white dark:hover:bg-white/10 cursor-pointer"
+                              >
+                                {language === 'en' ? 'Cancel' : 'Ghairi'}
+                              </button>
+                              <button
+                                type="submit"
+                                disabled={!replyText.trim()}
+                                className="px-3.5 py-1 rounded-full text-[11px] font-bold bg-[#FF3040] hover:bg-[#E02635] text-white disabled:opacity-40 cursor-pointer"
+                              >
+                                {language === 'en' ? 'Reply' : 'Jibu'}
+                              </button>
+                            </div>
+                          </div>
+                        </form>
+                      )}
+
+                      {/* Nested Replies Toggle & Thread */}
+                      {c.replies && c.replies.length > 0 && (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleCommentReplies(c.id)}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 cursor-pointer"
+                          >
+                            {expandedRepliesIds.includes(c.id) ? (
+                              <ChevronUp className="w-3.5 h-3.5" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            )}
+                            <span>
+                              {expandedRepliesIds.includes(c.id)
+                                ? language === 'en'
+                                  ? `Hide ${c.replies.length} replies`
+                                  : `Ficha majibu ${c.replies.length}`
+                                : language === 'en'
+                                  ? `View ${c.replies.length} ${c.replies.length === 1 ? 'reply' : 'replies'}`
+                                  : `Ona majibu ${c.replies.length}`}
+                            </span>
+                          </button>
+
+                          {expandedRepliesIds.includes(c.id) && (
+                            <div className="mt-2.5 pl-3 border-l-2 border-slate-200 dark:border-[#262E3E] space-y-3">
+                              {c.replies.map((r) => (
+                                <div key={r.id} className="flex gap-2.5 text-xs">
+                                  <img
+                                    src={r.userAvatar}
+                                    alt=""
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = createAvatarSvgDataUri(r.userName);
+                                    }}
+                                    className="w-7 h-7 rounded-full object-cover shrink-0 ring-1 ring-slate-200 dark:ring-white/10"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                      <span className="font-bold text-slate-900 dark:text-white">{r.userName}</span>
+                                      <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">
+                                        {formatRelativeTime(r.createdAt, language)}
+                                      </span>
+                                    </div>
+                                    <p className="text-slate-700 dark:text-[#D1D7E0] leading-relaxed">
+                                      {r.text}
+                                    </p>
+                                    <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-500 dark:text-[#A7B0C0]">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCommentLike(r.id)}
+                                        className={`flex items-center gap-1 cursor-pointer ${
+                                          commentVotes[r.id] === 'like'
+                                            ? 'text-[#FF3040] font-bold'
+                                            : 'hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                      >
+                                        <ThumbsUp className={`w-3 h-3 ${commentVotes[r.id] === 'like' ? 'fill-[#FF3040]' : ''}`} />
+                                        <span className="tabular-nums">{r.likesCount || 0}</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCommentDislike(r.id)}
+                                        className={`cursor-pointer ${
+                                          commentVotes[r.id] === 'dislike'
+                                            ? 'text-amber-600 dark:text-amber-400'
+                                            : 'hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                      >
+                                        <ThumbsDown className={`w-3 h-3 ${commentVotes[r.id] === 'dislike' ? 'fill-amber-600 dark:fill-amber-400' : ''}`} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))

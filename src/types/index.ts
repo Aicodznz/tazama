@@ -3,6 +3,13 @@ export type Theme = 'dark' | 'light';
 
 export type UserRole = 'viewer' | 'creator' | 'moderator' | 'admin' | 'finance' | 'copyright' | 'support' | 'analyst';
 
+export interface NotificationPreferences {
+  newVideos: boolean;
+  commentsReplies: boolean;
+  giftsTips: boolean;
+  platformUpdates: boolean;
+}
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -19,6 +26,7 @@ export interface UserProfile {
   premiumPlanId?: string;
   creatorPlanId?: string;
   premiumExpiry?: string;
+  notificationPreferences?: NotificationPreferences;
   createdAt: string;
   updatedAt?: string;
 }

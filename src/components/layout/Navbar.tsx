@@ -209,11 +209,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Search className="w-4 h-4" />
           </button>
 
-          {/* Data Saver Mode Toggle Button (Desktop/Tablet inline; Mobile uses Row 2 bar) */}
+          {/* Data Saver Mode Toggle Button (Desktop xl+ inline; Mobile Row 2 & Profile Menu) */}
           <button
             type="button"
             onClick={toggleDataSaver}
-            className={`hidden md:flex items-center gap-1 px-2 xl:px-2.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
+            className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
               isDataSaver 
                 ? 'bg-amber-50 text-amber-800 border border-amber-300 shadow-sm dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/50 dark:shadow-md dark:shadow-amber-500/20' 
                 : 'bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 dark:bg-[#191E29] dark:text-[#A7B0C0] dark:hover:text-white dark:border-[#262E3E]'
@@ -221,7 +221,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             title={isDataSaver ? 'Hali ya Kubana Bando Imewashwa (360p)' : 'Washa Hali ya Kubana Bando (Data Saver)'}
           >
             <Zap className={`w-3.5 h-3.5 ${isDataSaver ? 'text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400' : ''}`} />
-            <span className="hidden xl:inline text-[11px]">{isDataSaver ? 'Bando: 360p' : 'Bana Bando'}</span>
+            <span className="text-[11px]">{isDataSaver ? 'Bando: 360p' : 'Bana Bando'}</span>
           </button>
 
           {/* Live Streaming Button (Desktop/Tablet inline; Mobile uses Row 2 bar) */}
@@ -283,7 +283,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               <ShieldCheck className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
               <span>Admin</span>
               {pendingAdsCount > 0 && (
-                <span className="w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center animate-bounce shadow">
+                <span className="w-4 h-4 rounded-full bg-red-600 text-white text-[9px] font-black flex items-center justify-center shadow">
                   {pendingAdsCount}
                 </span>
               )}
@@ -520,6 +520,28 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
 
                 <div className="space-y-0.5 text-xs text-slate-800 dark:text-white">
+                  <button
+                    type="button"
+                    onClick={toggleDataSaver}
+                    className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
+                      isDataSaver
+                        ? 'bg-amber-50 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300 font-bold'
+                        : 'hover:bg-slate-100 dark:hover:bg-[#232A39] text-slate-800 dark:text-white font-medium'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Zap className={`w-4 h-4 ${isDataSaver ? 'text-amber-600 fill-amber-500 dark:text-amber-400 dark:fill-amber-400' : 'text-slate-500 dark:text-[#A7B0C0]'}`} />
+                      <span>{language === 'en' ? 'Data Saver Mode' : 'Hali ya Kubana Bando'}</span>
+                    </div>
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                      isDataSaver
+                        ? 'bg-amber-400 text-black'
+                        : 'bg-slate-200 text-slate-700 dark:bg-[#232A39] dark:text-[#A7B0C0]'
+                    }`}>
+                      {isDataSaver ? '360p ON' : 'Auto'}
+                    </span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => {

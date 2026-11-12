@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Clock,
   ThumbsUp,
@@ -26,14 +26,6 @@ import { VideoItem, Playlist } from '../types';
 import { translations, formatViews, formatTZS, formatRelativeTime } from '../lib/i18n';
 import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
 
-interface LibraryPageProps {
-  onSelectVideo: (video: VideoItem) => void;
-  onSelectChannel: (channelId: string) => void;
-  onOpenWallet?: () => void;
-  onOpenPremium?: () => void;
-  onNavigate?: (page: string) => void;
-}
-
 type LibraryTabId =
   | 'all'
   | 'offline'
@@ -43,12 +35,24 @@ type LibraryTabId =
   | 'subscriptions'
   | 'queue';
 
+interface LibraryPageProps {
+  onSelectVideo: (video: VideoItem) => void;
+  onSelectChannel: (channelId: string) => void;
+  onOpenWallet?: () => void;
+  onOpenPremium?: () => void;
+  onNavigate?: (page: string) => void;
+  initialTab?: LibraryTabId;
+  tabRequestKey?: number;
+}
+
 export const LibraryPage: React.FC<LibraryPageProps> = ({
   onSelectVideo,
   onSelectChannel,
   onOpenWallet,
   onOpenPremium,
   onNavigate,
+  initialTab = 'all',
+  tabRequestKey = 0,
 }) => {
   const {
     watchHistory,
@@ -75,12 +79,16 @@ export const LibraryPage: React.FC<LibraryPageProps> = ({
   const t = translations[language];
   const isEn = language === 'en';
 
-  const [activeTab, setActiveTab] = useState<LibraryTabId>('all');
+  const [activeTab, setActiveTab] = useState<LibraryTabId>(initialTab);
   const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState<boolean>(false);
   const [newPlaylistTitle, setNewPlaylistTitle] = useState<string>('');
   const [newPlaylistDesc, setNewPlaylistDesc] = useState<string>('');
   const [inspectPlaylistId, setInspectPlaylistId] = useState<string | null>(null);
   const [historyClearedNotice, setHistoryClearedNotice] = useState<boolean>(false);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab, tabRequestKey]);
 
   const allVideoPool = useMemo(() => {
     const map = new Map<string, VideoItem>();

@@ -123,7 +123,11 @@ interface VideoContextType {
   recordView: (videoId: string) => void;
   clearWatchHistory: () => void;
   syncServerViews: (videoId: string, serverViewsCount: number, uniqueViewers?: number, watchTimeSeconds?: number) => void;
+  commentVotes: Record<string, 'like' | 'dislike'>;
   addComment: (videoId: string, text: string) => void;
+  toggleLikeComment: (videoId: string, commentId: string) => void;
+  toggleDislikeComment: (videoId: string, commentId: string) => void;
+  addCommentReply: (videoId: string, parentCommentId: string, text: string) => void;
   sendGiftToCreator: (videoId: string, channelId: string, giftId: string, message?: string) => Promise<boolean>;
   joinMembership: (channelId: string, tierId: string, tierName: string, priceTZS: number) => Promise<boolean>;
   submitReport: (targetType: 'video' | 'comment' | 'channel', targetId: string, targetTitle: string, reason: string, details: string) => void;
@@ -185,7 +189,7 @@ interface VideoContextType {
   activeLiveStream: LiveStream | null;
   setActiveLiveStream: (stream: LiveStream | null) => void;
   liveChatMessages: Record<string, LiveChatMessage[]>;
-  sendLiveChatMessage: (streamId: string, text: string) => void;
+  sendLiveChatMessage: (streamId: string, text: string, senderOverride?: { name: string; avatar?: string; isTip?: boolean; tipAmountTZS?: number }) => void;
   sendLiveTip: (streamId: string, amountTZS: number, giftName: string) => Promise<boolean>;
   // STK Push Simulator
   stkPushRequest: STKPushRequest | null;
@@ -636,6 +640,14 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return {};
   });
 
+  const [commentVotes, setCommentVotes] = useState<Record<string, 'like' | 'dislike'>>(() => {
+    try {
+      const saved = localStorage.getItem('tazama_comment_votes');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {};
+  });
+
   const [giftTransactions, setGiftTransactions] = useState<GiftTransaction[]>([]);
   const [memberships, setMemberships] = useState<UserMembership[]>([]);
   const [reports, setReports] = useState<ContentReport[]>([]);
@@ -979,13 +991,19 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     ]
   });
 
-  const sendLiveChatMessage = (streamId: string, text: string) => {
-    const senderName = profile?.displayName || 'Mtazamaji';
+  const sendLiveChatMessage = (
+    streamId: string,
+    text: string,
+    senderOverride?: { name: string; avatar?: string; isTip?: boolean; tipAmountTZS?: number }
+  ) => {
+    const senderName = senderOverride?.name || profile?.displayName || 'Mtazamaji';
     const newMessage: LiveChatMessage = {
-      id: `msg-${Date.now()}`,
+      id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       senderName,
-      senderAvatar: profile?.photoURL || createAvatarSvgDataUri(senderName),
+      senderAvatar: senderOverride?.avatar || profile?.photoURL || createAvatarSvgDataUri(senderName),
       message: text,
+      isTip: senderOverride?.isTip,
+      tipAmountTZS: senderOverride?.tipAmountTZS,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     setLiveChatMessages(prev => ({
@@ -1815,7 +1833,8 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       userAvatar: profile?.photoURL || createAvatarSvgDataUri(profile?.displayName || 'Mwanachama'),
       text: text.trim(),
       likesCount: 0,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      replies: []
     };
 
     setComments(prev => {
@@ -1829,6 +1848,113 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     setVideos(vids => vids.map(v => v.id === videoId ? { ...v, commentsCount: v.commentsCount + 1 } : v));
     setShorts(shList => shList.map(s => s.id === videoId ? { ...s, commentsCount: s.commentsCount + 1 } : s));
+  };
+
+  const applyLikeDeltaRecursive = (
+    list: CommentItem[],
+    commentId: string,
+    delta: number
+  ): CommentItem[] => {
+    return list.map((c) => {
+      let nextReplies = c.replies;
+      if (c.replies && c.replies.length > 0) {
+        nextReplies = applyLikeDeltaRecursive(c.replies, commentId, delta);
+      }
+      if (c.id === commentId) {
+        return {
+          ...c,
+          likesCount: Math.max(0, (c.likesCount || 0) + delta),
+          replies: nextReplies
+        };
+      }
+      return nextReplies !== c.replies ? { ...c, replies: nextReplies } : c;
+    });
+  };
+
+  const toggleLikeComment = (videoId: string, commentId: string) => {
+    if (!videoId || !commentId) return;
+    const currentVote = commentVotes[commentId];
+    const delta = currentVote === 'like' ? -1 : 1;
+
+    setCommentVotes(prev => {
+      const next = { ...prev };
+      if (currentVote === 'like') {
+        delete next[commentId];
+      } else {
+        next[commentId] = 'like';
+      }
+      try { localStorage.setItem('tazama_comment_votes', JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    setComments(prev => {
+      const vidComments = prev[videoId] || [];
+      const next = {
+        ...prev,
+        [videoId]: applyLikeDeltaRecursive(vidComments, commentId, delta)
+      };
+      try { localStorage.setItem('tazama_comments', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const toggleDislikeComment = (videoId: string, commentId: string) => {
+    if (!videoId || !commentId) return;
+    const currentVote = commentVotes[commentId];
+
+    setCommentVotes(prev => {
+      const next = { ...prev };
+      if (currentVote === 'dislike') {
+        delete next[commentId];
+      } else {
+        next[commentId] = 'dislike';
+      }
+      try { localStorage.setItem('tazama_comment_votes', JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    if (currentVote === 'like') {
+      setComments(prev => {
+        const vidComments = prev[videoId] || [];
+        const next = {
+          ...prev,
+          [videoId]: applyLikeDeltaRecursive(vidComments, commentId, -1)
+        };
+        try { localStorage.setItem('tazama_comments', JSON.stringify(next)); } catch {}
+        return next;
+      });
+    }
+  };
+
+  const addCommentReply = (videoId: string, parentCommentId: string, text: string) => {
+    if (!videoId || !parentCommentId || !text.trim()) return;
+    const newReply: CommentItem = {
+      id: `reply-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      videoId,
+      userId: profile?.uid || 'guest-user',
+      userName: profile?.displayName || 'Mwanachama wa Tazama',
+      userAvatar: profile?.photoURL || createAvatarSvgDataUri(profile?.displayName || 'Mwanachama'),
+      text: text.trim(),
+      likesCount: 0,
+      createdAt: new Date().toISOString()
+    };
+
+    setComments(prev => {
+      const vidComments = prev[videoId] || [];
+      const next = {
+        ...prev,
+        [videoId]: vidComments.map((c) =>
+          c.id === parentCommentId
+            ? { ...c, replies: [...(c.replies || []), newReply] }
+            : c
+        )
+      };
+      try { localStorage.setItem('tazama_comments', JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    setVideos(vids => vids.map(v => v.id === videoId ? { ...v, commentsCount: (v.commentsCount || 0) + 1 } : v));
+    setShorts(shList => shList.map(s => s.id === videoId ? { ...s, commentsCount: (s.commentsCount || 0) + 1 } : s));
   };
 
   const sendGiftToCreator = async (
@@ -2313,6 +2439,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         likedVideoIds,
         watchHistory,
         comments,
+        commentVotes,
         giftTransactions,
         memberships,
         reports,
@@ -2326,6 +2453,9 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         clearWatchHistory,
         syncServerViews,
         addComment,
+        toggleLikeComment,
+        toggleDislikeComment,
+        addCommentReply,
         sendGiftToCreator,
         joinMembership,
         submitReport,

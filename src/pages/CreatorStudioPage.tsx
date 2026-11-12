@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Sparkles, 
   Eye, 
@@ -79,6 +79,8 @@ import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaP
 interface CreatorStudioPageProps {
   onOpenUpload: () => void;
   onOpenPremium?: () => void;
+  initialTab?: StudioTab;
+  tabRequestKey?: number;
 }
 
 type StudioTab = 
@@ -100,7 +102,9 @@ type StudioTab =
 
 export const CreatorStudioPage: React.FC<CreatorStudioPageProps> = ({ 
   onOpenUpload,
-  onOpenPremium 
+  onOpenPremium,
+  initialTab = 'dashboard',
+  tabRequestKey = 0
 }) => {
   const { profile, language } = useAuth();
   const { 
@@ -146,7 +150,10 @@ export const CreatorStudioPage: React.FC<CreatorStudioPageProps> = ({
   const t = translations[language];
 
   // Active navigation tab
-  const [activeTab, setActiveTab] = useState<StudioTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<StudioTab>(initialTab);
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab, tabRequestKey]);
   const [dateRange, setDateRange] = useState<string>('28d');
   const [copyrightSubTab, setCopyrightSubTab] = useState<'shield' | 'claims' | 'registry'>('shield');
   const [newWorkTitle, setNewWorkTitle] = useState('');

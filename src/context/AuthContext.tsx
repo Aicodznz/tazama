@@ -16,9 +16,16 @@ import {
   handleFirestoreError,
   OperationType
 } from '../lib/firebase';
-import { UserProfile, Channel, UserRole, Language, Theme } from '../types';
+import { UserProfile, Channel, UserRole, Language, Theme, NotificationPreferences } from '../types';
 import { INITIAL_CHANNELS, INITIAL_USERS } from '../data/mockData';
 import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
+
+const DEFAULT_NOTIFICATION_PREFS: NotificationPreferences = {
+  newVideos: true,
+  commentsReplies: true,
+  giftsTips: true,
+  platformUpdates: true,
+};
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -29,6 +36,7 @@ interface AuthContextType {
   theme: Theme;
   demoMode: boolean;
   isLoading: boolean;
+  notificationPreferences: NotificationPreferences;
   loginWithGoogle: () => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
@@ -50,6 +58,8 @@ interface AuthContextType {
   deductBalance: (amountTZS: number) => boolean;
   upgradeToCreator: (channelData?: Partial<Channel>) => Promise<Channel | null>;
   updateUserChannel: (channelData: Partial<Channel>) => void;
+  updateUserProfile: (updates: { displayName?: string; photoURL?: string; preferredLanguage?: Language }) => Promise<boolean>;
+  updateNotificationPreferences: (prefs: Partial<NotificationPreferences>) => void;
 }
 
 const safeStorageGet = (key: string): string | null => {
@@ -123,6 +133,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [demoMode, setDemoMode] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences>(() => {
+    try {
+      const saved = safeStorageGet('tazama_notif_prefs');
+      if (saved) {
+        return { ...DEFAULT_NOTIFICATION_PREFS, ...JSON.parse(saved) };
+      }
+    } catch {}
+    return DEFAULT_NOTIFICATION_PREFS;
+  });
 
   useEffect(() => {
     // Sync theme class to document element and body
@@ -547,6 +566,104 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateUserProfile = async (updates: {
+    displayName?: string;
+    photoURL?: string;
+    preferredLanguage?: Language;
+  }): Promise<boolean> => {
+    if (!profile) return false;
+    const cleanName = updates.displayName !== undefined ? updates.displayName.trim() : profile.displayName;
+    if (!cleanName) return false;
+
+    const updatedAt = new Date().toISOString();
+    const nextPhoto = updates.photoURL !== undefined
+      ? (updates.photoURL.trim() || createAvatarSvgDataUri(cleanName))
+      : profile.photoURL;
+    const nextLang = updates.preferredLanguage || profile.preferredLanguage || language;
+
+    const updatedProfile: UserProfile = {
+      ...profile,
+      displayName: cleanName,
+      photoURL: nextPhoto,
+      preferredLanguage: nextLang,
+      updatedAt,
+    };
+
+    setProfile(updatedProfile);
+    safeStorageSet('tazama_session_profile', JSON.stringify(updatedProfile));
+
+    try {
+      const existingRaw = safeStorageGet('tazama_registered_users');
+      if (existingRaw) {
+        const list: UserProfile[] = JSON.parse(existingRaw);
+        const updatedList = list.map((u) =>
+          u && (u.uid === profile.uid || u.email.toLowerCase() === profile.email.toLowerCase())
+            ? { ...u, displayName: cleanName, photoURL: nextPhoto, preferredLanguage: nextLang, updatedAt }
+            : u
+        );
+        safeStorageSet('tazama_registered_users', JSON.stringify(updatedList));
+      }
+    } catch {}
+
+    if (auth.currentUser) {
+      try {
+        await updateProfile(auth.currentUser, {
+          displayName: cleanName,
+          photoURL: nextPhoto,
+        });
+      } catch {}
+    }
+
+    // Firestore self-update rule requires incoming.uid == userId and MUST NOT touch 'role'
+    if (auth.currentUser && auth.currentUser.uid === profile.uid) {
+      try {
+        await setDoc(
+          doc(db, 'users', profile.uid),
+          {
+            uid: profile.uid,
+            displayName: cleanName,
+            photoURL: nextPhoto || '',
+            preferredLanguage: nextLang,
+            updatedAt,
+          },
+          { merge: true }
+        );
+      } catch {
+        // Preview or offline mode still keeps localStorage updated cleanly
+      }
+    }
+
+    return true;
+  };
+
+  const updateNotificationPreferences = (prefs: Partial<NotificationPreferences>) => {
+    setNotificationPreferences((prev) => {
+      const next = { ...prev, ...prefs };
+      safeStorageSet('tazama_notif_prefs', JSON.stringify(next));
+      if (profile) {
+        const updatedProfile: UserProfile = {
+          ...profile,
+          notificationPreferences: next,
+          updatedAt: new Date().toISOString(),
+        };
+        setProfile(updatedProfile);
+        safeStorageSet('tazama_session_profile', JSON.stringify(updatedProfile));
+        if (auth.currentUser && auth.currentUser.uid === profile.uid) {
+          setDoc(
+            doc(db, 'users', profile.uid),
+            {
+              uid: profile.uid,
+              notificationPreferences: next,
+              updatedAt: updatedProfile.updatedAt,
+            },
+            { merge: true }
+          ).catch(() => {});
+        }
+      }
+      return next;
+    });
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -558,6 +675,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         theme,
         demoMode,
         isLoading,
+        notificationPreferences,
         loginWithGoogle,
         loginWithEmail,
         signUpWithEmail,
@@ -570,7 +688,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toggleTheme,
         topUpBalance,
         deductBalance,
-        updateUserChannel
+        updateUserChannel,
+        updateUserProfile,
+        updateNotificationPreferences
       }}
     >
       {children}

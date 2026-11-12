@@ -8,6 +8,7 @@ import { WatchPage } from './pages/WatchPage';
 import { ShortsPage } from './pages/ShortsPage';
 import { ExplorePage } from './pages/ExplorePage';
 import { ChannelsPage } from './pages/ChannelsPage';
+import { SubscriptionsPage } from './pages/SubscriptionsPage';
 import { CreatorStudioPage } from './pages/CreatorStudioPage';
 import { AdminPage } from './pages/AdminPage';
 import { ChannelPage } from './pages/ChannelPage';
@@ -31,10 +32,11 @@ import { Sparkles, Shield, Info, CheckCircle2, X } from 'lucide-react';
 import { TazamaActionToastPayload } from './components/video/VideoActionsMenu';
 
 const AppContent: React.FC = () => {
-  const { role, profile, switchDemoRole, upgradeToCreator } = useAuth();
-  const { setSelectedCategory, videos, shorts } = useVideo();
+  const { role, profile, switchDemoRole } = useAuth();
+  const { setSelectedCategory, videos, shorts, liveStreams, setActiveLiveStream } = useVideo();
 
   const [activePage, setActivePage] = useState<string>('home');
+  const [navRequestSeq, setNavRequestSeq] = useState<number>(0);
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
 
   const liveSelectedVideo = selectedVideo 
@@ -97,21 +99,33 @@ const AppContent: React.FC = () => {
     if (deepLinkHandledRef.current || typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const sharedVideoId = params.get('v');
-    if (!sharedVideoId) {
+    const sharedLiveId = params.get('live');
+    if (!sharedVideoId && !sharedLiveId) {
       deepLinkHandledRef.current = true;
       return;
     }
-    const found =
-      videos.find((v) => v.id === sharedVideoId) ||
-      (shorts && shorts.find((s) => s.id === sharedVideoId));
-    if (found) {
-      deepLinkHandledRef.current = true;
-      setSelectedVideo(found);
-      setMinimizedVideo(found);
-      setIsMiniPlaying(true);
-      setActivePage('watch');
+    if (sharedVideoId) {
+      const found =
+        videos.find((v) => v.id === sharedVideoId) ||
+        (shorts && shorts.find((s) => s.id === sharedVideoId));
+      if (found) {
+        deepLinkHandledRef.current = true;
+        setSelectedVideo(found);
+        setMinimizedVideo(found);
+        setIsMiniPlaying(true);
+        setActivePage('watch');
+      }
+      return;
     }
-  }, [videos, shorts]);
+    if (sharedLiveId) {
+      const foundLive = (liveStreams || []).find((s) => s.id === sharedLiveId);
+      if (foundLive) {
+        deepLinkHandledRef.current = true;
+        setActiveLiveStream(foundLive);
+        setActivePage('live');
+      }
+    }
+  }, [videos, shorts, liveStreams, setActiveLiveStream]);
 
   const handleSelectVideo = (video: VideoItem) => {
     setSelectedVideo(video);
@@ -128,6 +142,7 @@ const AppContent: React.FC = () => {
   };
 
   const handleNavigate = (page: string) => {
+    setNavRequestSeq((n) => n + 1);
     if (page.startsWith('cat-')) {
       const categoryMap: Record<string, VideoCategory> = {
         'cat-music': 'Muziki',
@@ -236,11 +251,22 @@ const AppContent: React.FC = () => {
             />
           )}
 
-          {activePage === 'explore' && (
+          {(activePage === 'explore' || activePage === 'trending') && (
             <ExplorePage
+              initialCategory="trend"
+              tabRequestKey={navRequestSeq}
               onSelectVideo={handleSelectVideo}
               onSelectChannel={handleSelectChannel}
               onNavigateHome={() => handleNavigate('home')}
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {activePage === 'subscriptions' && (
+            <SubscriptionsPage
+              onSelectVideo={handleSelectVideo}
+              onSelectChannel={handleSelectChannel}
+              onNavigate={handleNavigate}
             />
           )}
 
@@ -272,9 +298,17 @@ const AppContent: React.FC = () => {
             />
           )}
 
-          {activePage === 'studio' && (
+          {(activePage === 'studio' || activePage === 'gifts' || activePage === 'memberships') && (
             profile && (role === 'creator' || role === 'admin') ? (
               <CreatorStudioPage
+                initialTab={
+                  activePage === 'gifts'
+                    ? 'revenue'
+                    : activePage === 'memberships'
+                      ? 'memberships'
+                      : 'dashboard'
+                }
+                tabRequestKey={navRequestSeq}
                 onOpenUpload={handleOpenUpload}
                 onOpenPremium={() => {
                   setPremiumTarget('creator');
@@ -351,8 +385,16 @@ const AppContent: React.FC = () => {
             />
           )}
 
-          {activePage === 'library' && (
+          {(activePage === 'library' || activePage === 'history' || activePage === 'liked') && (
             <LibraryPage
+              initialTab={
+                activePage === 'history'
+                  ? 'history'
+                  : activePage === 'liked'
+                    ? 'liked'
+                    : 'all'
+              }
+              tabRequestKey={navRequestSeq}
               onSelectVideo={handleSelectVideo}
               onSelectChannel={handleSelectChannel}
               onOpenWallet={handleOpenWallet}
