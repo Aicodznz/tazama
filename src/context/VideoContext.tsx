@@ -121,6 +121,7 @@ interface VideoContextType {
   toggleSubscribe: (channelId: string) => void;
   toggleLike: (videoId: string) => void;
   recordView: (videoId: string) => void;
+  clearWatchHistory: () => void;
   syncServerViews: (videoId: string, serverViewsCount: number, uniqueViewers?: number, watchTimeSeconds?: number) => void;
   addComment: (videoId: string, text: string) => void;
   sendGiftToCreator: (videoId: string, channelId: string, giftId: string, message?: string) => Promise<boolean>;
@@ -1618,6 +1619,13 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {}
   };
 
+  const clearWatchHistory = () => {
+    setWatchHistory([]);
+    try {
+      localStorage.removeItem('tazama_watch_history');
+    } catch {}
+  };
+
   const recordView = (videoId: string) => {
     if (!videoId) return;
 
@@ -1625,12 +1633,18 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                    (shorts && shorts.find(s => Boolean(s && s.id === videoId))) ||
                    (currentVideo && currentVideo.id === videoId ? currentVideo : null);
 
-    // 1. Add to local watch history
+    // 1. Add to local watch history (persisted locally)
     if (target) {
-      setWatchHistory(prev => [
-        target,
-        ...(Array.isArray(prev) ? prev.filter(item => Boolean(item && item.id && item.id !== videoId)) : [])
-      ].slice(0, 50));
+      setWatchHistory(prev => {
+        const next = [
+          target,
+          ...(Array.isArray(prev) ? prev.filter(item => Boolean(item && item.id && item.id !== videoId)) : [])
+        ].slice(0, 50);
+        try {
+          localStorage.setItem('tazama_watch_history', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
     }
 
     // 2. Read persistent device id
@@ -2309,6 +2323,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toggleSubscribe,
         toggleLike,
         recordView,
+        clearWatchHistory,
         syncServerViews,
         addComment,
         sendGiftToCreator,
