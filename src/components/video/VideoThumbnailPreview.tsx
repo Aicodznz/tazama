@@ -295,10 +295,11 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
     .replace(/\bborder(-[^\s]+)?(\/[^\s]+)?\b/g, '')
     .replace(/\boverflow-hidden\b/g, '')
     .trim();
+  const hasExplicitWidth = /(?:^|\s)(?:sm:|md:|lg:|xl:)?w-/.test(cleanedClassName);
 
   return (
     <div
-      className={`relative isolate group/gradient-card select-none cursor-pointer ${aspectRatioClass} ${cleanedClassName}`}
+      className={`relative isolate group/gradient-card select-none cursor-pointer ${hasExplicitWidth ? '' : 'w-full'} ${aspectRatioClass} ${cleanedClassName}`}
       onClick={(e) => {
         if (onSelectVideo) {
           e.stopPropagation();
@@ -338,7 +339,7 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
         onMouseMove={handleMouseMove}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className={`relative w-full h-full p-[2px] sm:p-[2.5px] rounded-[inherit] overflow-hidden transition-all duration-300 ${
+        className={`absolute inset-0 p-[2px] sm:p-[2.5px] rounded-[inherit] overflow-hidden transition-all duration-300 ${
           isPreviewActive ? 'shadow-2xl' : 'shadow-md dark:shadow-lg'
         }`}
         style={{
@@ -367,7 +368,7 @@ export const VideoThumbnailPreview: React.FC<VideoThumbnailPreviewProps> = ({
             referrerPolicy="no-referrer"
             onError={() => setThumbError(true)}
             loading="lazy"
-            className={`w-full h-full object-cover transition-opacity duration-300 ${
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
               isPreviewActive && isVideoLoaded ? 'opacity-0' : 'opacity-100'
             }`}
           />

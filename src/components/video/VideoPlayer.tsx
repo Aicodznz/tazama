@@ -18,7 +18,8 @@ import {
   Check,
   PictureInPicture2,
   Copy,
-  Wifi
+  Wifi,
+  Moon
 } from 'lucide-react';
 import { VideoItem, AdCampaign } from '../../types';
 import { formatDuration } from '../../lib/i18n';
@@ -27,6 +28,22 @@ import { useAuth } from '../../context/AuthContext';
 import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../../lib/mediaPlaceholders';
 import { parseVideoSource } from '../../lib/videoUtils';
 import { getVideoScenes, getActiveSceneForTime } from '../../lib/videoScenes';
+import { VideoSettingsSheet } from './VideoSettingsSheet';
+import {
+  AutoTranslateLang,
+  CaptionStyleOptions,
+  SleepTimerMode,
+  SubtitleMode,
+  VideoQualityOption,
+  applyQualityHintToStreamUrl,
+  buildCaptionStyles,
+  formatCountdownClock,
+  formatQualitySummary,
+  getCaptionCueForTime,
+  isCorsFriendlyVideoUrl,
+  loadStoredCaptionOptions,
+  saveStoredCaptionOptions,
+} from '../../lib/videoSettings';
 
 interface VideoPlayerProps {
   video: VideoItem;
@@ -43,8 +60,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { syncServerViews, recordView, adCampaigns, recordAdImpression, recordAdClick, isDataSaver, toggleDataSaver } = useVideo();
-  const { profile } = useAuth();
+  const { syncServerViews, recordView, addToWatchHistory, adCampaigns, recordAdImpression, recordAdClick, isDataSaver, toggleDataSaver } = useVideo();
+  const { profile, language } = useAuth();
+  const [cachedOfflineUrl, setCachedOfflineUrl] = useState<string | null>(null);
 
   // In-Stream Video Ad State
   const [activeAd, setActiveAd] = useState<AdCampaign | null>(null);
@@ -60,11 +78,55 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [volume, setVolume] = useState<number>(1);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(() => {
+    try {
+      const saved = parseFloat(localStorage.getItem('tazama_playback_speed') || '1');
+      return Number.isFinite(saved) && saved >= 0.25 && saved <= 3 ? saved : 1;
+    } catch {
+      return 1;
+    }
+  });
   const [showSettingsMenu, setShowSettingsMenu] = useState<boolean>(false);
-  const [selectedQuality, setSelectedQuality] = useState<string>(isDataSaver ? '360p' : 'Auto (1080p)');
-  const [showCaptions, setShowCaptions] = useState<boolean>(false);
-  const [captionLang, setCaptionLang] = useState<'sw' | 'en'>('sw');
+  const [selectedQuality, setSelectedQuality] = useState<VideoQualityOption>(() => {
+    if (isDataSaver) return '360p';
+    try {
+      return (localStorage.getItem('tazama_player_quality') as VideoQualityOption) || 'Auto';
+    } catch {
+      return 'Auto';
+    }
+  });
+  const [subtitleMode, setSubtitleMode] = useState<SubtitleMode>('off');
+  const [autoTranslateLang, setAutoTranslateLang] = useState<AutoTranslateLang>('sw');
+  const [captionOptions, setCaptionOptions] = useState<CaptionStyleOptions>(() =>
+    loadStoredCaptionOptions()
+  );
+  const [stableVolume, setStableVolume] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('tazama_stable_volume') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const [voiceBoost, setVoiceBoost] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('tazama_voice_boost') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const [sleepTimerMode, setSleepTimerMode] = useState<SleepTimerMode>('off');
+  const [sleepRemainingSeconds, setSleepRemainingSeconds] = useState<number | null>(null);
+  const [corsFallback, setCorsFallback] = useState<boolean>(false);
+  const pendingSeekRestoreRef = useRef<{ time: number; shouldPlay: boolean } | null>(null);
+
+  // Web Audio nodes refs for Stable Volume (DynamicsCompressor) + Voice Boost (Peaking EQ)
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const mediaSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const compressorRef = useRef<DynamicsCompressorNode | null>(null);
+  const highPassRef = useRef<BiquadFilterNode | null>(null);
+  const voiceEqRef = useRef<BiquadFilterNode | null>(null);
+  const boostGainRef = useRef<GainNode | null>(null);
+
   const [hasRecordedView, setHasRecordedView] = useState<boolean>(false);
   const [videoError, setVideoError] = useState<boolean>(false);
   const [ambientImgError, setAmbientImgError] = useState<boolean>(false);
@@ -82,14 +144,21 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [playerToast, setPlayerToast] = useState<string | null>(null);
   const toastTimeoutRef = useRef<any>(null);
 
+  const showCaptions = subtitleMode !== 'off';
+  const activeCaptionLang: AutoTranslateLang =
+    subtitleMode === 'sw' ? 'sw' : subtitleMode === 'en' ? 'en' : autoTranslateLang;
+
   useEffect(() => {
-    setSelectedQuality(isDataSaver ? '360p' : 'Auto (1080p)');
+    setSelectedQuality(isDataSaver ? '360p' : (prev) => (prev === '360p' ? 'Auto' : prev));
   }, [isDataSaver]);
 
   useEffect(() => {
     return () => {
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
       if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(() => {});
+      }
     };
   }, []);
 
@@ -146,9 +215,121 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     parsedSource.sourceType === 'embed'
   ) && !(isAdPlaying && activeAd);
 
-  // Initialize Ad check when video changes (VIP users are ad-free)
+  const rawDirectStreamUrl =
+    isAdPlaying && activeAd
+      ? activeAd.mediaUrl
+      : cachedOfflineUrl
+        ? cachedOfflineUrl
+        : parsedSource.sourceType === 'direct'
+          ? applyQualityHintToStreamUrl(
+              parsedSource.streamUrl || video.videoUrl,
+              selectedQuality,
+              isDataSaver
+            )
+          : '';
+  const shouldUseCors = !corsFallback && isCorsFriendlyVideoUrl(rawDirectStreamUrl);
+
+  // Real Web Audio API Processing: Stable Volume (DynamicsCompressor) + Voice Boost (Vocal EQ)
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el || isEmbedVideo || !shouldUseCors) return;
+    if (!stableVolume && !voiceBoost && !audioCtxRef.current) return;
+
+    try {
+      if (!audioCtxRef.current) {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const source = ctx.createMediaElementSource(el);
+        const highPass = ctx.createBiquadFilter();
+        highPass.type = 'highpass';
+        highPass.frequency.value = 20;
+
+        const voiceEq = ctx.createBiquadFilter();
+        voiceEq.type = 'peaking';
+        voiceEq.frequency.value = 2100;
+        voiceEq.Q.value = 1.05;
+        voiceEq.gain.value = 0;
+
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.value = 0;
+        compressor.knee.value = 30;
+        compressor.ratio.value = 1;
+        compressor.attack.value = 0.003;
+        compressor.release.value = 0.25;
+
+        const gainNode = ctx.createGain();
+        gainNode.gain.value = 1;
+
+        source.connect(highPass);
+        highPass.connect(voiceEq);
+        voiceEq.connect(compressor);
+        compressor.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        audioCtxRef.current = ctx;
+        mediaSourceRef.current = source;
+        highPassRef.current = highPass;
+        voiceEqRef.current = voiceEq;
+        compressorRef.current = compressor;
+        boostGainRef.current = gainNode;
+      }
+
+      const ctx = audioCtxRef.current;
+      if (ctx && ctx.state === 'suspended' && (stableVolume || voiceBoost)) {
+        ctx.resume().catch(() => {});
+      }
+
+      if (highPassRef.current && voiceEqRef.current && compressorRef.current && boostGainRef.current) {
+        highPassRef.current.frequency.value = voiceBoost ? 125 : 20;
+        voiceEqRef.current.gain.value = voiceBoost ? 7.5 : 0;
+
+        if (stableVolume) {
+          compressorRef.current.threshold.value = -24;
+          compressorRef.current.knee.value = 24;
+          compressorRef.current.ratio.value = 8;
+        } else {
+          compressorRef.current.threshold.value = 0;
+          compressorRef.current.ratio.value = 1;
+        }
+
+        const makeup = stableVolume && voiceBoost ? 1.24 : stableVolume ? 1.18 : voiceBoost ? 1.12 : 1;
+        boostGainRef.current.gain.value = makeup;
+      }
+    } catch {
+      // If browser rejects MediaElementSource (e.g. non-CORS stream), play natively without interruption
+    }
+  }, [stableVolume, voiceBoost, shouldUseCors, isEmbedVideo, video.id]);
+
+  // Real Sleep Timer 1-second Countdown
+  useEffect(() => {
+    if (typeof sleepTimerMode !== 'number') return;
+    const interval = setInterval(() => {
+      setSleepRemainingSeconds((prev) => {
+        if (prev === null) return null;
+        if (prev <= 1) {
+          if (videoRef.current && !videoRef.current.paused) {
+            videoRef.current.pause();
+            setIsPlaying(false);
+          }
+          setSleepTimerMode('off');
+          triggerToast(
+            language === 'en'
+              ? 'Sleep timer ended — video paused'
+              : 'Kipima muda kimeisha — video imesitishwa'
+          );
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [sleepTimerMode, language]);
+
+  // Initialize Ad check when video changes (VIP users are ad-free) + record Watch History immediately
   useEffect(() => {
     setVideoError(false);
+    setCorsFallback(false);
     setAmbientImgError(false);
     setHasRecordedView(false);
     setHasShownAdForVideo(false);
@@ -156,6 +337,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setHoverVideoError(false);
     setCurrentTime(0);
     setShowControls(true);
+
+    if (video?.id) {
+      addToWatchHistory(video);
+    }
 
     const isVIP = profile?.premiumPlanId === 'plan-viewer-monthly' || profile?.premiumPlanId === 'plan-viewer-yearly';
     
@@ -185,6 +370,32 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       setActiveAd(null);
       setIsAdPlaying(false);
     }
+
+    // Check Cache Storage for locally downloaded offline copy of this video
+    let revoked = false;
+    let objectUrl: string | null = null;
+    setCachedOfflineUrl(null);
+    if (video?.videoUrl && typeof window !== 'undefined' && 'caches' in window) {
+      caches.open('tazama-offline-videos-v1')
+        .then((cache) => cache.match(video.videoUrl))
+        .then((matched) => {
+          if (!matched || revoked) return null;
+          return matched.blob();
+        })
+        .then((blob) => {
+          if (!blob || blob.size === 0 || revoked) return;
+          objectUrl = URL.createObjectURL(blob);
+          setCachedOfflineUrl(objectUrl);
+        })
+        .catch(() => {});
+    }
+
+    return () => {
+      revoked = true;
+      if (objectUrl) {
+        try { URL.revokeObjectURL(objectUrl); } catch {}
+      }
+    };
   }, [video.id, profile?.premiumPlanId, adCampaigns]);
 
   // Ad Timer Countdown Effect
@@ -338,6 +549,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const handleVideoPlay = () => {
     setIsPlaying(true);
+    if (video?.id) {
+      addToWatchHistory(video);
+    }
     if (!playbackSessionIdRef.current) {
       startPlaybackSession().then(() => {
         startHeartbeatLoop();
@@ -361,6 +575,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     sendHeartbeat('ended');
     if (isAdPlaying) {
       handleCompleteAd();
+    } else if (sleepTimerMode === 'end_of_video') {
+      setSleepTimerMode('off');
+      setSleepRemainingSeconds(null);
+      triggerToast(
+        language === 'en'
+          ? 'Sleep timer: paused at end of video'
+          : 'Kipima muda: Video imekamilika'
+      );
     } else if (autoplayNext && onNextVideo) {
       triggerToast('Inacheza video inayofuata...');
       setTimeout(() => {
@@ -432,6 +654,19 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (videoRef.current) {
       setDuration(videoRef.current.duration || video.durationSeconds);
       videoRef.current.playbackRate = playbackSpeed;
+
+      const restore = pendingSeekRestoreRef.current;
+      if (restore) {
+        pendingSeekRestoreRef.current = null;
+        try {
+          videoRef.current.currentTime = restore.time;
+        } catch {}
+        if (restore.shouldPlay) {
+          videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+        }
+        return;
+      }
+
       if (autoPlay) {
         videoRef.current.play()
           .then(() => setIsPlaying(true))
@@ -476,10 +711,110 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const changeSpeed = (speed: number) => {
-    setPlaybackSpeed(speed);
+    const clamped = Math.max(0.25, Math.min(3, Math.round(speed * 100) / 100));
+    setPlaybackSpeed(clamped);
+    try {
+      localStorage.setItem('tazama_playback_speed', String(clamped));
+    } catch {}
     if (videoRef.current) {
-      videoRef.current.playbackRate = speed;
+      videoRef.current.playbackRate = clamped;
     }
+  };
+
+  const handleSelectQuality = (q: VideoQualityOption) => {
+    if (videoRef.current && !isEmbedVideo && !isAdPlaying) {
+      pendingSeekRestoreRef.current = {
+        time: videoRef.current.currentTime || currentTime,
+        shouldPlay: !videoRef.current.paused,
+      };
+    }
+    setSelectedQuality(q);
+    try {
+      localStorage.setItem('tazama_player_quality', q);
+    } catch {}
+
+    const isLowQuality = q === '360p' || q === '240p' || q === '144p';
+    if (q === '360p' && !isDataSaver) toggleDataSaver();
+    else if (!isLowQuality && q !== 'Auto' && isDataSaver) toggleDataSaver();
+
+    triggerToast(
+      `${language === 'en' ? 'Quality' : 'Ubora'}: ${formatQualitySummary(q, isDataSaver, language)}`
+    );
+  };
+
+  const handleSelectSubtitleMode = (mode: SubtitleMode, translateLang?: AutoTranslateLang) => {
+    setSubtitleMode(mode);
+    if (translateLang) setAutoTranslateLang(translateLang);
+    if (mode === 'off') {
+      triggerToast(language === 'en' ? 'Subtitles turned off' : 'Manukuu yamezimwa');
+    } else if (mode === 'sw') {
+      triggerToast('Manukuu: Kiswahili');
+    } else if (mode === 'en') {
+      triggerToast('Subtitles: English');
+    } else if (translateLang) {
+      triggerToast(`Auto-translate: ${translateLang.toUpperCase()}`);
+    }
+  };
+
+  const handleUpdateCaptionOptions = (next: CaptionStyleOptions) => {
+    setCaptionOptions(next);
+    saveStoredCaptionOptions(next);
+  };
+
+  const handleSelectSleepTimer = (mode: SleepTimerMode) => {
+    setSleepTimerMode(mode);
+    if (mode === 'off') {
+      setSleepRemainingSeconds(null);
+      triggerToast(language === 'en' ? 'Sleep timer off' : 'Kipima muda kimezimwa');
+    } else if (mode === 'end_of_video') {
+      setSleepRemainingSeconds(null);
+      triggerToast(
+        language === 'en'
+          ? 'Sleep timer: End of video'
+          : 'Kipima muda: Mwisho wa video'
+      );
+    } else {
+      setSleepRemainingSeconds(mode * 60);
+      triggerToast(
+        language === 'en'
+          ? `Sleep timer set for ${mode} min`
+          : `Kipima muda: Dakika ${mode}`
+      );
+    }
+  };
+
+  const handleToggleStableVolume = () => {
+    const next = !stableVolume;
+    setStableVolume(next);
+    try {
+      localStorage.setItem('tazama_stable_volume', next ? '1' : '0');
+    } catch {}
+    triggerToast(
+      next
+        ? language === 'en'
+          ? 'Stable Volume: On'
+          : 'Usawazishaji wa Sauti: Umewashwa'
+        : language === 'en'
+          ? 'Stable Volume: Off'
+          : 'Usawazishaji wa Sauti: Umezimwa'
+    );
+  };
+
+  const handleToggleVoiceBoost = () => {
+    const next = !voiceBoost;
+    setVoiceBoost(next);
+    try {
+      localStorage.setItem('tazama_voice_boost', next ? '1' : '0');
+    } catch {}
+    triggerToast(
+      next
+        ? language === 'en'
+          ? 'Voice boost: On'
+          : 'Voice boost: Imewashwa'
+        : language === 'en'
+          ? 'Voice boost: Off'
+          : 'Voice boost: Imezimwa'
+    );
   };
 
   const handleNativeCastPrompt = async () => {
@@ -759,8 +1094,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
           <video
             ref={videoRef}
-            src={isAdPlaying && activeAd ? activeAd.mediaUrl : (parsedSource.sourceType === 'direct' ? (parsedSource.streamUrl || video.videoUrl) : '')}
+            src={rawDirectStreamUrl}
+            crossOrigin={shouldUseCors ? 'anonymous' : undefined}
             poster={isAdPlaying && activeAd ? undefined : video.thumbnailUrl}
+            preload={
+              isDataSaver || selectedQuality === '240p' || selectedQuality === '144p'
+                ? 'metadata'
+                : 'auto'
+            }
             onTimeUpdate={handleTimeUpdate}
             onLoadedMetadata={handleLoadedMetadata}
             onPlay={handleVideoPlay}
@@ -769,6 +1110,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             onSeeked={handleVideoSeeked}
             onEnded={handleVideoEnded}
             onError={(e) => {
+              if (shouldUseCors && !corsFallback) {
+                setCorsFallback(true);
+                setVideoError(false);
+                return;
+              }
               console.warn('Video element source error:', e);
               setVideoError(true);
               setIsPlaying(false);
@@ -924,19 +1270,56 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             showControls || !isPlaying ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
         >
-          {/* Top Left: Down Chevron (Minimize / Rudi) */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onMinimize) onMinimize();
-              else if (window.history.length > 1) window.history.back();
-            }}
-            className="p-1.5 sm:p-2 rounded-full bg-black/60 hover:bg-black/90 backdrop-blur-md text-white border border-white/20 transition-all active:scale-90 cursor-pointer shadow-lg"
-            title="Punguza Video / Rudi (Minimize)"
-          >
-            <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
+          {/* Top Left: Down Chevron (Minimize / Rudi) + Data Saver indicator */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onMinimize) onMinimize();
+                else if (window.history.length > 1) window.history.back();
+              }}
+              className="p-1.5 sm:p-2 rounded-full bg-black/60 hover:bg-black/90 backdrop-blur-md text-white border border-white/20 transition-all active:scale-90 cursor-pointer shadow-lg"
+              title="Punguza Video / Rudi (Minimize)"
+            >
+              <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+            {isDataSaver && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleDataSaver();
+                }}
+                className="px-2.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[10px] font-bold backdrop-blur-md cursor-pointer"
+                title="Hali ya Kubana Bando Imewashwa"
+              >
+                360p · Bana Bando
+              </button>
+            )}
+            {sleepTimerMode !== 'off' && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowSettingsMenu(true);
+                }}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/70 border border-white/25 text-white text-[10px] font-bold backdrop-blur-md cursor-pointer tabular-nums"
+                title={language === 'en' ? 'Active sleep timer' : 'Kipima muda kinachofanya kazi'}
+              >
+                <Moon className="w-3 h-3 text-[#FF3040]" />
+                <span>
+                  {sleepTimerMode === 'end_of_video'
+                    ? language === 'en'
+                      ? 'End'
+                      : 'Mwisho'
+                    : typeof sleepRemainingSeconds === 'number'
+                      ? formatCountdownClock(sleepRemainingSeconds)
+                      : `${sleepTimerMode}m`}
+                </span>
+              </button>
+            )}
+          </div>
 
           {/* Top Right Controls: Autoplay pill, Cast, CC, Settings */}
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -993,11 +1376,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   triggerToast('Tumia alama ya CC ndani ya kicheza video chini kulia');
                   return;
                 }
-                setShowCaptions(prev => {
-                  const next = !prev;
-                  triggerToast(next ? `Manukuu (CC): ${captionLang === 'sw' ? 'Kiswahili' : 'English'}` : 'Manukuu yamezimwa');
-                  return next;
-                });
+                if (showCaptions) {
+                  handleSelectSubtitleMode('off');
+                } else {
+                  handleSelectSubtitleMode(language === 'en' ? 'en' : 'sw');
+                }
               }}
               className={`px-2 py-1 rounded-lg border text-xs font-black transition-all active:scale-90 cursor-pointer shadow-lg ${
                 showCaptions 
@@ -1073,24 +1456,20 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       )}
 
-      {/* Captions Overlay (Synchronized Kiswahili / English captions) */}
-      {showCaptions && !isAdPlaying && !isEmbedVideo && (
-        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 bg-black/85 backdrop-blur-md text-amber-300 font-semibold px-4 py-2 rounded-xl text-xs sm:text-sm text-center pointer-events-none max-w-[90%] shadow-2xl border border-amber-500/30 transition-all duration-300 z-20">
-          <span className="text-[10px] text-white/70 block uppercase font-mono tracking-wider mb-0.5">
-            CC &bull; {captionLang === 'sw' ? 'Kiswahili' : 'English'}
-          </span>
-          {currentTime < 4
-            ? (captionLang === 'sw' ? 'Habari za leo! Karibu kwenye Tazama Tanzania.' : 'Hello! Welcome to Tazama Tanzania.')
-            : currentTime < 9
-            ? (captionLang === 'sw' ? 'Tazama video na filamu bora zaidi za waumbaji wetu.' : 'Watch the best video and film creations from our talent.')
-            : currentTime < 15
-            ? (captionLang === 'sw' ? 'Gonga Like, Fuatilia chaneli, na acha maoni yako hapa chini.' : 'Hit Like, Subscribe to the channel, and leave your thoughts.')
-            : currentTime < 22
-            ? (captionLang === 'sw' ? 'Tuma Zawadi (Gifts) kusaidia sanaa na kazi ya muumbaji.' : 'Send Gifts to directly support the artist and their work.')
-            : (captionLang === 'sw' ? 'Asante sana kwa kutazama kupitia Tazama!' : 'Thank you for watching on Tazama!')
-          }
-        </div>
-      )}
+      {/* Captions Overlay (Styled dynamically by Caption Options & Auto-translate language) */}
+      {showCaptions && !isAdPlaying && !isEmbedVideo && (() => {
+        const { windowStyle, textStyle } = buildCaptionStyles(captionOptions);
+        return (
+          <div
+            style={windowStyle}
+            className="absolute bottom-16 left-1/2 -translate-x-1/2 text-center pointer-events-none max-w-[90%] transition-all duration-200 z-20"
+          >
+            <div style={textStyle}>
+              {getCaptionCueForTime(currentTime, activeCaptionLang)}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Subtle Bottom Progress Line when HUD Controls Auto-Hide */}
       {!isAdPlaying && !isEmbedVideo && !videoError && !showControls && isPlaying && (
@@ -1154,14 +1533,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                     hoverVideoLoaded && !hoverVideoError && !isEmbedVideo ? 'opacity-0' : 'opacity-100'
                   }`}
                 />
-                {!isEmbedVideo && !hoverVideoError && (
+                {!isEmbedVideo && !hoverVideoError && !isDataSaver && (
                   <video
                     ref={hoverVideoRef}
                     src={parsedSource.streamUrl || video.videoUrl}
                     muted
                     playsInline
                     loop
-                    preload="auto"
+                    preload="metadata"
                     onLoadedData={() => setHoverVideoLoaded(true)}
                     onError={() => setHoverVideoError(true)}
                     className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${
@@ -1267,205 +1646,45 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       </div>
       )}
 
-      {/* Viewport-Safe Video Settings Sheet (Never clipped on mobile; works for both direct and embed videos) */}
+      {/* Viewport-Safe Drill-Down Video Settings Sheet */}
       {showSettingsMenu && (
-        <div
-          onClick={() => setShowSettingsMenu(false)}
-          className="fixed inset-0 z-[100000] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="w-full sm:max-w-sm bg-white dark:bg-[#191E29] border-t sm:border border-slate-200 dark:border-[#262E3E] rounded-t-3xl sm:rounded-3xl shadow-2xl p-4 sm:p-5 max-h-[85dvh] overflow-y-auto text-left space-y-4 animate-in slide-in-from-bottom sm:zoom-in-95 duration-200"
-          >
-            <div className="flex items-center justify-between pb-2.5 border-b border-slate-200 dark:border-[#262E3E]">
-              <span className="text-sm font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <Settings className="w-4 h-4 text-[#FF3040]" />
-                Mipangilio ya Video
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowSettingsMenu(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-600 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-sm cursor-pointer"
-                aria-label="Funga"
-              >
-                ✕
-              </button>
-            </div>
-
-            {isEmbedVideo && (
-              <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed">
-                Video hii inachezwa kutoka kwa mtoa huduma wa nje; kwa ubora na manukuu tumia pia ikoni ya gia ndani ya kicheza video chini kulia.
-              </div>
-            )}
-
-            {/* Quality Selection */}
-            {!isEmbedVideo && (
-              <div>
-                <label className="text-[11px] font-bold text-slate-500 dark:text-[#A7B0C0] uppercase tracking-wider block mb-2">
-                  Ubora wa Picha (Quality)
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {['Auto (1080p)', '1080p HD', '720p', '480p', '360p'].map((q) => (
-                    <button
-                      key={q}
-                      type="button"
-                      onClick={() => {
-                        setSelectedQuality(q);
-                        if (q === '360p' && !isDataSaver) toggleDataSaver();
-                        else if (q !== '360p' && isDataSaver) toggleDataSaver();
-                        setShowSettingsMenu(false);
-                        triggerToast(`Ubora: ${q}`);
-                      }}
-                      className={`px-2.5 py-2 rounded-xl text-xs font-semibold text-center transition-colors cursor-pointer ${
-                        selectedQuality === q 
-                          ? 'bg-[#FF3040] text-white font-bold shadow-md shadow-[#FF3040]/25' 
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#10131B] dark:text-[#A7B0C0] dark:hover:text-white dark:hover:bg-[#232A39]'
-                      }`}
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Speed Selection */}
-            {!isEmbedVideo && (
-              <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]/70">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-[#A7B0C0] uppercase tracking-wider block mb-2">
-                  Kasi ya Video (Playback Speed)
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {[0.5, 0.75, 1, 1.25, 1.5, 2].map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => {
-                        changeSpeed(s);
-                        setShowSettingsMenu(false);
-                        triggerToast(`Kasi: ${s}x`);
-                      }}
-                      className={`px-2 py-2 rounded-xl text-center text-xs font-mono font-bold cursor-pointer transition-colors ${
-                        playbackSpeed === s
-                          ? 'bg-[#FF3040] text-white shadow-md shadow-[#FF3040]/25'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#10131B] dark:text-[#A7B0C0] dark:hover:text-white'
-                      }`}
-                    >
-                      {s === 1 ? '1x (Kawaida)' : `${s}x`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Captions Language */}
-            {!isEmbedVideo && (
-              <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]/70">
-                <label className="text-[11px] font-bold text-slate-500 dark:text-[#A7B0C0] uppercase tracking-wider block mb-2">
-                  Manukuu (Subtitles / CC)
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCaptions(false);
-                      setShowSettingsMenu(false);
-                      triggerToast('Manukuu yamezimwa');
-                    }}
-                    className={`px-2 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
-                      !showCaptions
-                        ? 'bg-slate-900 text-white dark:bg-white dark:text-black'
-                        : 'bg-slate-100 text-slate-700 dark:bg-[#10131B] dark:text-[#A7B0C0]'
-                    }`}
-                  >
-                    Zima
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCaptionLang('sw');
-                      setShowCaptions(true);
-                      setShowSettingsMenu(false);
-                      triggerToast('Manukuu: Kiswahili');
-                    }}
-                    className={`px-2 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
-                      showCaptions && captionLang === 'sw'
-                        ? 'bg-[#FF3040] text-white'
-                        : 'bg-slate-100 text-slate-700 dark:bg-[#10131B] dark:text-[#A7B0C0]'
-                    }`}
-                  >
-                    Kiswahili
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCaptionLang('en');
-                      setShowCaptions(true);
-                      setShowSettingsMenu(false);
-                      triggerToast('Captions: English');
-                    }}
-                    className={`px-2 py-2 rounded-xl text-xs font-bold cursor-pointer transition-colors ${
-                      showCaptions && captionLang === 'en'
-                        ? 'bg-[#FF3040] text-white'
-                        : 'bg-slate-100 text-slate-700 dark:bg-[#10131B] dark:text-[#A7B0C0]'
-                    }`}
-                  >
-                    English
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Data Saver Toggle (Synced globally with VideoContext) */}
-            <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]/70 flex items-center justify-between gap-3">
-              <div>
-                <span className="text-xs font-bold text-slate-900 dark:text-white block">Bana Bando (Data Saver)</span>
-                <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">360p kuokoa MBs kote kwenye app</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const willEnable = !isDataSaver;
-                  toggleDataSaver();
-                  setSelectedQuality(willEnable ? '360p' : 'Auto (1080p)');
-                  triggerToast(willEnable ? 'Bana Bando: Imewashwa' : 'Bana Bando: Imezimwa');
-                }}
-                className={`w-11 h-6 rounded-full p-0.5 transition-colors shrink-0 cursor-pointer ${
-                  isDataSaver ? 'bg-[#16C784]' : 'bg-slate-300 dark:bg-[#262E3E]'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                  isDataSaver ? 'translate-x-5' : 'translate-x-0'
-                }`} />
-              </button>
-            </div>
-
-            {/* Autoplay Next Video Toggle */}
-            <div className="pt-2 border-t border-slate-200 dark:border-[#262E3E]/70 flex items-center justify-between gap-3">
-              <div>
-                <span className="text-xs font-bold text-slate-900 dark:text-white block">Cheza Video Inayofuata</span>
-                <span className="text-[11px] text-slate-500 dark:text-[#A7B0C0]">Autoplay video ikiisha</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setAutoplayNext(prev => {
-                    const next = !prev;
-                    triggerToast(next ? 'Autoplay imewashwa' : 'Autoplay imezimwa');
-                    return next;
-                  });
-                }}
-                className={`w-11 h-6 rounded-full p-0.5 transition-colors shrink-0 cursor-pointer ${
-                  autoplayNext ? 'bg-[#FF3040]' : 'bg-slate-300 dark:bg-[#262E3E]'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                  autoplayNext ? 'translate-x-5' : 'translate-x-0'
-                }`} />
-              </button>
-            </div>
-          </div>
-        </div>
+        <VideoSettingsSheet
+          language={language}
+          isEmbedVideo={isEmbedVideo}
+          isDataSaver={isDataSaver}
+          autoplayNext={autoplayNext}
+          stableVolume={stableVolume}
+          voiceBoost={voiceBoost}
+          selectedQuality={selectedQuality}
+          playbackSpeed={playbackSpeed}
+          subtitleMode={subtitleMode}
+          autoTranslateLang={autoTranslateLang}
+          captionOptions={captionOptions}
+          sleepTimerMode={sleepTimerMode}
+          sleepRemainingSeconds={sleepRemainingSeconds}
+          remainingVideoSeconds={Math.max(1, (duration || video.durationSeconds || 60) - currentTime)}
+          onClose={() => setShowSettingsMenu(false)}
+          onToggleDataSaver={() => {
+            const willEnable = !isDataSaver;
+            toggleDataSaver();
+            setSelectedQuality(willEnable ? '360p' : 'Auto');
+            triggerToast(willEnable ? 'Bana Bando: Imewashwa' : 'Bana Bando: Imezimwa');
+          }}
+          onToggleAutoplay={() => {
+            setAutoplayNext((prev) => {
+              const next = !prev;
+              triggerToast(next ? 'Autoplay imewashwa' : 'Autoplay imezimwa');
+              return next;
+            });
+          }}
+          onToggleStableVolume={handleToggleStableVolume}
+          onToggleVoiceBoost={handleToggleVoiceBoost}
+          onSelectQuality={handleSelectQuality}
+          onChangeSpeed={changeSpeed}
+          onSelectSubtitleMode={handleSelectSubtitleMode}
+          onUpdateCaptionOptions={handleUpdateCaptionOptions}
+          onSelectSleepTimer={handleSelectSleepTimer}
+        />
       )}
 
       {/* Viewport-Safe Chapters / Scenes Bottom Sheet */}

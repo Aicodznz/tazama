@@ -1687,7 +1687,11 @@ export const WatchPage: React.FC<WatchPageProps> = ({
         onClose={() => setShowDownloadModal(false)}
         video={video}
         onGoToLibrary={() => {
-          if (onMinimize) onMinimize();
+          window.dispatchEvent(
+            new CustomEvent('tazama_navigate', {
+              detail: { page: 'library', libraryTab: 'offline' }
+            })
+          );
         }}
       />
 

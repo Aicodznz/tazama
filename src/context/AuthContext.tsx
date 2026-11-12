@@ -58,7 +58,13 @@ interface AuthContextType {
   deductBalance: (amountTZS: number) => boolean;
   upgradeToCreator: (channelData?: Partial<Channel>) => Promise<Channel | null>;
   updateUserChannel: (channelData: Partial<Channel>) => void;
-  updateUserProfile: (updates: { displayName?: string; photoURL?: string; preferredLanguage?: Language }) => Promise<boolean>;
+  updateUserProfile: (updates: {
+    displayName?: string;
+    photoURL?: string;
+    preferredLanguage?: Language;
+    premiumPlanId?: string;
+    creatorPlanId?: string;
+  }) => Promise<boolean>;
   updateNotificationPreferences: (prefs: Partial<NotificationPreferences>) => void;
 }
 
@@ -570,6 +576,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     displayName?: string;
     photoURL?: string;
     preferredLanguage?: Language;
+    premiumPlanId?: string;
+    creatorPlanId?: string;
   }): Promise<boolean> => {
     if (!profile) return false;
     const cleanName = updates.displayName !== undefined ? updates.displayName.trim() : profile.displayName;
@@ -580,12 +588,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ? (updates.photoURL.trim() || createAvatarSvgDataUri(cleanName))
       : profile.photoURL;
     const nextLang = updates.preferredLanguage || profile.preferredLanguage || language;
+    const nextPremiumPlanId = updates.premiumPlanId !== undefined ? updates.premiumPlanId : profile.premiumPlanId;
+    const nextCreatorPlanId = updates.creatorPlanId !== undefined ? updates.creatorPlanId : profile.creatorPlanId;
 
     const updatedProfile: UserProfile = {
       ...profile,
       displayName: cleanName,
       photoURL: nextPhoto,
       preferredLanguage: nextLang,
+      ...(nextPremiumPlanId !== undefined ? { premiumPlanId: nextPremiumPlanId } : {}),
+      ...(nextCreatorPlanId !== undefined ? { creatorPlanId: nextCreatorPlanId } : {}),
       updatedAt,
     };
 
@@ -598,14 +610,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const list: UserProfile[] = JSON.parse(existingRaw);
         const updatedList = list.map((u) =>
           u && (u.uid === profile.uid || u.email.toLowerCase() === profile.email.toLowerCase())
-            ? { ...u, displayName: cleanName, photoURL: nextPhoto, preferredLanguage: nextLang, updatedAt }
+            ? {
+                ...u,
+                displayName: cleanName,
+                photoURL: nextPhoto,
+                preferredLanguage: nextLang,
+                ...(nextPremiumPlanId !== undefined ? { premiumPlanId: nextPremiumPlanId } : {}),
+                ...(nextCreatorPlanId !== undefined ? { creatorPlanId: nextCreatorPlanId } : {}),
+                updatedAt,
+              }
             : u
         );
         safeStorageSet('tazama_registered_users', JSON.stringify(updatedList));
       }
     } catch {}
 
-    if (auth.currentUser) {
+    if (auth.currentUser && (updates.displayName !== undefined || updates.photoURL !== undefined)) {
       try {
         await updateProfile(auth.currentUser, {
           displayName: cleanName,
@@ -624,6 +644,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             displayName: cleanName,
             photoURL: nextPhoto || '',
             preferredLanguage: nextLang,
+            ...(nextPremiumPlanId !== undefined ? { premiumPlanId: nextPremiumPlanId } : {}),
+            ...(nextCreatorPlanId !== undefined ? { creatorPlanId: nextCreatorPlanId } : {}),
             updatedAt,
           },
           { merge: true }

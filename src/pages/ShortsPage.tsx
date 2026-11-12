@@ -52,7 +52,9 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({
     likedVideoIds,
     toggleLike,
     userSubscriptions,
-    toggleSubscribe
+    toggleSubscribe,
+    addToWatchHistory,
+    isDataSaver
   } = useVideo();
   const { language, profile } = useAuth();
 
@@ -101,13 +103,16 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({
   const safeIndex = filteredShorts.length > 0 ? Math.min(currentIndex, filteredShorts.length - 1) : 0;
   const currentShort = filteredShorts[safeIndex];
 
-  // Reset per-short UI state when active Short changes
+  // Reset per-short UI state when active Short changes & record in watch history
   useEffect(() => {
     setProgress(0);
     setIsCaptionExpanded(false);
     setShowMoreMenu(false);
     setShowCommentsSheet(false);
     setIsPlaying(true);
+    if (currentShort?.id) {
+      addToWatchHistory(currentShort);
+    }
   }, [currentShort?.id]);
 
   // Safe autoplay helper with instant muted fallback if browser blocks unmuted autoplay
@@ -519,6 +524,7 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({
                     : currentShort.videoUrl
                 }
                 poster={currentShort.thumbnailUrl}
+                preload={isDataSaver ? 'metadata' : 'auto'}
                 autoPlay
                 loop
                 muted={isMuted}

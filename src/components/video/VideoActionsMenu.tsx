@@ -209,16 +209,18 @@ export const VideoActionsMenu: React.FC<VideoActionsMenuProps> = ({
   const handleQuickLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsOpen(false);
-    toggleLike(video.id);
-    dispatchActionToast({
-      message: !isLiked
-        ? isEn
-          ? 'Added to liked videos'
-          : 'Imependezwa na kuhifadhiwa kwenye Zilizopendwa'
-        : isEn
-          ? 'Removed like'
-          : 'Like imeondolewa',
-    });
+    const ok = toggleLike(video.id);
+    if (ok) {
+      dispatchActionToast({
+        message: !isLiked
+          ? isEn
+            ? 'Added to liked videos'
+            : 'Imependezwa na kuhifadhiwa kwenye Zilizopendwa'
+          : isEn
+            ? 'Removed like'
+            : 'Like imeondolewa',
+      });
+    }
   };
 
   const handleOpenChannel = (e: React.MouseEvent) => {
@@ -809,6 +811,13 @@ export const VideoActionsMenu: React.FC<VideoActionsMenuProps> = ({
               isOpen={showDownloadModal}
               onClose={() => setShowDownloadModal(false)}
               video={video}
+              onGoToLibrary={() => {
+                window.dispatchEvent(
+                  new CustomEvent('tazama_navigate', {
+                    detail: { page: 'library', libraryTab: 'offline' }
+                  })
+                );
+              }}
             />
           </div>,
           document.body

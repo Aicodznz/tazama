@@ -318,10 +318,12 @@ export interface AuditLogEntry {
 
 export interface Playlist {
   id: string;
+  userId?: string;
   title: string;
   description?: string;
   coverUrl?: string;
   videoIds: string[];
+  isPublic?: boolean;
   createdAt: string;
 }
 
@@ -330,6 +332,7 @@ export interface OfflineDownload {
   video: VideoItem;
   downloadedAt: string;
   fileSizeBytes: number;
+  quality?: '720p' | '480p' | '360p';
 }
 
 export interface LiveChatMessage {

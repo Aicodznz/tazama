@@ -36,6 +36,7 @@ const AppContent: React.FC = () => {
   const { setSelectedCategory, videos, shorts, liveStreams, setActiveLiveStream } = useVideo();
 
   const [activePage, setActivePage] = useState<string>('home');
+  const [libraryTabOverride, setLibraryTabOverride] = useState<'all' | 'offline' | 'playlists' | 'history' | 'liked' | 'subscriptions' | 'queue'>('all');
   const [navRequestSeq, setNavRequestSeq] = useState<number>(0);
   const [selectedVideo, setSelectedVideo] = useState<VideoItem | null>(null);
 
@@ -96,6 +97,27 @@ const AppContent: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
+    const handleCustomNavigate = (e: Event) => {
+      const detail = (e as CustomEvent<{ page?: string; libraryTab?: 'all' | 'offline' | 'playlists' | 'history' | 'liked' | 'subscriptions' | 'queue' }>).detail;
+      if (!detail || !detail.page) return;
+      if (detail.libraryTab) {
+        setLibraryTabOverride(detail.libraryTab);
+      } else if (detail.page === 'history') {
+        setLibraryTabOverride('history');
+      } else if (detail.page === 'liked') {
+        setLibraryTabOverride('liked');
+      } else {
+        setLibraryTabOverride('all');
+      }
+      setNavRequestSeq((n) => n + 1);
+      setActivePage(detail.page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('tazama_navigate', handleCustomNavigate);
+    return () => window.removeEventListener('tazama_navigate', handleCustomNavigate);
+  }, []);
+
+  React.useEffect(() => {
     if (deepLinkHandledRef.current || typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const sharedVideoId = params.get('v');
@@ -143,6 +165,13 @@ const AppContent: React.FC = () => {
 
   const handleNavigate = (page: string) => {
     setNavRequestSeq((n) => n + 1);
+    if (page === 'history') {
+      setLibraryTabOverride('history');
+    } else if (page === 'liked') {
+      setLibraryTabOverride('liked');
+    } else if (page === 'library') {
+      setLibraryTabOverride('all');
+    }
     if (page.startsWith('cat-')) {
       const categoryMap: Record<string, VideoCategory> = {
         'cat-music': 'Muziki',
@@ -392,7 +421,7 @@ const AppContent: React.FC = () => {
                   ? 'history'
                   : activePage === 'liked'
                     ? 'liked'
-                    : 'all'
+                    : libraryTabOverride
               }
               tabRequestKey={navRequestSeq}
               onSelectVideo={handleSelectVideo}

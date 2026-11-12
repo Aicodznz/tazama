@@ -58,7 +58,7 @@ import {
   INITIAL_NOTIFICATIONS
 } from '../data/mockData';
 import { useAuth } from './AuthContext';
-import { db, doc, setDoc, deleteDoc, collection, onSnapshot, getDocs, query, where } from '../lib/firebase';
+import { auth, db, doc, setDoc, deleteDoc, collection, onSnapshot, getDocs, query, where } from '../lib/firebase';
 import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
 
 const SEED_VIDEO_MAP = new Map<string, VideoItem>(
@@ -119,8 +119,10 @@ interface VideoContextType {
   setSearchQuery: (query: string) => void;
   setSelectedCategory: (cat: string) => void;
   toggleSubscribe: (channelId: string) => void;
-  toggleLike: (videoId: string) => void;
+  toggleLike: (videoId: string) => boolean;
   recordView: (videoId: string) => void;
+  addToWatchHistory: (video: VideoItem) => void;
+  removeFromWatchHistory: (videoId: string) => void;
   clearWatchHistory: () => void;
   syncServerViews: (videoId: string, serverViewsCount: number, uniqueViewers?: number, watchTimeSeconds?: number) => void;
   commentVotes: Record<string, 'like' | 'dislike'>;
@@ -157,7 +159,7 @@ interface VideoContextType {
   closeMiniPlayer: () => void;
   // Offline Downloads
   offlineDownloads: OfflineDownload[];
-  downloadVideo: (video: VideoItem) => void;
+  downloadVideo: (video: VideoItem, options?: { quality?: '720p' | '480p' | '360p'; fileSizeBytes?: number }) => void;
   removeDownload: (videoId: string) => void;
   isDownloaded: (videoId: string) => boolean;
   // Data Saver
@@ -178,9 +180,10 @@ interface VideoContextType {
   unhideChannelRecommendations: (channelId: string) => void;
   // Playlists
   playlists: Playlist[];
-  createPlaylist: (title: string, description?: string) => string;
+  createPlaylist: (title: string, description?: string, initialVideoIds?: string[]) => string;
   addToPlaylist: (playlistId: string, videoId: string) => void;
   removeFromPlaylist: (playlistId: string, videoId: string) => void;
+  renamePlaylist: (playlistId: string, title: string, description?: string) => void;
   toggleWatchLater: (videoId: string) => boolean;
   isInWatchLater: (videoId: string) => boolean;
   deletePlaylist: (playlistId: string) => void;
@@ -264,7 +267,7 @@ interface VideoContextType {
 const VideoContext = createContext<VideoContextType | undefined>(undefined);
 
 export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { profile, deductBalance } = useAuth();
+  const { profile, deductBalance, updateUserProfile } = useAuth();
 
   // PRODUCTION STATE: Start with clean seed videos + dynamic user uploads
   const [videos, setVideos] = useState<VideoItem[]>(() => {
@@ -536,11 +539,72 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [userSubscriptions, setUserSubscriptions] = useState<string[]>(() => {
     try {
+      const savedUser = localStorage.getItem('tazama_session_profile');
+      const uid = savedUser ? JSON.parse(savedUser)?.uid : null;
+      if (uid) {
+        const userSaved = localStorage.getItem(`tazama_subscriptions_${uid}`);
+        if (userSaved) {
+          const parsed = JSON.parse(userSaved);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      }
       const saved = localStorage.getItem('tazama_subscriptions');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
     } catch {}
     return [];
   });
+
+  // Hydrate and sync user subscriptions per user + Firestore when Firebase Auth session matches
+  useEffect(() => {
+    if (!profile?.uid) return;
+    const userUid = profile.uid;
+
+    try {
+      const userSaved = localStorage.getItem(`tazama_subscriptions_${userUid}`);
+      const fallbackSaved = localStorage.getItem('tazama_subscriptions');
+      const userList = userSaved ? JSON.parse(userSaved) : [];
+      const fallbackList = fallbackSaved ? JSON.parse(fallbackSaved) : [];
+      const merged = Array.from(new Set([
+        ...(Array.isArray(userList) ? userList : []),
+        ...(Array.isArray(fallbackList) ? fallbackList : []),
+      ]));
+      if (merged.length > 0) {
+        setUserSubscriptions(merged);
+        localStorage.setItem(`tazama_subscriptions_${userUid}`, JSON.stringify(merged));
+      }
+    } catch {}
+
+    let unsubscribeSubs: (() => void) | undefined;
+    if (auth.currentUser && auth.currentUser.uid === userUid) {
+      try {
+        const subQuery = query(collection(db, 'subscriptions'), where('subscriberId', '==', userUid));
+        unsubscribeSubs = onSnapshot(subQuery, (snapshot) => {
+          const remoteIds: string[] = [];
+          snapshot.forEach((docSnap) => {
+            const sData = docSnap.data();
+            if (sData && sData.channelId) remoteIds.push(sData.channelId);
+          });
+          if (remoteIds.length > 0) {
+            setUserSubscriptions((prev) => {
+              const merged = Array.from(new Set([...prev, ...remoteIds]));
+              try {
+                localStorage.setItem(`tazama_subscriptions_${userUid}`, JSON.stringify(merged));
+                localStorage.setItem('tazama_subscriptions', JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
+          }
+        }, () => {});
+      } catch {}
+    }
+
+    return () => {
+      if (unsubscribeSubs) unsubscribeSubs();
+    };
+  }, [profile?.uid]);
 
   const [likedVideoIds, setLikedVideoIds] = useState<string[]>(() => {
     try {
@@ -574,16 +638,19 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
     } catch {}
 
-    // 2. Fetch authoritative likes from Server API (ensuring cross-device recognition)
+    // 2. Fetch authoritative likes from Server API (merge safely so server restarts don't wipe user likes)
     fetch(`/api/users/${encodeURIComponent(userUid)}/likes`)
       .then(res => res.json())
       .then(data => {
-        if (data && data.success && Array.isArray(data.likedVideoIds)) {
-          setLikedVideoIds(data.likedVideoIds);
-          try {
-            localStorage.setItem(`tazama_liked_videos_${userUid}`, JSON.stringify(data.likedVideoIds));
-            localStorage.setItem('tazama_liked_videos', JSON.stringify(data.likedVideoIds));
-          } catch {}
+        if (data && data.success && Array.isArray(data.likedVideoIds) && data.likedVideoIds.length > 0) {
+          setLikedVideoIds(prev => {
+            const merged = Array.from(new Set([...prev, ...data.likedVideoIds]));
+            try {
+              localStorage.setItem(`tazama_liked_videos_${userUid}`, JSON.stringify(merged));
+              localStorage.setItem('tazama_liked_videos', JSON.stringify(merged));
+            } catch {}
+            return merged;
+          });
         }
       })
       .catch(() => {});
@@ -623,6 +690,15 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [watchHistory, setWatchHistory] = useState<VideoItem[]>(() => {
     try {
+      const savedUser = localStorage.getItem('tazama_session_profile');
+      const uid = savedUser ? JSON.parse(savedUser)?.uid : null;
+      if (uid) {
+        const userSaved = localStorage.getItem(`tazama_watch_history_${uid}`);
+        if (userSaved) {
+          const parsed = JSON.parse(userSaved);
+          if (Array.isArray(parsed)) return parsed.filter((item: any) => Boolean(item && item.id));
+        }
+      }
       const saved = localStorage.getItem('tazama_watch_history');
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -631,6 +707,20 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {}
     return [];
   });
+
+  useEffect(() => {
+    if (!profile?.uid) return;
+    const uid = profile.uid;
+    try {
+      const userSaved = localStorage.getItem(`tazama_watch_history_${uid}`);
+      if (userSaved) {
+        const parsed = JSON.parse(userSaved);
+        if (Array.isArray(parsed)) {
+          setWatchHistory(parsed.filter((item: any) => Boolean(item && item.id)));
+        }
+      }
+    } catch {}
+  }, [profile?.uid]);
 
   const [comments, setComments] = useState<Record<string, CommentItem[]>>(() => {
     try {
@@ -707,9 +797,18 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setMiniPlayerVideo(null);
   };
 
-  // Offline Downloads State (Persisted locally)
+  // Offline Downloads State (Persisted locally per user & device)
   const [offlineDownloads, setOfflineDownloads] = useState<OfflineDownload[]>(() => {
     try {
+      const savedUser = localStorage.getItem('tazama_session_profile');
+      const uid = savedUser ? JSON.parse(savedUser)?.uid : null;
+      if (uid) {
+        const userSaved = localStorage.getItem(`tazama_offline_downloads_${uid}`);
+        if (userSaved) {
+          const parsed = JSON.parse(userSaved);
+          if (Array.isArray(parsed)) return parsed.filter((d: any) => Boolean(d && d.videoId && d.video));
+        }
+      }
       const saved = localStorage.getItem('tazama_offline_downloads');
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -719,40 +818,93 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return [];
   });
 
-  const downloadVideo = (video: VideoItem) => {
+  const downloadVideo = (
+    video: VideoItem,
+    options?: { quality?: '720p' | '480p' | '360p'; fileSizeBytes?: number }
+  ) => {
+    if (!video || !video.id) return;
+    const quality = options?.quality || '720p';
+    const defaultSize =
+      quality === '360p'
+        ? Math.round(9.8 * 1024 * 1024)
+        : quality === '480p'
+          ? Math.round(18.2 * 1024 * 1024)
+          : Math.round(34.5 * 1024 * 1024);
+    const fileSizeBytes = options?.fileSizeBytes && options.fileSizeBytes > 0 ? options.fileSizeBytes : defaultSize;
+
     setOfflineDownloads(prev => {
-      if (prev.some(d => d.videoId === video.id)) return prev;
-      const next = [
-        {
-          videoId: video.id,
-          video,
-          downloadedAt: new Date().toISOString(),
-          fileSizeBytes: Math.floor(Math.random() * 35000000) + 18000000
-        },
-        ...prev
-      ];
-      try { localStorage.setItem('tazama_offline_downloads', JSON.stringify(next)); } catch {}
+      const existing = prev.find(d => d.videoId === video.id);
+      const entry: OfflineDownload = {
+        videoId: video.id,
+        video,
+        downloadedAt: new Date().toISOString(),
+        fileSizeBytes: options?.fileSizeBytes || existing?.fileSizeBytes || fileSizeBytes,
+        quality
+      };
+      const next = [entry, ...prev.filter(d => d.videoId !== video.id)];
+      try {
+        localStorage.setItem('tazama_offline_downloads', JSON.stringify(next));
+        if (profile?.uid) {
+          localStorage.setItem(`tazama_offline_downloads_${profile.uid}`, JSON.stringify(next));
+        }
+      } catch {}
       return next;
     });
   };
 
   const removeDownload = (videoId: string) => {
     setOfflineDownloads(prev => {
+      const removed = prev.find(d => d.videoId === videoId);
+      if (removed?.video?.videoUrl && typeof window !== 'undefined' && 'caches' in window) {
+        caches.open('tazama-offline-videos-v1').then(c => c.delete(removed.video.videoUrl)).catch(() => {});
+      }
       const next = prev.filter(d => d.videoId !== videoId);
-      try { localStorage.setItem('tazama_offline_downloads', JSON.stringify(next)); } catch {}
+      try {
+        localStorage.setItem('tazama_offline_downloads', JSON.stringify(next));
+        if (profile?.uid) {
+          localStorage.setItem(`tazama_offline_downloads_${profile.uid}`, JSON.stringify(next));
+        }
+      } catch {}
       return next;
     });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tazama_action_toast', {
+        detail: { message: 'Video imeondolewa kwenye Nje ya Mtandao.' }
+      }));
+    }
   };
 
   const isDownloaded = (videoId: string) => {
     return offlineDownloads.some(d => d.videoId === videoId);
   };
 
-  // Data Saver Mode State
-  const [isDataSaver, setIsDataSaver] = useState<boolean>(false);
+  // Data Saver Mode State (Persisted to localStorage)
+  const [isDataSaver, setIsDataSaver] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('tazama_data_saver') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   const toggleDataSaver = () => {
-    setIsDataSaver(prev => !prev);
+    setIsDataSaver(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('tazama_data_saver', String(next));
+      } catch {}
+      if (typeof window !== 'undefined') {
+        const isEn = (profile?.preferredLanguage || 'sw') === 'en';
+        window.dispatchEvent(new CustomEvent('tazama_action_toast', {
+          detail: {
+            message: next
+              ? (isEn ? 'Data Saver enabled (360p) · Saves mobile MBs' : 'Kubana Bando Imewashwa (360p) · Inaokoa MBs zako')
+              : (isEn ? 'Data Saver turned off (HD quality)' : 'Kubana Bando Imezimwa (HD) · Ubora wa juu')
+          }
+        }));
+      }
+      return next;
+    });
   };
 
   // Playback Queue State (Persisted locally)
@@ -853,9 +1005,42 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   };
 
-  // Playlists State (Persisted locally, ensures Watch Later works automatically)
+  const persistPlaylists = (list: Playlist[]) => {
+    try {
+      localStorage.setItem('tazama_playlists', JSON.stringify(list));
+      if (profile?.uid) {
+        localStorage.setItem(`tazama_playlists_${profile.uid}`, JSON.stringify(list));
+      }
+    } catch {}
+  };
+
+  const syncPlaylistToFirestore = (pl: Playlist) => {
+    if (!profile?.uid || !auth.currentUser || auth.currentUser.uid !== profile.uid) return;
+    try {
+      setDoc(doc(db, 'playlists', pl.id), {
+        id: pl.id,
+        userId: profile.uid,
+        title: pl.title,
+        description: pl.description || '',
+        videoIds: pl.videoIds,
+        isPublic: pl.isPublic ?? false,
+        createdAt: pl.createdAt
+      }, { merge: true }).catch(() => {});
+    } catch {}
+  };
+
+  // Playlists State (Persisted locally per user + Firestore synced when Firebase Auth is active)
   const [playlists, setPlaylists] = useState<Playlist[]>(() => {
     try {
+      const savedUser = localStorage.getItem('tazama_session_profile');
+      const uid = savedUser ? JSON.parse(savedUser)?.uid : null;
+      if (uid) {
+        const userSaved = localStorage.getItem(`tazama_playlists_${uid}`);
+        if (userSaved) {
+          const parsed = JSON.parse(userSaved);
+          if (Array.isArray(parsed)) return parsed.filter((p: any) => Boolean(p && p.id && p.title));
+        }
+      }
       const saved = localStorage.getItem('tazama_playlists');
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -865,46 +1050,137 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return INITIAL_PLAYLISTS;
   });
 
-  const createPlaylist = (title: string, description?: string): string => {
+  useEffect(() => {
+    if (!profile?.uid) return;
+    const uid = profile.uid;
+    try {
+      const userSaved = localStorage.getItem(`tazama_playlists_${uid}`);
+      if (userSaved) {
+        const parsed = JSON.parse(userSaved);
+        if (Array.isArray(parsed)) {
+          setPlaylists(parsed.filter((p: any) => Boolean(p && p.id && p.title)));
+        }
+      }
+    } catch {}
+
+    let unsubscribePls: (() => void) | undefined;
+    if (auth.currentUser && auth.currentUser.uid === uid) {
+      try {
+        const plQ = query(collection(db, 'playlists'), where('userId', '==', uid));
+        unsubscribePls = onSnapshot(plQ, (snap) => {
+          const remote: Playlist[] = [];
+          snap.forEach((d) => {
+            const pData = d.data() as any;
+            if (pData && pData.id && pData.title) {
+              remote.push({
+                id: pData.id,
+                userId: pData.userId,
+                title: pData.title,
+                description: pData.description || '',
+                coverUrl: pData.coverUrl || '',
+                videoIds: Array.isArray(pData.videoIds) ? pData.videoIds : [],
+                isPublic: Boolean(pData.isPublic),
+                createdAt: pData.createdAt || new Date().toISOString()
+              });
+            }
+          });
+          if (remote.length > 0) {
+            setPlaylists(prev => {
+              const map = new Map<string, Playlist>();
+              prev.forEach(p => map.set(p.id, p));
+              remote.forEach(p => map.set(p.id, p));
+              const merged = Array.from(map.values());
+              try {
+                localStorage.setItem(`tazama_playlists_${uid}`, JSON.stringify(merged));
+                localStorage.setItem('tazama_playlists', JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
+          }
+        }, () => {});
+      } catch {}
+    }
+
+    return () => {
+      if (unsubscribePls) unsubscribePls();
+    };
+  }, [profile?.uid]);
+
+  const createPlaylist = (title: string, description?: string, initialVideoIds: string[] = []): string => {
     const newId = `pl-${Date.now()}`;
     const newPlaylist: Playlist = {
       id: newId,
-      title,
-      description,
+      userId: profile?.uid,
+      title: title.trim() || 'Orodha Mpya',
+      description: description?.trim() || '',
       coverUrl: '',
-      videoIds: [],
+      videoIds: Array.from(new Set(initialVideoIds.filter(Boolean))),
+      isPublic: false,
       createdAt: new Date().toISOString()
     };
     setPlaylists(prev => {
       const next = [newPlaylist, ...prev];
-      try { localStorage.setItem('tazama_playlists', JSON.stringify(next)); } catch {}
+      persistPlaylists(next);
       return next;
     });
+    syncPlaylistToFirestore(newPlaylist);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tazama_action_toast', {
+        detail: { message: `Orodha "${newPlaylist.title}" imeundwa.` }
+      }));
+    }
     return newId;
   };
 
   const addToPlaylist = (playlistId: string, videoId: string) => {
     setPlaylists(prev => {
+      let updatedTarget: Playlist | null = null;
       const next = prev.map(p => {
         if (p.id === playlistId && !p.videoIds.includes(videoId)) {
-          return { ...p, videoIds: [...p.videoIds, videoId] };
+          updatedTarget = { ...p, videoIds: [...p.videoIds, videoId] };
+          return updatedTarget;
         }
         return p;
       });
-      try { localStorage.setItem('tazama_playlists', JSON.stringify(next)); } catch {}
+      persistPlaylists(next);
+      if (updatedTarget) syncPlaylistToFirestore(updatedTarget);
       return next;
     });
   };
 
   const removeFromPlaylist = (playlistId: string, videoId: string) => {
     setPlaylists(prev => {
+      let updatedTarget: Playlist | null = null;
       const next = prev.map(p => {
         if (p.id === playlistId) {
-          return { ...p, videoIds: p.videoIds.filter(id => id !== videoId) };
+          updatedTarget = { ...p, videoIds: p.videoIds.filter(id => id !== videoId) };
+          return updatedTarget;
         }
         return p;
       });
-      try { localStorage.setItem('tazama_playlists', JSON.stringify(next)); } catch {}
+      persistPlaylists(next);
+      if (updatedTarget) syncPlaylistToFirestore(updatedTarget);
+      return next;
+    });
+  };
+
+  const renamePlaylist = (playlistId: string, title: string, description?: string) => {
+    if (!title.trim()) return;
+    setPlaylists(prev => {
+      let updatedTarget: Playlist | null = null;
+      const next = prev.map(p => {
+        if (p.id === playlistId) {
+          updatedTarget = {
+            ...p,
+            title: title.trim(),
+            description: description !== undefined ? description.trim() : p.description
+          };
+          return updatedTarget;
+        }
+        return p;
+      });
+      persistPlaylists(next);
+      if (updatedTarget) syncPlaylistToFirestore(updatedTarget);
       return next;
     });
   };
@@ -917,30 +1193,31 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setPlaylists(prev => {
       const target = prev.find(p => p.id === 'pl-watch-later');
       let next: Playlist[];
+      let updatedTarget: Playlist;
       if (!target) {
-        const watchLaterList: Playlist = {
+        updatedTarget = {
           id: 'pl-watch-later',
+          userId: profile?.uid,
           title: 'Tazama Baadaye',
           description: 'Video zilizohifadhiwa kutazama baadaye',
           coverUrl: '',
           videoIds: [videoId],
+          isPublic: false,
           createdAt: new Date().toISOString()
         };
-        next = [watchLaterList, ...prev];
+        next = [updatedTarget, ...prev];
       } else {
         const hasVideo = target.videoIds.includes(videoId);
-        next = prev.map(p =>
-          p.id === 'pl-watch-later'
-            ? {
-                ...p,
-                videoIds: hasVideo
-                  ? p.videoIds.filter(id => id !== videoId)
-                  : [...p.videoIds, videoId]
-              }
-            : p
-        );
+        updatedTarget = {
+          ...target,
+          videoIds: hasVideo
+            ? target.videoIds.filter(id => id !== videoId)
+            : [...target.videoIds, videoId]
+        };
+        next = prev.map(p => (p.id === 'pl-watch-later' ? updatedTarget : p));
       }
-      try { localStorage.setItem('tazama_playlists', JSON.stringify(next)); } catch {}
+      persistPlaylists(next);
+      syncPlaylistToFirestore(updatedTarget);
       return next;
     });
 
@@ -955,9 +1232,19 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deletePlaylist = (playlistId: string) => {
     setPlaylists(prev => {
       const next = prev.filter(p => p.id !== playlistId);
-      try { localStorage.setItem('tazama_playlists', JSON.stringify(next)); } catch {}
+      persistPlaylists(next);
       return next;
     });
+    if (profile?.uid && auth.currentUser && auth.currentUser.uid === profile.uid) {
+      try {
+        deleteDoc(doc(db, 'playlists', playlistId)).catch(() => {});
+      } catch {}
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tazama_action_toast', {
+        detail: { message: 'Orodha imefutwa.' }
+      }));
+    }
   };
 
   // Live Streams State
@@ -1637,10 +1924,44 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {}
   };
 
+  const addToWatchHistory = (video: VideoItem) => {
+    if (!video || !video.id) return;
+    setWatchHistory(prev => {
+      const next = [
+        video,
+        ...(Array.isArray(prev) ? prev.filter(item => Boolean(item && item.id && item.id !== video.id)) : [])
+      ].slice(0, 50);
+      try {
+        localStorage.setItem('tazama_watch_history', JSON.stringify(next));
+        if (profile?.uid) {
+          localStorage.setItem(`tazama_watch_history_${profile.uid}`, JSON.stringify(next));
+        }
+      } catch {}
+      return next;
+    });
+  };
+
+  const removeFromWatchHistory = (videoId: string) => {
+    if (!videoId) return;
+    setWatchHistory(prev => {
+      const next = (Array.isArray(prev) ? prev : []).filter(item => item && item.id !== videoId);
+      try {
+        localStorage.setItem('tazama_watch_history', JSON.stringify(next));
+        if (profile?.uid) {
+          localStorage.setItem(`tazama_watch_history_${profile.uid}`, JSON.stringify(next));
+        }
+      } catch {}
+      return next;
+    });
+  };
+
   const clearWatchHistory = () => {
     setWatchHistory([]);
     try {
       localStorage.removeItem('tazama_watch_history');
+      if (profile?.uid) {
+        localStorage.removeItem(`tazama_watch_history_${profile.uid}`);
+      }
     } catch {}
   };
 
@@ -1653,16 +1974,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     // 1. Add to local watch history (persisted locally)
     if (target) {
-      setWatchHistory(prev => {
-        const next = [
-          target,
-          ...(Array.isArray(prev) ? prev.filter(item => Boolean(item && item.id && item.id !== videoId)) : [])
-        ].slice(0, 50);
-        try {
-          localStorage.setItem('tazama_watch_history', JSON.stringify(next));
-        } catch {}
-        return next;
-      });
+      addToWatchHistory(target);
     }
 
     // 2. Read persistent device id
@@ -1699,10 +2011,20 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const toggleSubscribe = (channelId: string) => {
+    if (!channelId) return;
+    const isCurrentlySubbed = userSubscriptions.includes(channelId);
+    const chObj = channels.find(c => c.id === channelId);
+    const chName = chObj?.name || 'Kituo';
+
     setUserSubscriptions(prev => {
       const isSubbed = prev.includes(channelId);
       const updated = isSubbed ? prev.filter(id => id !== channelId) : [...prev, channelId];
-      try { localStorage.setItem('tazama_subscriptions', JSON.stringify(updated)); } catch {}
+      try {
+        localStorage.setItem('tazama_subscriptions', JSON.stringify(updated));
+        if (profile?.uid) {
+          localStorage.setItem(`tazama_subscriptions_${profile.uid}`, JSON.stringify(updated));
+        }
+      } catch {}
       
       // Update channel subscriber count
       setChannels(chList => chList.map(ch => {
@@ -1717,17 +2039,42 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       return updated;
     });
+
+    if (profile?.uid && auth.currentUser && auth.currentUser.uid === profile.uid) {
+      const subDocRef = doc(db, 'subscriptions', `${profile.uid}_${channelId}`);
+      if (isCurrentlySubbed) {
+        deleteDoc(subDocRef).catch(() => {});
+      } else {
+        setDoc(subDocRef, {
+          id: `${profile.uid}_${channelId}`,
+          subscriberId: profile.uid,
+          channelId,
+          channelName: chName,
+          createdAt: new Date().toISOString()
+        }, { merge: true }).catch(() => {});
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tazama_action_toast', {
+        detail: {
+          message: isCurrentlySubbed
+            ? `Umeacha kufuatilia "${chName}"`
+            : `Umeanza kufuatilia "${chName}" · Imehifadhiwa kwenye Usajili`
+        }
+      }));
+    }
   };
 
-  const toggleLike = (videoId: string) => {
-    if (!videoId) return;
+  const toggleLike = (videoId: string): boolean => {
+    if (!videoId) return false;
 
     // 1. MUST BE AUTHENTICATED: Guest users without account are NOT allowed to like
     if (!profile || !profile.uid) {
       window.dispatchEvent(new CustomEvent('tazama_show_auth_modal', {
         detail: { action: 'kupiga kura ya Like (Kupenda video)' }
       }));
-      return;
+      return false;
     }
 
     const userUid = profile.uid;
@@ -1821,6 +2168,8 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     .catch(err => {
       console.warn('Error syncing like to server:', err);
     });
+
+    return true;
   };
 
   const addComment = (videoId: string, text: string) => {
@@ -2385,6 +2734,14 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       return p;
     }));
 
+    if (profile) {
+      await updateUserProfile(
+        plan.target === 'viewer'
+          ? { premiumPlanId: plan.id }
+          : { creatorPlanId: plan.id }
+      );
+    }
+
     addAuditLog('PREMIUM_SUBSCRIPTION_ACTIVE', plan.name, `Mtumiaji amejiunga na kifurushi cha ${plan.name} kwa TZS ${plan.priceTZS.toLocaleString()}`);
     return true;
   };
@@ -2450,6 +2807,8 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toggleSubscribe,
         toggleLike,
         recordView,
+        addToWatchHistory,
+        removeFromWatchHistory,
         clearWatchHistory,
         syncServerViews,
         addComment,
@@ -2508,6 +2867,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         createPlaylist,
         addToPlaylist,
         removeFromPlaylist,
+        renamePlaylist,
         toggleWatchLater,
         isInWatchLater,
         deletePlaylist,

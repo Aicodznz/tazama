@@ -40,7 +40,8 @@ export const HomePage: React.FC<HomePageProps> = ({
     toggleSubscribe,
     adCampaigns,
     notInterestedIds,
-    hiddenChannelIds
+    hiddenChannelIds,
+    isDataSaver
   } = useVideo();
   
   const { language, profile, role } = useAuth();
@@ -215,7 +216,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 <React.Fragment key={video.id}>
                   <VideoCard
                     video={video}
-                    autoPlayPreview={idx === 0}
+                    autoPlayPreview={!isDataSaver && idx === 0}
                     onSelectVideo={onSelectVideo}
                     onSelectChannel={onSelectChannel}
                   />

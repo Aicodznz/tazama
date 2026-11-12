@@ -43,36 +43,48 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
 
   if (!isOpen) return null;
 
-  const qualityOptions = [
+  const qualityOptions: Array<{
+    id: '720p' | '480p' | '360p';
+    name: string;
+    size: string;
+    bytes: number;
+    desc: string;
+  }> = [
     {
       id: '720p',
       name: 'Ubora wa Juu (720p HD)',
       size: '34.5 MB',
+      bytes: 34.5 * 1024 * 1024,
       desc: 'Inafaa kwa skrini kubwa na picha angavu'
     },
     {
       id: '480p',
       name: 'Ubora wa Wastani (480p)',
       size: '18.2 MB',
+      bytes: 18.2 * 1024 * 1024,
       desc: 'Sawia kati ya ubora mzuri na MB chache'
     },
     {
       id: '360p',
       name: 'Kubana Bando (360p)',
       size: '9.8 MB',
+      bytes: 9.8 * 1024 * 1024,
       desc: 'Inaokoa bando na kupakua haraka sana'
     }
   ];
+
+  const selectedOpt = qualityOptions.find((q) => q.id === quality) || qualityOptions[0];
 
   const handleStartDownload = async () => {
     setDownloadState('downloading');
     setProgress(15);
     setDownloadError(null);
 
-    // Save into Tazama offline storage
-    downloadVideo(video);
+    downloadVideo(video, {
+      quality,
+      fileSizeBytes: Math.round(selectedOpt.bytes)
+    });
 
-    // Simulate realistic download progress
     const interval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 90) {
@@ -80,56 +92,73 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
           finishDownload();
           return 100;
         }
-        return prev + Math.floor(Math.random() * 15) + 10;
+        return prev + Math.floor(Math.random() * 15) + 12;
       });
-    }, 250);
+    }, 220);
   };
 
   const finishDownload = async () => {
-    // Save into Tazama offline storage
-    downloadVideo(video);
+    let savedBytes = Math.round(selectedOpt.bytes);
+    const urlToDownload = video.videoUrl;
 
-    // Trigger real browser file download for the user's phone / PC
-    try {
-      const cleanTitle = (video.title || 'tazama-video')
-        .replace(/[^a-zA-Z0-9_\u00C0-\u017F\s-]/g, '')
-        .trim()
-        .slice(0, 35)
-        .replace(/\s+/g, '_');
-      
-      const fileName = `Tazama_${cleanTitle}_${quality}.mp4`;
-      const urlToDownload = video.videoUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-
-      // Attempt blob download first for true offline save on phone storage
+    if (urlToDownload) {
       try {
-        const response = await fetch(urlToDownload, { mode: 'cors' });
-        if (response.ok) {
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
+        const cleanTitle = (video.title || 'tazama-video')
+          .replace(/[^a-zA-Z0-9_\u00C0-\u017F\s-]/g, '')
+          .trim()
+          .slice(0, 35)
+          .replace(/\s+/g, '_');
+
+        const fileName = `Tazama_${cleanTitle}_${quality}.mp4`;
+
+        try {
+          const response = await fetch(urlToDownload, { mode: 'cors' });
+          if (response.ok) {
+            const blob = await response.blob();
+            if (blob.size > 0) {
+              savedBytes = blob.size;
+            }
+            if (typeof window !== 'undefined' && 'caches' in window) {
+              try {
+                const cache = await caches.open('tazama-offline-videos-v1');
+                await cache.put(
+                  urlToDownload,
+                  new Response(blob, {
+                    headers: { 'Content-Type': blob.type || 'video/mp4' }
+                  })
+                );
+              } catch {}
+            }
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+          } else {
+            throw new Error('CORS fetch fallback');
+          }
+        } catch {
           const link = document.createElement('a');
-          link.href = blobUrl;
+          link.href = urlToDownload;
           link.download = fileName;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
-        } else {
-          throw new Error('CORS fetch fallback');
         }
-      } catch {
-        // Fallback to direct anchor download
-        const link = document.createElement('a');
-        link.href = urlToDownload;
-        link.download = fileName;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      } catch (err) {
+        console.warn('Direct file download fallback triggered', err);
       }
-    } catch (err) {
-      console.warn('Direct file download fallback triggered', err);
     }
+
+    downloadVideo(video, {
+      quality,
+      fileSizeBytes: savedBytes
+    });
 
     setDownloadState('completed');
   };
@@ -138,6 +167,19 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
     removeDownload(video.id);
     setDownloadState('idle');
     setProgress(0);
+  };
+
+  const handleOpenOfflineLibrary = () => {
+    onClose();
+    if (onGoToLibrary) {
+      onGoToLibrary();
+    } else if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('tazama_navigate', {
+          detail: { page: 'library', libraryTab: 'offline' }
+        })
+      );
+    }
   };
 
   return (
@@ -157,7 +199,7 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
           </div>
           <button 
             onClick={onClose}
-            className="p-1 rounded-full text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+            className="p-1 rounded-full text-slate-500 dark:text-[#A7B0C0] hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -193,7 +235,7 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
               <div className="flex items-center justify-between text-xs font-bold">
                 <span className="flex items-center gap-2 text-slate-900 dark:text-white">
                   <Loader2 className="w-4 h-4 animate-spin text-emerald-600 dark:text-[#16C784]" />
-                  Inapakua faili kwenye simu...
+                  Inapakua faili ({quality})...
                 </span>
                 <span className="font-mono text-emerald-700 dark:text-[#16C784]">{progress}%</span>
               </div>
@@ -207,7 +249,7 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
               </div>
 
               <p className="text-[11px] text-slate-600 dark:text-[#A7B0C0] text-center">
-                Tafadhali subiri kidogo, faili linatayarishwa na kuhifadhiwa kwenye kumbukumbu ya simu.
+                Tafadhali subiri kidogo, faili linahifadhiwa kwenye Maktaba ya Nje ya Mtandao na kifaa chako.
               </p>
             </div>
           )}
@@ -221,35 +263,33 @@ export const VideoDownloadModal: React.FC<VideoDownloadModalProps> = ({
               <div>
                 <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">Video Imepakuliwa Kikamilifu!</h4>
                 <p className="text-xs text-slate-600 dark:text-[#A7B0C0] mt-1">
-                  Imehifadhiwa kwenye folda ya <strong>Downloads</strong> ya simu yako na kwenye <strong>Maktaba ya Nje ya Mtandao</strong> ya Tazama.
+                  Imehifadhiwa kwenye <strong>Maktaba ya Nje ya Mtandao</strong> ya Tazama ({quality}) tayari kutazamwa bila intaneti.
                 </p>
               </div>
 
               <div className="flex flex-col gap-2 pt-2">
-                {onGoToLibrary && (
-                  <button
-                    onClick={() => {
-                      onClose();
-                      onGoToLibrary();
-                    }}
-                    className="w-full py-2.5 rounded-xl bg-[#16C784] hover:bg-[#13b376] text-black font-extrabold text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow-md shadow-[#16C784]/20"
-                  >
-                    <WifiOff className="w-4 h-4" />
-                    <span>Fungua Kwenye Maktaba ya Nje ya Mtandao</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleOpenOfflineLibrary}
+                  className="w-full py-2.5 rounded-xl bg-[#16C784] hover:bg-[#13b376] text-black font-extrabold text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow-md shadow-[#16C784]/20 cursor-pointer"
+                >
+                  <WifiOff className="w-4 h-4" />
+                  <span>Fungua Kwenye Maktaba ya Nje ya Mtandao</span>
+                </button>
 
                 <button
+                  type="button"
                   onClick={finishDownload}
-                  className="w-full py-2 rounded-xl bg-white dark:bg-[#232A39] hover:bg-slate-100 dark:hover:bg-[#2E3748] border border-slate-200 dark:border-transparent text-slate-900 dark:text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1.5"
+                  className="w-full py-2 rounded-xl bg-white dark:bg-[#232A39] hover:bg-slate-100 dark:hover:bg-[#2E3748] border border-slate-200 dark:border-transparent text-slate-900 dark:text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-[#16C784]" />
                   <span>Pakua Faili Tena (Download Again)</span>
                 </button>
 
                 <button
+                  type="button"
                   onClick={handleRemove}
-                  className="text-[11px] text-red-600 dark:text-red-400 hover:underline pt-1"
+                  className="text-[11px] text-red-600 dark:text-red-400 hover:underline pt-1 cursor-pointer"
                 >
                   Ondoa video hii kwenye maktaba
                 </button>

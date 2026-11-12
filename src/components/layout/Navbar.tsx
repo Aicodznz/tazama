@@ -209,11 +209,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Search className="w-4 h-4" />
           </button>
 
-          {/* Data Saver Mode Toggle Button (Desktop xl+ inline; Mobile Row 2 & Profile Menu) */}
+          {/* Data Saver Mode Toggle Button (Desktop/Tablet md+ inline; Mobile Row 2 & Profile Menu) */}
           <button
             type="button"
             onClick={toggleDataSaver}
-            className={`hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 cursor-pointer ${
               isDataSaver 
                 ? 'bg-amber-50 text-amber-800 border border-amber-300 shadow-sm dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/50 dark:shadow-md dark:shadow-amber-500/20' 
                 : 'bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 dark:bg-[#191E29] dark:text-[#A7B0C0] dark:hover:text-white dark:border-[#262E3E]'
