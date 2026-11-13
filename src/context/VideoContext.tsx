@@ -58,7 +58,7 @@ import {
   INITIAL_NOTIFICATIONS
 } from '../data/mockData';
 import { useAuth } from './AuthContext';
-import { auth, db, doc, setDoc, deleteDoc, collection, onSnapshot, getDocs, query, where } from '../lib/firebase';
+import { auth, db, doc, setDoc, updateDoc, deleteDoc, collection, onSnapshot, getDocs, query, where } from '../lib/firebase';
 import { createAvatarSvgDataUri, createThumbnailSvgDataUri } from '../lib/mediaPlaceholders';
 
 const SEED_VIDEO_MAP = new Map<string, VideoItem>(
@@ -120,6 +120,7 @@ interface VideoContextType {
   setSelectedCategory: (cat: string) => void;
   toggleSubscribe: (channelId: string) => void;
   toggleLike: (videoId: string) => boolean;
+  refreshVideoLikes: (videoId: string) => void;
   recordView: (videoId: string) => void;
   addToWatchHistory: (video: VideoItem) => void;
   removeFromWatchHistory: (videoId: string) => void;
@@ -327,12 +328,76 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Global Sync: Listen in real-time to Firestore videos & channels + sync with server API
   useEffect(() => {
+    let lastServerFetchAt = 0;
+
+    const fetchServerVideos = (force = false) => {
+      const now = Date.now();
+      if (!force && now - lastServerFetchAt < 8000) return;
+      lastServerFetchAt = now;
+
+      fetch('/api/videos')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.videos) && data.videos.length > 0) {
+            const serverVideos: VideoItem[] = data.videos.filter((v: any) => Boolean(v && v.id && v.videoUrl));
+            const serverLongVideos = serverVideos.filter(v => !v.isShort);
+            const serverShorts = serverVideos.filter(v => Boolean(v.isShort));
+
+            setVideos(prev => {
+              const map = new Map<string, VideoItem>();
+              prev.forEach(v => { if (v && v.id) map.set(v.id, v); });
+              serverLongVideos.forEach(v => {
+                const existing = map.get(v.id);
+                const nextVideo = preserveLocalSeedVideo(v, existing);
+                map.set(v.id, {
+                  ...nextVideo,
+                  viewsCount: typeof v.viewsCount === 'number' ? v.viewsCount : (existing?.viewsCount || 0),
+                  likesCount: typeof v.likesCount === 'number' ? v.likesCount : (existing?.likesCount || 0)
+                });
+              });
+              const merged = Array.from(map.values());
+              try { localStorage.setItem('tazama_custom_videos', JSON.stringify(merged)); } catch {}
+              return merged;
+            });
+
+            setShorts(prev => {
+              const map = new Map<string, VideoItem>();
+              prev.forEach(s => { if (s && s.id) map.set(s.id, s); });
+              serverShorts.forEach(s => {
+                const existing = map.get(s.id);
+                if (existing) {
+                  map.set(s.id, {
+                    ...existing,
+                    ...s,
+                    viewsCount: typeof s.viewsCount === 'number' ? s.viewsCount : (existing.viewsCount || 0),
+                    likesCount: typeof s.likesCount === 'number' ? s.likesCount : (existing.likesCount || 0)
+                  });
+                } else {
+                  map.set(s.id, s);
+                }
+              });
+              const merged = Array.from(map.values());
+              try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(merged)); } catch {}
+              return merged;
+            });
+
+            setCurrentVideo(prev => {
+              if (!prev) return prev;
+              const updated = serverVideos.find(v => v.id === prev.id);
+              if (!updated) return prev;
+              return {
+                ...prev,
+                viewsCount: typeof updated.viewsCount === 'number' ? updated.viewsCount : prev.viewsCount,
+                likesCount: typeof updated.likesCount === 'number' ? updated.likesCount : prev.likesCount
+              };
+            });
+          }
+        })
+        .catch(err => console.warn('Could not fetch server videos:', err));
+    };
+
     // 1. Initial fetch from server API
-    fetch('/api/videos')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.videos) && data.videos.length > 0) {
-          const serverVideos: VideoItem[] = data.videos.filter((v: any) => Boolean(v && v.id && v.videoUrl));
+    fetchServerVideos(true);
 
     // 1b. Initial fetch for ad campaigns from server API
     fetch('/api/ads')
@@ -352,49 +417,14 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       })
       .catch(() => {});
-          const serverLongVideos = serverVideos.filter(v => !v.isShort);
-          const serverShorts = serverVideos.filter(v => Boolean(v.isShort));
 
-          setVideos(prev => {
-            const map = new Map<string, VideoItem>();
-            prev.forEach(v => { if (v && v.id) map.set(v.id, v); });
-            serverLongVideos.forEach(v => {
-              const existing = map.get(v.id);
-              const nextVideo = preserveLocalSeedVideo(v, existing);
-              map.set(v.id, {
-                ...nextVideo,
-                viewsCount: typeof v.viewsCount === 'number' ? v.viewsCount : (existing?.viewsCount || 0),
-                likesCount: Math.max(v.likesCount || 0, existing?.likesCount || 0)
-              });
-            });
-            const merged = Array.from(map.values());
-            try { localStorage.setItem('tazama_custom_videos', JSON.stringify(merged)); } catch {}
-            return merged;
-          });
-
-          setShorts(prev => {
-            const map = new Map<string, VideoItem>();
-            prev.forEach(s => { if (s && s.id) map.set(s.id, s); });
-            serverShorts.forEach(s => {
-              const existing = map.get(s.id);
-              if (existing) {
-                map.set(s.id, {
-                  ...existing,
-                  ...s,
-                  viewsCount: typeof s.viewsCount === 'number' ? s.viewsCount : (existing.viewsCount || 0),
-                  likesCount: Math.max(s.likesCount || 0, existing.likesCount || 0)
-                });
-              } else {
-                map.set(s.id, s);
-              }
-            });
-            const merged = Array.from(map.values());
-            try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(merged)); } catch {}
-            return merged;
-          });
-        }
-      })
-      .catch(err => console.warn('Could not fetch server videos:', err));
+    const handleVisibilityOrFocus = () => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+        fetchServerVideos(false);
+      }
+    };
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
 
     // 2. Initial fetch from server channels
     fetch('/api/channels')
@@ -528,6 +558,8 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     return () => {
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
       if (unsubscribeVideos) unsubscribeVideos();
       if (unsubscribeChannels) unsubscribeChannels();
     };
@@ -629,58 +661,138 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const userUid = profile.uid;
 
-    // 1. Hydrate from user-specific cache
-    try {
-      const cached = localStorage.getItem(`tazama_liked_videos_${userUid}`);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed)) setLikedVideoIds(parsed);
+    const applyVideoLikesMap = (videoLikesMap: Record<string, number>) => {
+      if (!videoLikesMap || typeof videoLikesMap !== 'object') return;
+      setVideos(vids => {
+        const updated = vids.map(v => typeof videoLikesMap[v.id] === 'number' ? { ...v, likesCount: videoLikesMap[v.id] } : v);
+        try { localStorage.setItem('tazama_custom_videos', JSON.stringify(updated)); } catch {}
+        return updated;
+      });
+      setShorts(shList => {
+        const updated = shList.map(s => typeof videoLikesMap[s.id] === 'number' ? { ...s, likesCount: videoLikesMap[s.id] } : s);
+        try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(updated)); } catch {}
+        return updated;
+      });
+      setCurrentVideo(prev => prev && typeof videoLikesMap[prev.id] === 'number'
+        ? { ...prev, likesCount: videoLikesMap[prev.id] }
+        : prev
+      );
+    };
+
+    const getLocalUnliked = (): string[] => {
+      try {
+        const raw = localStorage.getItem(`tazama_unliked_videos_${userUid}`);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
       }
+    };
+
+    // 1. Hydrate from user-specific cache (and migrate legacy cache once if user has no per-user key yet)
+    let initialLocalLikes: string[] = [];
+    try {
+      const userKey = `tazama_liked_videos_${userUid}`;
+      const cached = localStorage.getItem(userKey);
+      if (cached !== null) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) initialLocalLikes = parsed;
+      } else {
+        const legacyCached = localStorage.getItem('tazama_liked_videos');
+        if (legacyCached) {
+          const parsedLegacy = JSON.parse(legacyCached);
+          if (Array.isArray(parsedLegacy) && parsedLegacy.length > 0) {
+            initialLocalLikes = parsedLegacy;
+            localStorage.setItem(userKey, JSON.stringify(parsedLegacy));
+            localStorage.removeItem('tazama_liked_videos');
+          }
+        }
+      }
+      setLikedVideoIds(initialLocalLikes);
     } catch {}
 
-    // 2. Fetch authoritative likes from Server API (merge safely so server restarts don't wipe user likes)
+    // 2. Fetch authoritative likes from Server API & push any local/legacy likes not yet recorded on server
     fetch(`/api/users/${encodeURIComponent(userUid)}/likes`)
       .then(res => res.json())
       .then(data => {
-        if (data && data.success && Array.isArray(data.likedVideoIds) && data.likedVideoIds.length > 0) {
-          setLikedVideoIds(prev => {
-            const merged = Array.from(new Set([...prev, ...data.likedVideoIds]));
-            try {
-              localStorage.setItem(`tazama_liked_videos_${userUid}`, JSON.stringify(merged));
-              localStorage.setItem('tazama_liked_videos', JSON.stringify(merged));
-            } catch {}
-            return merged;
-          });
+        const serverLiked: string[] = (data && data.success && Array.isArray(data.likedVideoIds))
+          ? data.likedVideoIds
+          : [];
+        const unlikedSet = new Set(getLocalUnliked());
+        const missingOnServer = initialLocalLikes.filter(
+          id => Boolean(id) && !serverLiked.includes(id) && !unlikedSet.has(id)
+        );
+
+        const merged = Array.from(new Set([...serverLiked, ...missingOnServer]));
+        setLikedVideoIds(merged);
+        try {
+          localStorage.setItem(`tazama_liked_videos_${userUid}`, JSON.stringify(merged));
+        } catch {}
+
+        if (missingOnServer.length > 0) {
+          fetch(`/api/users/${encodeURIComponent(userUid)}/likes/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              likedVideoIds: missingOnServer,
+              unlikedVideoIds: Array.from(unlikedSet)
+            })
+          })
+            .then(r => r.json())
+            .then(syncRes => {
+              if (syncRes && syncRes.success && syncRes.videoLikesMap) {
+                applyVideoLikesMap(syncRes.videoLikesMap);
+              }
+            })
+            .catch(() => {});
         }
       })
       .catch(() => {});
 
-    // 3. Real-time Firestore sync across open tabs and multiple devices
+    // 3. Real-time Firestore sync across open tabs and multiple devices (only when Firebase Auth session matches)
     let unsubscribeLikes: (() => void) | undefined;
-    try {
-      const q = query(collection(db, 'likes'), where('userId', '==', userUid));
-      unsubscribeLikes = onSnapshot(q, (snapshot) => {
-        const serverLikedIds: string[] = [];
-        snapshot.forEach(docSnap => {
-          const lData = docSnap.data();
-          if (lData && lData.videoId) {
-            serverLikedIds.push(lData.videoId);
-          }
-        });
-        if (serverLikedIds.length > 0) {
-          setLikedVideoIds(prev => {
-            const merged = Array.from(new Set([...prev, ...serverLikedIds]));
-            try {
-              localStorage.setItem(`tazama_liked_videos_${userUid}`, JSON.stringify(merged));
-            } catch {}
-            return merged;
+    if (auth.currentUser && auth.currentUser.uid === userUid) {
+      try {
+        const q = query(collection(db, 'likes'), where('userId', '==', userUid));
+        unsubscribeLikes = onSnapshot(q, (snapshot) => {
+          const firestoreLikedIds: string[] = [];
+          snapshot.forEach(docSnap => {
+            const lData = docSnap.data();
+            if (lData && lData.videoId) {
+              firestoreLikedIds.push(lData.videoId);
+            }
           });
-        }
-      }, (err) => {
-        console.warn('Firestore likes sync notice:', err.message);
-      });
-    } catch (err) {
-      console.warn('Error setting up likes listener:', err);
+          if (firestoreLikedIds.length > 0) {
+            setLikedVideoIds(prev => {
+              const merged = Array.from(new Set([...prev, ...firestoreLikedIds]));
+              try {
+                localStorage.setItem(`tazama_liked_videos_${userUid}`, JSON.stringify(merged));
+              } catch {}
+              return merged;
+            });
+
+            fetch(`/api/users/${encodeURIComponent(userUid)}/likes/sync`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                likedVideoIds: firestoreLikedIds,
+                unlikedVideoIds: getLocalUnliked()
+              })
+            })
+              .then(r => r.json())
+              .then(syncRes => {
+                if (syncRes && syncRes.success && syncRes.videoLikesMap) {
+                  applyVideoLikesMap(syncRes.videoLikesMap);
+                }
+              })
+              .catch(() => {});
+          }
+        }, (err) => {
+          console.warn('Firestore likes sync notice:', err.message);
+        });
+      } catch (err) {
+        console.warn('Error setting up likes listener:', err);
+      }
     }
 
     return () => {
@@ -2066,6 +2178,43 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const refreshVideoLikes = (videoId: string) => {
+    if (!videoId) return;
+    const uidParam = profile?.uid ? `?userId=${encodeURIComponent(profile.uid)}` : '';
+    fetch(`/api/videos/${encodeURIComponent(videoId)}/likes${uidParam}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.success && typeof data.likesCount === 'number') {
+          const nextLikes = data.likesCount;
+          setVideos(vids => {
+            const updated = vids.map(v => v.id === videoId ? { ...v, likesCount: nextLikes } : v);
+            try { localStorage.setItem('tazama_custom_videos', JSON.stringify(updated)); } catch {}
+            return updated;
+          });
+          setShorts(shList => {
+            const updated = shList.map(s => s.id === videoId ? { ...s, likesCount: nextLikes } : s);
+            try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(updated)); } catch {}
+            return updated;
+          });
+          setCurrentVideo(prev => prev && prev.id === videoId ? { ...prev, likesCount: nextLikes } : prev);
+
+          if (profile?.uid && typeof data.isLiked === 'boolean') {
+            const userUid = profile.uid;
+            setLikedVideoIds(prev => {
+              const has = prev.includes(videoId);
+              if (data.isLiked && !has) {
+                const next = [...prev, videoId];
+                try { localStorage.setItem(`tazama_liked_videos_${userUid}`, JSON.stringify(next)); } catch {}
+                return next;
+              }
+              return prev;
+            });
+          }
+        }
+      })
+      .catch(() => {});
+  };
+
   const toggleLike = (videoId: string): boolean => {
     if (!videoId) return false;
 
@@ -2081,12 +2230,21 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const isCurrentlyLiked = likedVideoIds.includes(videoId);
     const willBeLiked = !isCurrentlyLiked;
 
+    // Track explicit unlikes so client sync never resurrects an intentionally unliked video
+    try {
+      const unlikedRaw = localStorage.getItem(`tazama_unliked_videos_${userUid}`);
+      const unlikedArr: string[] = unlikedRaw ? JSON.parse(unlikedRaw) : [];
+      const nextUnliked = willBeLiked
+        ? unlikedArr.filter(id => id !== videoId)
+        : Array.from(new Set([...unlikedArr, videoId]));
+      localStorage.setItem(`tazama_unliked_videos_${userUid}`, JSON.stringify(nextUnliked));
+    } catch {}
+
     // 2. Optimistic UI update
     setLikedVideoIds(prev => {
       const next = willBeLiked ? [...prev.filter(id => id !== videoId), videoId] : prev.filter(id => id !== videoId);
       try {
         localStorage.setItem(`tazama_liked_videos_${userUid}`, JSON.stringify(next));
-        localStorage.setItem('tazama_liked_videos', JSON.stringify(next));
       } catch {}
       return next;
     });
@@ -2132,8 +2290,16 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (data && data.success && typeof data.likesCount === 'number') {
         const confirmedLiked = Boolean(data.isLiked);
         // Sync confirmed authoritative likes count
-        setVideos(vids => vids.map(v => v.id === videoId ? { ...v, likesCount: data.likesCount } : v));
-        setShorts(shList => shList.map(s => s.id === videoId ? { ...s, likesCount: data.likesCount } : s));
+        setVideos(vids => {
+          const updated = vids.map(v => v.id === videoId ? { ...v, likesCount: data.likesCount } : v);
+          try { localStorage.setItem('tazama_custom_videos', JSON.stringify(updated)); } catch {}
+          return updated;
+        });
+        setShorts(shList => {
+          const updated = shList.map(s => s.id === videoId ? { ...s, likesCount: data.likesCount } : s);
+          try { localStorage.setItem('tazama_custom_shorts', JSON.stringify(updated)); } catch {}
+          return updated;
+        });
         setCurrentVideo(prev => prev && prev.id === videoId ? { ...prev, likesCount: data.likesCount } : prev);
         
         // Ensure user's liked state matches server
@@ -2145,24 +2311,26 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return next;
         });
 
-        // 4. Sync to Firestore for real-time consistency
-        try {
-          const likeDocRef = doc(db, 'likes', `${videoId}_${userUid}`);
-          if (confirmedLiked) {
-            setDoc(likeDocRef, {
-              id: `${videoId}_${userUid}`,
-              videoId,
-              userId: userUid,
-              isLike: true,
-              createdAt: new Date().toISOString()
-            }, { merge: true }).catch(() => {});
-          } else {
-            deleteDoc(likeDocRef).catch(() => {});
-          }
+        // 4. Sync to Firestore for real-time consistency when Firebase Auth session matches
+        if (auth.currentUser && auth.currentUser.uid === userUid) {
+          try {
+            const likeDocRef = doc(db, 'likes', `${videoId}_${userUid}`);
+            if (confirmedLiked) {
+              setDoc(likeDocRef, {
+                id: `${videoId}_${userUid}`,
+                videoId,
+                userId: userUid,
+                isLike: true,
+                createdAt: new Date().toISOString()
+              }, { merge: true }).catch(() => {});
+            } else {
+              deleteDoc(likeDocRef).catch(() => {});
+            }
 
-          const videoDocRef = doc(db, 'videos', videoId);
-          setDoc(videoDocRef, { likesCount: data.likesCount }, { merge: true }).catch(() => {});
-        } catch {}
+            const videoDocRef = doc(db, 'videos', videoId);
+            updateDoc(videoDocRef, { likesCount: data.likesCount }).catch(() => {});
+          } catch {}
+        }
       }
     })
     .catch(err => {
@@ -2806,6 +2974,7 @@ export const VideoProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setSelectedCategory,
         toggleSubscribe,
         toggleLike,
+        refreshVideoLikes,
         recordView,
         addToWatchHistory,
         removeFromWatchHistory,

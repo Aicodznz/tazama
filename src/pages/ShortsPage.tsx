@@ -51,6 +51,7 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({
     removeFromPlaylist,
     likedVideoIds,
     toggleLike,
+    refreshVideoLikes,
     userSubscriptions,
     toggleSubscribe,
     addToWatchHistory,
@@ -112,8 +113,9 @@ export const ShortsPage: React.FC<ShortsPageProps> = ({
     setIsPlaying(true);
     if (currentShort?.id) {
       addToWatchHistory(currentShort);
+      refreshVideoLikes(currentShort.id);
     }
-  }, [currentShort?.id]);
+  }, [currentShort?.id, profile?.uid]);
 
   // Safe autoplay helper with instant muted fallback if browser blocks unmuted autoplay
   useEffect(() => {

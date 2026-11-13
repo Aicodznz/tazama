@@ -69,6 +69,7 @@ export const WatchPage: React.FC<WatchPageProps> = ({
     toggleSubscribe, 
     likedVideoIds, 
     toggleLike, 
+    refreshVideoLikes,
     recordView,
     comments,
     commentVotes,
@@ -101,6 +102,13 @@ export const WatchPage: React.FC<WatchPageProps> = ({
       video
     );
   }, [videos, shorts, video]);
+
+  // Always hydrate authoritative likes count for the active video (for both guests and logged-in users)
+  useEffect(() => {
+    if (video?.id) {
+      refreshVideoLikes(video.id);
+    }
+  }, [video?.id, profile?.uid]);
 
 
   // UI state

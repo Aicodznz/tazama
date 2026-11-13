@@ -241,11 +241,35 @@ async function startServer() {
   // SHARED PERSISTENT VIDEOS & CHANNELS API
   // ==========================================
 
+const SEED_BASE_LIKES: Record<string, number> = {
+  'vid-donghua-first-dragon-ep1': 1240,
+  'vid-donghua-mortals-journey-ep1': 2980
+};
+
+function computeEffectiveLikesCount(video: any, allLikes: Record<string, string[]>): number {
+  if (!video || !video.id) return 0;
+  const baseLikes = typeof video.baseLikesCount === 'number'
+    ? video.baseLikesCount
+    : (SEED_BASE_LIKES[video.id] ?? 0);
+  const rawList = allLikes[video.id];
+  const hasLikeRecord = Object.prototype.hasOwnProperty.call(allLikes, video.id) && Array.isArray(rawList);
+  if (hasLikeRecord) {
+    const uniqueUsers = new Set(rawList.filter((u: any) => typeof u === 'string' && u.trim().length > 0));
+    return baseLikes + uniqueUsers.size;
+  }
+  return Math.max(typeof video.likesCount === 'number' ? video.likesCount : 0, baseLikes);
+}
+
   // 1. Get all globally uploaded videos & shorts
   app.get('/api/videos', (_req, res) => {
     try {
       const videos = getStoredVideos();
-      res.json({ success: true, videos });
+      const allLikes = getStoredLikes();
+      const reconciled = videos.map((v: any) => ({
+        ...v,
+        likesCount: computeEffectiveLikesCount(v, allLikes)
+      }));
+      res.json({ success: true, videos: reconciled });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message, videos: [] });
     }
@@ -260,24 +284,44 @@ async function startServer() {
       }
 
       const current = getStoredVideos();
+      const allLikes = getStoredLikes();
       const existingIdx = current.findIndex(v => v.id === newVideo.id);
       let updatedList;
+      let savedVideo;
       if (existingIdx >= 0) {
-        updatedList = [...current];
-        updatedList[existingIdx] = { 
-          ...updatedList[existingIdx], 
+        const existing = current[existingIdx];
+        const merged = {
+          ...existing,
           ...newVideo,
-          videoUrl: newVideo.videoUrl || updatedList[existingIdx].videoUrl 
+          videoUrl: newVideo.videoUrl || existing.videoUrl,
+          viewsCount: Math.max(existing.viewsCount || 0, typeof newVideo.viewsCount === 'number' ? newVideo.viewsCount : 0),
+          uniqueViewers: Math.max(existing.uniqueViewers || 0, typeof newVideo.uniqueViewers === 'number' ? newVideo.uniqueViewers : 0),
+          watchTimeSeconds: Math.max(existing.watchTimeSeconds || 0, typeof newVideo.watchTimeSeconds === 'number' ? newVideo.watchTimeSeconds : 0),
+          likesCount: computeEffectiveLikesCount(
+            {
+              ...existing,
+              ...newVideo,
+              likesCount: Math.max(existing.likesCount || 0, typeof newVideo.likesCount === 'number' ? newVideo.likesCount : 0)
+            },
+            allLikes
+          )
         };
+        updatedList = [...current];
+        updatedList[existingIdx] = merged;
+        savedVideo = merged;
       } else {
         if (!newVideo.videoUrl) {
           return res.status(400).json({ success: false, error: 'videoUrl is required for new videos' });
         }
-        updatedList = [newVideo, ...current];
+        savedVideo = {
+          ...newVideo,
+          likesCount: computeEffectiveLikesCount(newVideo, allLikes)
+        };
+        updatedList = [savedVideo, ...current];
       }
 
       saveStoredVideos(updatedList);
-      res.json({ success: true, video: newVideo, totalVideos: updatedList.length });
+      res.json({ success: true, video: savedVideo, totalVideos: updatedList.length });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
@@ -695,7 +739,10 @@ async function startServer() {
       // 2. CONCURRENCY MUTEX LOCK PER VIDEO
       const result = await runWithVideoLock(id, async () => {
         const allLikes = getStoredLikes();
-        const currentLikesForVideo = Array.isArray(allLikes[id]) ? [...allLikes[id]] : [];
+        const rawLikes = Array.isArray(allLikes[id]) ? allLikes[id] : [];
+        const currentLikesForVideo = Array.from(
+          new Set(rawLikes.filter((u: any) => typeof u === 'string' && u.trim().length > 0).map((u: string) => u.trim()))
+        );
         const existingIdx = currentLikesForVideo.indexOf(cleanUserId);
 
         let isLikedNow = false;
@@ -714,12 +761,15 @@ async function startServer() {
 
         // Update video likesCount atomically in data/videos.json
         const currentVids = getStoredVideos();
+        const targetExisting = currentVids.find((v: any) => v.id === id) || { id };
+        const effectiveLikesCount = computeEffectiveLikesCount(targetExisting, allLikes);
+
         let updatedVideo: any = null;
         const nextVids = currentVids.map((v: any) => {
           if (v.id === id) {
             updatedVideo = {
               ...v,
-              likesCount: currentLikesForVideo.length
+              likesCount: effectiveLikesCount
             };
             return updatedVideo;
           }
@@ -733,7 +783,7 @@ async function startServer() {
         return {
           success: true,
           isLiked: isLikedNow,
-          likesCount: currentLikesForVideo.length,
+          likesCount: effectiveLikesCount,
           videoId: id,
           video: updatedVideo
         };
@@ -753,11 +803,12 @@ async function startServer() {
         return res.json({ success: true, likedVideoIds: [] });
       }
 
+      const cleanUid = uid.trim();
       const allLikes = getStoredLikes();
       const likedVideoIds: string[] = [];
 
       for (const [videoId, userList] of Object.entries(allLikes)) {
-        if (Array.isArray(userList) && userList.includes(uid)) {
+        if (Array.isArray(userList) && userList.includes(cleanUid)) {
           likedVideoIds.push(videoId);
         }
       }
@@ -768,26 +819,102 @@ async function startServer() {
     }
   });
 
+  // 2g-bis. Sync client-cached / Firestore user likes up to server disk so all users & guests see accurate counts
+  app.post('/api/users/:uid/likes/sync', async (req, res) => {
+    try {
+      const { uid } = req.params;
+      const { likedVideoIds, unlikedVideoIds } = req.body || {};
+      if (!uid || !uid.trim()) {
+        return res.status(400).json({ success: false, error: 'Valid uid is required' });
+      }
+      const cleanUid = uid.trim();
+      const incomingLikes: string[] = Array.isArray(likedVideoIds)
+        ? likedVideoIds.filter((id: any) => typeof id === 'string' && id.trim().length > 0)
+        : [];
+      const explicitUnlikes = new Set<string>(
+        Array.isArray(unlikedVideoIds)
+          ? unlikedVideoIds.filter((id: any) => typeof id === 'string' && id.trim().length > 0)
+          : []
+      );
+
+      const allLikes = getStoredLikes();
+      let likesModified = false;
+
+      for (const videoId of incomingLikes) {
+        if (explicitUnlikes.has(videoId)) continue;
+        const list = Array.isArray(allLikes[videoId]) ? [...allLikes[videoId]] : [];
+        if (!list.includes(cleanUid)) {
+          list.push(cleanUid);
+          allLikes[videoId] = list;
+          likesModified = true;
+        }
+      }
+
+      if (likesModified) {
+        saveStoredLikes(allLikes);
+      }
+
+      const currentVids = getStoredVideos();
+      let vidsModified = false;
+      const videoLikesMap: Record<string, number> = {};
+
+      const nextVids = currentVids.map((v: any) => {
+        const effectiveCount = computeEffectiveLikesCount(v, allLikes);
+        videoLikesMap[v.id] = effectiveCount;
+        if (v.likesCount !== effectiveCount) {
+          vidsModified = true;
+          return { ...v, likesCount: effectiveCount };
+        }
+        return v;
+      });
+
+      if (vidsModified) {
+        saveStoredVideos(nextVids);
+      }
+
+      // Also include any likes for non-stored videos in videoLikesMap
+      for (const videoId of Object.keys(allLikes)) {
+        if (!(videoId in videoLikesMap)) {
+          videoLikesMap[videoId] = computeEffectiveLikesCount({ id: videoId }, allLikes);
+        }
+      }
+
+      const userLikedIds: string[] = [];
+      for (const [videoId, userList] of Object.entries(allLikes)) {
+        if (Array.isArray(userList) && userList.includes(cleanUid)) {
+          userLikedIds.push(videoId);
+        }
+      }
+
+      res.json({ success: true, likedVideoIds: userLikedIds, videoLikesMap });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   // 2h. Get Video Likes Status
   app.get('/api/videos/:id/likes', (req, res) => {
     try {
       const { id } = req.params;
       const { userId } = req.query;
       const allLikes = getStoredLikes();
-      const userList = Array.isArray(allLikes[id]) ? allLikes[id] : [];
+      const rawList = Array.isArray(allLikes[id]) ? allLikes[id] : [];
+      const userList = rawList.filter((u: any) => typeof u === 'string' && u.trim().length > 0);
+      const currentVids = getStoredVideos();
+      const targetVideo = currentVids.find((v: any) => v.id === id) || { id };
 
       res.json({
         success: true,
         videoId: id,
-        likesCount: userList.length,
-        isLiked: typeof userId === 'string' && userId ? userList.includes(userId) : false
+        likesCount: computeEffectiveLikesCount(targetVideo, allLikes),
+        isLiked: typeof userId === 'string' && userId.trim() ? userList.includes(userId.trim()) : false
       });
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message });
     }
   });
 
-  // 3. Batch sync videos from client
+  // 3. Batch sync videos from client (Never overwrite server metrics with stale lower Firestore values)
   app.post('/api/videos/sync', (req, res) => {
     try {
       const { videos } = req.body;
@@ -796,11 +923,35 @@ async function startServer() {
       }
 
       const current = getStoredVideos();
+      const allLikes = getStoredLikes();
       const videoMap = new Map<string, any>();
       current.forEach(v => { if (v && v.id) videoMap.set(v.id, v); });
-      videos.forEach(v => { if (v && v.id) videoMap.set(v.id, { ...(videoMap.get(v.id) || {}), ...v }); });
+      videos.forEach(v => {
+        if (v && v.id) {
+          const existing = videoMap.get(v.id);
+          const merged = {
+            ...(existing || {}),
+            ...v,
+            videoUrl: v.videoUrl || existing?.videoUrl,
+            viewsCount: Math.max(existing?.viewsCount || 0, typeof v.viewsCount === 'number' ? v.viewsCount : 0),
+            uniqueViewers: Math.max(existing?.uniqueViewers || 0, typeof v.uniqueViewers === 'number' ? v.uniqueViewers : 0),
+            watchTimeSeconds: Math.max(existing?.watchTimeSeconds || 0, typeof v.watchTimeSeconds === 'number' ? v.watchTimeSeconds : 0),
+          };
+          merged.likesCount = computeEffectiveLikesCount(
+            {
+              ...merged,
+              likesCount: Math.max(existing?.likesCount || 0, typeof v.likesCount === 'number' ? v.likesCount : 0)
+            },
+            allLikes
+          );
+          videoMap.set(v.id, merged);
+        }
+      });
 
-      const merged = Array.from(videoMap.values());
+      const merged = Array.from(videoMap.values()).map(v => ({
+        ...v,
+        likesCount: computeEffectiveLikesCount(v, allLikes)
+      }));
       saveStoredVideos(merged);
       res.json({ success: true, totalVideos: merged.length, videos: merged });
     } catch (err: any) {
